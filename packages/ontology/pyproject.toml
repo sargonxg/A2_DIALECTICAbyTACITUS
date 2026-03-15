@@ -8,8 +8,9 @@ readme = "README.md"
 packages = [{include = "dialectica_ontology", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 pydantic = "^2.8.0"
+python-ulid = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.0"
