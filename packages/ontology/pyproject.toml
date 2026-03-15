@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "dialectica-ontology"
+version = "2.0.1"
+description = "TACITUS Core Ontology — The Conflict Grammar (15 node types, 20 edge types, 25+ enums)"
+authors = ["TACITUS <team@tacitus.ai>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "dialectica_ontology", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = "^2.8.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.6.0"
+mypy = "^1.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

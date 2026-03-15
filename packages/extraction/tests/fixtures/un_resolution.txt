@@ -1,0 +1,26 @@
+United Nations Security Council Resolution — Test Fixture
+
+The Security Council, acting under Chapter VII of the Charter of the United Nations,
+
+Reaffirming its previous resolutions on the matter and expressing grave concern at reports 
+of continued violations of international humanitarian law,
+
+Determining that the situation constitutes a threat to international peace and security,
+
+1. Demands that all parties immediately cease hostilities and comply with applicable 
+   provisions of international humanitarian law;
+
+2. Calls upon all Member States to refrain from providing support to non-state armed groups;
+
+3. Authorizes the Secretary-General to establish a monitoring mechanism with full and 
+   unimpeded access to affected areas;
+
+4. Decides that all parties shall allow and facilitate safe, rapid, and unimpeded access 
+   for humanitarian personnel;
+
+5. Requests the Secretary-General to report to the Security Council every 30 days on 
+   implementation of this resolution;
+
+6. Decides to remain actively seized of the matter.
+
+TODO: This is a test fixture. Real content should be 400+ words.

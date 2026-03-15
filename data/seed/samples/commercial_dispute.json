@@ -1,0 +1,12 @@
+{
+  "_comment": "Commercial contract dispute — Tier 2 (Standard) example",
+  "_status": "TODO: Populate in Prompt 10",
+  "workspace": {
+    "name": "Commercial Contract Dispute",
+    "domain": "commercial",
+    "scale": "meso",
+    "tier": "standard"
+  },
+  "nodes": [],
+  "edges": []
+}

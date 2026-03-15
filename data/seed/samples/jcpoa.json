@@ -1,0 +1,12 @@
+{
+  "_comment": "JCPOA conflict graph — Complete Tier 3 example with all 15 node types and all 20 edge types",
+  "_status": "TODO: Populate in Prompt 10",
+  "workspace": {
+    "name": "JCPOA Nuclear Negotiations",
+    "domain": "political",
+    "scale": "macro",
+    "tier": "full"
+  },
+  "nodes": [],
+  "edges": []
+}

@@ -1,0 +1,28 @@
+Iran Nuclear Deal Negotiations — JCPOA Excerpt (Test Fixture)
+
+In July 2015, Iran and the P5+1 nations (United States, United Kingdom, France, Germany, Russia, and China) 
+along with the European Union, reached a landmark agreement known as the Joint Comprehensive Plan of Action 
+(JCPOA) in Vienna. The agreement came after years of intense diplomatic negotiations, beginning in earnest 
+after the election of President Hassan Rouhani in 2013.
+
+Under the JCPOA, Iran agreed to significantly limit its uranium enrichment program, reducing its stockpile 
+of enriched uranium by 98% and limiting enrichment to 3.67% purity. In exchange, the international 
+community agreed to lift comprehensive economic sanctions that had crippled the Iranian economy, including 
+oil export restrictions and banking sector sanctions.
+
+The International Atomic Energy Agency (IAEA) was tasked with verifying Iran's compliance through an 
+extensive inspection regime, including access to nuclear facilities and continuous monitoring. Iran's 
+Supreme Leader Ayatollah Khamenei remained skeptical of Western intentions, while hardliners in Iran's 
+Revolutionary Guard Corps (IRGC) opposed any limitations on the nuclear program.
+
+Israel and Saudi Arabia expressed strong opposition to the deal, with Israeli Prime Minister Benjamin 
+Netanyahu warning that the agreement threatened regional security. The US-Iran trust deficit, built over 
+decades of antagonistic relations since the 1979 Islamic Revolution, remained a fundamental obstacle to 
+implementation.
+
+In May 2018, President Donald Trump withdrew the United States from the JCPOA, reimposing sweeping 
+economic sanctions under a "maximum pressure" campaign. Iran responded by gradually exceeding JCPOA 
+limits on enrichment levels and stockpiles. Subsequent Vienna talks in 2021-2022 attempted to restore 
+the agreement but failed to reach consensus on sanctions relief and nuclear rollback sequencing.
+
+TODO: This is a test fixture for the extraction pipeline. Real content should be 500+ words.

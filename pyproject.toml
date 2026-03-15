@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "dialectica"
+version = "1.0.0"
+description = "DIALECTICA by TACITUS — The Universal Data Layer for Human Friction"
+authors = ["TACITUS <team@tacitus.ai>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = []
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.0"
+mypy = "^1.11.0"
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-cov = "^5.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "ANN"]
+ignore = ["ANN101", "ANN102", "ANN401"]
+
+[tool.ruff.isort]
+known-first-party = ["dialectica_ontology", "dialectica_graph", "dialectica_extraction", "dialectica_reasoning", "dialectica_api"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+exclude = ["tests/"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["packages"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=packages --cov-report=term-missing --cov-report=xml"

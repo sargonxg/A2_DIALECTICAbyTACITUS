@@ -1,0 +1,124 @@
+version: "3.9"
+
+services:
+  # ─── Google Cloud Spanner Emulator ──────────────────────────────────────
+  spanner-emulator:
+    image: gcr.io/cloud-spanner-emulator/emulator:latest
+    container_name: dialectica-spanner-emulator
+    ports:
+      - "9010:9010"   # gRPC
+      - "9020:9020"   # REST / HTTP
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9020/v1/projects/test-project/instances"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ─── Spanner Setup (one-shot init) ──────────────────────────────────────
+  spanner-init:
+    image: python:3.12-slim
+    container_name: dialectica-spanner-init
+    depends_on:
+      spanner-emulator:
+        condition: service_healthy
+    environment:
+      SPANNER_EMULATOR_HOST: spanner-emulator:9010
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
+      SPANNER_INSTANCE_ID: ${SPANNER_INSTANCE_ID:-dialectica-graph}
+      SPANNER_DATABASE_ID: ${SPANNER_DATABASE_ID:-dialectica}
+    volumes:
+      - ./infrastructure/scripts:/scripts
+      - ./packages:/packages
+    command: >
+      sh -c "
+        pip install google-cloud-spanner --quiet &&
+        python /scripts/init_spanner.py
+      "
+    restart: on-failure
+
+  # ─── DIALECTICA API ──────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: dialectica-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      spanner-emulator:
+        condition: service_healthy
+    environment:
+      # GCP
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
+      SPANNER_INSTANCE_ID: ${SPANNER_INSTANCE_ID:-dialectica-graph}
+      SPANNER_DATABASE_ID: ${SPANNER_DATABASE_ID:-dialectica}
+      SPANNER_EMULATOR_HOST: spanner-emulator:9010
+      VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-east1}
+      GEMINI_FLASH_MODEL: ${GEMINI_FLASH_MODEL:-gemini-2.5-flash-001}
+      GEMINI_PRO_MODEL: ${GEMINI_PRO_MODEL:-gemini-2.5-pro-001}
+      # App
+      GRAPH_BACKEND: ${GRAPH_BACKEND:-spanner}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-change-in-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Google Application Credentials (mount key file in production)
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ─── DIALECTICA Web App ──────────────────────────────────────────────────
+  web:
+    build:
+      context: apps/web
+      dockerfile: Dockerfile
+    container_name: dialectica-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      NODE_ENV: ${NODE_ENV:-development}
+    restart: unless-stopped
+
+  # ─── Neo4j (Optional — activate via profile) ─────────────────────────────
+  neo4j:
+    image: neo4j:5-community
+    container_name: dialectica-neo4j
+    profiles:
+      - neo4j
+    ports:
+      - "7474:7474"   # Browser
+      - "7687:7687"   # Bolt
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/dialectica-dev}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "dialectica-dev", "RETURN 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  neo4j-data:
+  neo4j-logs:
+
+networks:
+  default:
+    name: dialectica-network

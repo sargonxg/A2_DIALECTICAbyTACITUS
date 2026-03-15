@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "dialectica-reasoning"
+version = "1.0.0"
+description = "DIALECTICA Reasoning Layer — GraphRAG + Symbolic Rule Engine + AI Agents"
+authors = ["TACITUS <team@tacitus.ai>"]
+license = "Apache-2.0"
+packages = [{include = "dialectica_reasoning", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+dialectica-ontology = {path = "../ontology", develop = true}
+dialectica-graph = {path = "../graph", develop = true}
+google-cloud-aiplatform = "^1.68.0"
+vertexai = "^1.68.0"
+langgraph = "^0.2.0"
+langchain-google-vertexai = "^2.0.0"
+langchain-community = "^0.3.0"
+networkx = "^3.3.0"
+python-louvain = "^0.16"
+numpy = "^2.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-mock = "^3.14.0"
+ruff = "^0.6.0"
+mypy = "^1.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
