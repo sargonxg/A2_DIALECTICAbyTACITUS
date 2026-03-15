@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "dialectica-graph"
+version = "1.0.0"
+description = "DIALECTICA Graph Database Abstraction — Spanner Graph + Neo4j clients"
+authors = ["TACITUS <team@tacitus.ai>"]
+license = "Apache-2.0"
+packages = [{include = "dialectica_graph", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+dialectica-ontology = {path = "../ontology", develop = true}
+google-cloud-spanner = "^3.49.0"
+neo4j = "^5.24.0"
+google-cloud-aiplatform = "^1.68.0"
+anyio = "^4.6.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.6.0"
+mypy = "^1.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

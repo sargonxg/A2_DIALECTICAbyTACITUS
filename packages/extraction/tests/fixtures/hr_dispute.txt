@@ -1,0 +1,20 @@
+Workplace Mediation Case — Alex vs Maya Northwind (Test Fixture)
+
+Alex Chen, a senior software engineer at Northwind Technologies, filed a formal grievance against 
+Maya Rodriguez, the product manager overseeing their team. The dispute began in March 2024 when 
+Maya reassigned Alex's project to another team member without prior consultation, citing delivery 
+timeline concerns.
+
+Alex stated that the reassignment was unfair, arguing that the project had been on track and the 
+decision was made without proper process. Maya responded that Alex had missed two consecutive 
+sprint reviews and that the client had expressed concerns about communication. Both parties 
+acknowledged that their working relationship had deteriorated significantly over the preceding 
+three months.
+
+HR Director Sarah Okoye initiated a formal mediation process under the company's Workplace 
+Conflict Resolution Policy. Alex's interests included recognition of technical contributions, 
+procedural fairness in project assignments, and restoration of professional reputation. Maya's 
+interests included maintaining project delivery commitments to clients, team cohesion, and 
+management authority over resourcing decisions.
+
+TODO: This is a test fixture. Real content should be 300+ words.

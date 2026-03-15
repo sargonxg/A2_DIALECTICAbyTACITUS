@@ -1,0 +1,6 @@
+{
+  "_comment": "PLOVER code ↔ EventType bidirectional mapping",
+  "_status": "TODO: Populate in Prompt 10",
+  "plover_to_dialectica": {},
+  "dialectica_to_plover": {}
+}

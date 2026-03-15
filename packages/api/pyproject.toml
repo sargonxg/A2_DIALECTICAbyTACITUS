@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "dialectica-api"
+version = "1.0.0"
+description = "DIALECTICA FastAPI Service — The Universal Data Layer for Human Friction"
+authors = ["TACITUS <team@tacitus.ai>"]
+license = "Apache-2.0"
+packages = [{include = "dialectica_api", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+dialectica-ontology = {path = "../ontology", develop = true}
+dialectica-graph = {path = "../graph", develop = true}
+dialectica-extraction = {path = "../extraction", develop = true}
+dialectica-reasoning = {path = "../reasoning", develop = true}
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.31.0"}
+pydantic-settings = "^2.5.0"
+python-multipart = "^0.0.12"
+google-cloud-pubsub = "^2.26.0"
+google-cloud-storage = "^2.18.0"
+google-cloud-secret-manager = "^2.20.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-mock = "^3.14.0"
+httpx = "^0.27.0"
+ruff = "^0.6.0"
+mypy = "^1.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

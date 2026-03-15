@@ -1,0 +1,12 @@
+{
+  "_comment": "Alex vs Maya Northwind — HR mediation case, Tier 1 (Essential) example",
+  "_status": "TODO: Populate in Prompt 10",
+  "workspace": {
+    "name": "Alex vs Maya Northwind — HR Mediation",
+    "domain": "workplace",
+    "scale": "micro",
+    "tier": "essential"
+  },
+  "nodes": [],
+  "edges": []
+}
