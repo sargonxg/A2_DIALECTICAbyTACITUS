@@ -115,6 +115,42 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # ─── API (Neo4j backend variant) ─────────────────────────────────────────
+  # Use: docker-compose --profile neo4j up
+  # The default 'api' service uses Spanner emulator.
+  # When using neo4j profile, set GRAPH_BACKEND=neo4j and NEO4J_* vars.
+  api-neo4j:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: dialectica-api-neo4j
+    profiles:
+      - neo4j
+    ports:
+      - "8081:8080"   # Exposed on 8081 to avoid conflict with default api
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      GRAPH_BACKEND: neo4j
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-dialectica-dev}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-change-in-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
+      VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-east1}
+      GEMINI_FLASH_MODEL: ${GEMINI_FLASH_MODEL:-gemini-2.5-flash-001}
+      GEMINI_PRO_MODEL: ${GEMINI_PRO_MODEL:-gemini-2.5-pro-001}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   neo4j-data:
   neo4j-logs:
