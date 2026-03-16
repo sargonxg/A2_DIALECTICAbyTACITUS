@@ -1,5 +1,455 @@
 {
-  "_comment": "DIALECTICA Conflict Resolution Glossary — 100+ terms",
-  "_status": "TODO: Populate in Prompt 4",
-  "terms": []
+  "_comment": "DIALECTICA Conflict Resolution Glossary — 60+ terms drawn from conflict resolution, peace studies, and negotiation literature",
+  "glossary": [
+    {
+      "term": "BATNA",
+      "definition": "Best Alternative To a Negotiated Agreement. The course of action a party will pursue if negotiations fail. The stronger a party's BATNA, the greater its negotiating leverage. No rational negotiator accepts an agreement worse than their BATNA. Coined by Fisher and Ury (1981).",
+      "related_terms": ["ZOPA", "Reservation Value", "Negotiating Power", "Walk-Away Point"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "ZOPA",
+      "definition": "Zone of Possible Agreement. The range between each party's reservation value within which a mutually acceptable agreement can be reached. If the parties' reservation values do not overlap, no ZOPA exists and agreement is impossible without changing the parties' BATNAs.",
+      "related_terms": ["BATNA", "Reservation Value", "Negotiating Range"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "Ripeness",
+      "definition": "The condition in which a conflict is ready for negotiated resolution. Zartman identifies two primary indicators: a mutually hurting stalemate (MHS) and a perceived way out. Ripeness is a subjective perception, not an objective condition, and ripe moments are perishable.",
+      "related_terms": ["Mutually Hurting Stalemate", "MEO", "Way Out", "Ripe Moment"],
+      "frameworks": ["zartman"]
+    },
+    {
+      "term": "Mutually Hurting Stalemate (MHS)",
+      "definition": "The primary indicator of conflict ripeness, per Zartman. Both parties perceive themselves in a costly, painful stalemate from which neither can escape through unilateral escalation. The pain of continuing creates a shared motivation to seek a negotiated exit.",
+      "related_terms": ["Ripeness", "MEO", "Stalemate", "Hurting Stalemate"],
+      "frameworks": ["zartman", "kriesberg"]
+    },
+    {
+      "term": "MEO",
+      "definition": "Mutually Enticing Opportunity. Zartman's second ripeness indicator: both parties perceive a positive opportunity for mutual gain through negotiation, complementing the negative push of the MHS. An MEO creates a pull toward the negotiating table.",
+      "related_terms": ["Ripeness", "MHS", "Ripe Moment"],
+      "frameworks": ["zartman"]
+    },
+    {
+      "term": "Track II Diplomacy",
+      "definition": "Informal, non-governmental diplomatic processes involving non-official actors (academics, civil society, retired officials) who engage counterparts to explore solutions not possible in official Track I diplomacy. Particularly valuable for building empathy, testing ideas, and maintaining communication during crises.",
+      "related_terms": ["Track I Diplomacy", "Multi-Track Diplomacy", "Facilitation", "Problem-Solving Workshop"],
+      "frameworks": ["lederach", "burton"]
+    },
+    {
+      "term": "Spoiler",
+      "definition": "An actor who believes the peace process threatens their interests or values and acts to undermine it. Stedman (1997) distinguishes total spoilers (maximalist, ideological), greedy spoilers (opportunistic), and limited spoilers (specific grievances). Spoiler management is a critical challenge in peace processes.",
+      "related_terms": ["Spoiler Management", "Veto Actor", "Rejectionists", "Peacekeeping"],
+      "frameworks": ["lederach", "kriesberg"]
+    },
+    {
+      "term": "Entrapped Conflict",
+      "definition": "A conflict in which parties are locked in a self-perpetuating escalatory dynamic from which they perceive no exit, often because sunk costs, commitment escalation, or audience effects prevent de-escalation. Requires face-saving exit options to break the entrapment.",
+      "related_terms": ["Escalation", "Glasl Stage", "Commitment Escalation", "Face-Saving"],
+      "frameworks": ["glasl", "kriesberg"]
+    },
+    {
+      "term": "Mediation",
+      "definition": "A voluntary, consensual dispute resolution process in which a neutral third party (mediator) assists disputing parties to reach a mutually acceptable agreement. The mediator has no authority to impose a decision. Varieties include facilitative, evaluative, transformative, and narrative mediation.",
+      "related_terms": ["Facilitation", "Arbitration", "Conciliation", "Process Consultation"],
+      "frameworks": ["fisher_ury", "winslade_monk", "lederach"]
+    },
+    {
+      "term": "Arbitration",
+      "definition": "A binding dispute resolution process in which a neutral third party (arbitrator) hears arguments and evidence from both sides and renders a decision. More formal than mediation; decision is typically binding and enforceable. Distinguished from adjudication by its private, consensual character.",
+      "related_terms": ["Mediation", "Adjudication", "Rights-Based Approach", "UNCITRAL"],
+      "frameworks": ["ury_brett_goldberg"]
+    },
+    {
+      "term": "Facilitation",
+      "definition": "A structured process for improving communication, decision-making, or problem-solving among groups. The facilitator focuses on process (how the group works together) rather than content (what they decide). Distinct from mediation in that it may not involve a pre-existing dispute.",
+      "related_terms": ["Mediation", "Process Consultation", "Track II Diplomacy"],
+      "frameworks": ["lederach", "fisher_ury"]
+    },
+    {
+      "term": "Positive Peace",
+      "definition": "Galtung's concept of the presence of social justice, equality, and the absence of structural and cultural violence — not merely the cessation of direct violence. Positive peace requires addressing the structural and cultural roots of conflict, not just stopping armed hostilities.",
+      "related_terms": ["Negative Peace", "Structural Violence", "Peacebuilding", "Social Justice"],
+      "frameworks": ["galtung", "lederach"]
+    },
+    {
+      "term": "Negative Peace",
+      "definition": "The absence of direct, organised violence (war, armed conflict). A ceasefire or armistice achieves negative peace. Per Galtung, negative peace is necessary but insufficient for sustainable peace if structural and cultural violence remain.",
+      "related_terms": ["Positive Peace", "Ceasefire", "Direct Violence", "Peacemaking"],
+      "frameworks": ["galtung"]
+    },
+    {
+      "term": "Structural Violence",
+      "definition": "Harm caused by social structures, institutions, and systems that prevent people from meeting their basic needs. No single perpetrator can be identified; the harm is embedded in the social order. Examples: poverty, racial discrimination, denial of healthcare, economic exploitation. Coined by Galtung (1969).",
+      "related_terms": ["Direct Violence", "Cultural Violence", "Positive Peace", "Human Needs"],
+      "frameworks": ["galtung", "burton"]
+    },
+    {
+      "term": "Direct Violence",
+      "definition": "Physical or verbal harm inflicted by an identifiable actor upon a person or group. The most visible form of violence: war, assault, murder, torture, rape, verbal abuse. Galtung's violence triangle situates direct violence as the tip of the iceberg, sustained by structural and cultural violence.",
+      "related_terms": ["Structural Violence", "Cultural Violence", "Glasl Escalation"],
+      "frameworks": ["galtung"]
+    },
+    {
+      "term": "Cultural Violence",
+      "definition": "Those aspects of culture — religion, ideology, language, art, science — that can be used to legitimise and justify direct or structural violence. Cultural violence makes direct and structural violence appear natural, normal, or even virtuous. Examples: dehumanising propaganda, racial ideologies, religious extremism.",
+      "related_terms": ["Structural Violence", "Direct Violence", "Narrative", "Dehumanisation"],
+      "frameworks": ["galtung"]
+    },
+    {
+      "term": "Hurting Stalemate",
+      "definition": "A conflict condition in which both parties are deadlocked and suffering significant costs but neither can achieve decisive victory. Often used interchangeably with Mutually Hurting Stalemate (MHS). The presence of a hurting stalemate is Zartman's primary indicator of ripeness for negotiation.",
+      "related_terms": ["MHS", "Ripeness", "Stalemate", "Deadlock"],
+      "frameworks": ["zartman", "kriesberg"]
+    },
+    {
+      "term": "Interests vs. Positions",
+      "definition": "Fisher and Ury's foundational distinction: positions are what parties say they want; interests are the underlying needs, desires, concerns, and fears that motivate those positions. Durable agreements address interests; positional bargaining typically produces impasses or unstable compromises.",
+      "related_terms": ["BATNA", "Principled Negotiation", "Option Generation", "Needs"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "Principled Negotiation",
+      "definition": "Fisher and Ury's four-point negotiation method: (1) separate people from the problem; (2) focus on interests, not positions; (3) invent options for mutual gain; (4) insist on objective criteria. Designed to produce mutually satisfying agreements while protecting the relationship.",
+      "related_terms": ["Interests vs. Positions", "BATNA", "Objective Criteria", "Getting to Yes"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "Conflict Transformation",
+      "definition": "Lederach's framework that seeks to change the relationships, interests, discourses, and social conditions that generate violent conflict — not merely to resolve specific disputes. Transformation is long-term, systemic, and addresses root causes; settlement addresses symptoms.",
+      "related_terms": ["Peacebuilding", "Conflict Resolution", "Reconciliation", "Structural Violence"],
+      "frameworks": ["lederach"]
+    },
+    {
+      "term": "Peacebuilding",
+      "definition": "A broad set of activities that aim to prevent the outbreak, recurrence, or continuation of armed conflict by addressing root causes and building sustainable peace institutions. Encompasses economic development, governance reform, reconciliation, DDR, security sector reform, and transitional justice.",
+      "related_terms": ["Conflict Transformation", "Positive Peace", "Peacekeeping", "Reconstruction"],
+      "frameworks": ["lederach", "galtung"]
+    },
+    {
+      "term": "Escalation",
+      "definition": "A process in which a conflict increases in intensity, scope, or number of parties involved. Glasl's nine-stage model maps escalation along three levels (win-win, win-lose, lose-lose). Escalation is self-reinforcing through hostile attributions, mirror images, and reciprocal hostile acts.",
+      "related_terms": ["Glasl Escalation", "Spiral Model", "De-escalation", "Security Dilemma"],
+      "frameworks": ["glasl", "deutsch"]
+    },
+    {
+      "term": "De-escalation",
+      "definition": "A process in which conflict intensity, scope, or hostility decreases. May occur through negotiated agreements, exhaustion, changed circumstances, or active interventions. GRIT (Graduated and Reciprocated Initiatives in Tension Reduction) is a formal de-escalation strategy.",
+      "related_terms": ["Escalation", "Ripeness", "GRIT", "Confidence-Building Measures"],
+      "frameworks": ["glasl", "kriesberg", "deutsch"]
+    },
+    {
+      "term": "Conflict Cycle",
+      "definition": "Kriesberg's seven-phase model of conflict development: latent → emerging → escalating → stalemate → de-escalating → terminating → post-conflict. The cycle is heuristic — real conflicts often exhibit non-linear dynamics and may return to earlier phases.",
+      "related_terms": ["Kriesberg Phases", "Escalation", "Ripeness", "Post-Conflict"],
+      "frameworks": ["kriesberg"]
+    },
+    {
+      "term": "Dispute Systems Design (DSD)",
+      "definition": "The systematic design of organisational or social processes for preventing, managing, and resolving disputes. Based on the Ury/Brett/Goldberg interests–rights–power hierarchy: effective systems push disputes toward the lowest-cost, interest-based channels and build in loop-back mechanisms.",
+      "related_terms": ["Interests-Rights-Power", "ADR", "Grievance Procedure", "Ombuds"],
+      "frameworks": ["ury_brett_goldberg"]
+    },
+    {
+      "term": "Needs Theory",
+      "definition": "Burton's theoretical framework holding that certain universal human needs — security, identity, recognition, autonomy, participation — cannot be bargained away or substituted. Conflicts rooted in needs denial are intractable when addressed only at the interest or rights level.",
+      "related_terms": ["Basic Human Needs", "Identity Conflict", "Problem-Solving Workshop", "Provention"],
+      "frameworks": ["burton"]
+    },
+    {
+      "term": "Problem-Solving Workshop",
+      "definition": "Burton's signature intervention: small facilitated workshops bringing together representatives of conflicting parties with social scientists to analyse the conflict and generate solutions that address needs on all sides. Emphasises analytical problem-solving over positional bargaining.",
+      "related_terms": ["Track II Diplomacy", "Needs Theory", "Analytical Problem-Solving"],
+      "frameworks": ["burton"]
+    },
+    {
+      "term": "Security Dilemma",
+      "definition": "A structural situation in which one party's efforts to enhance its security necessarily reduce the security of others, triggering a cycle of defensive escalation. Neither party may have hostile intent, but the actions of each are interpreted as threatening by the other. Common in arms races and territorial disputes.",
+      "related_terms": ["Escalation", "Arms Race", "Burton Needs", "Spiral Model"],
+      "frameworks": ["burton", "glasl"]
+    },
+    {
+      "term": "Power Asymmetry",
+      "definition": "A significant differential in power between conflicting parties. Severe asymmetry can render interest-based negotiation ineffective by enabling the stronger party to coerce agreement. French and Raven identify multiple power bases (coercive, reward, legitimate, expert, referent, informational) that shape asymmetry.",
+      "related_terms": ["BATNA", "Coercive Power", "French & Raven", "Structural Violence"],
+      "frameworks": ["french_raven", "ury_brett_goldberg"]
+    },
+    {
+      "term": "Narrative Mediation",
+      "definition": "A mediation approach developed by Winslade and Monk, drawing on social constructionism and narrative therapy. The mediator helps parties examine and re-author the dominant conflict narrative, using externalisation, deconstruction, and the identification of unique outcomes to construct an alternative story.",
+      "related_terms": ["Dominant Narrative", "Externalisation", "Alternative Story", "Social Constructionism"],
+      "frameworks": ["winslade_monk"]
+    },
+    {
+      "term": "Dominant Narrative",
+      "definition": "The prevailing story through which a conflict is understood by its participants, typically saturated with blame, victim–villain constructions, and entrenched positions. Winslade and Monk argue that the dominant narrative sustains the conflict by constraining what is thinkable and possible.",
+      "related_terms": ["Narrative Mediation", "Alternative Story", "Externalisation", "Framing"],
+      "frameworks": ["winslade_monk"]
+    },
+    {
+      "term": "Externalisation",
+      "definition": "A narrative mediation technique in which the problem or conflict is linguistically separated from the persons involved. Rather than 'you are the problem,' the problem is described as an external entity that has acted upon both parties. Enables parties to examine the conflict together.",
+      "related_terms": ["Narrative Mediation", "Dominant Narrative", "Alternative Story"],
+      "frameworks": ["winslade_monk"]
+    },
+    {
+      "term": "Objective Criteria",
+      "definition": "Fisher and Ury's fourth principle of negotiation: using independent, fair standards (market value, expert opinion, legal precedent, scientific data) to evaluate proposals. Shifting from 'what we want' to 'what is fair' depersonalises the evaluation and reduces competitive pressure.",
+      "related_terms": ["Principled Negotiation", "Interests vs. Positions", "Rights-Based Approach"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "Cooperative Interdependence",
+      "definition": "Deutsch's concept of goal structures in which parties can only achieve their goals if others also achieve theirs. Produces open communication, trust, and mutual assistance. The structural precondition for constructive conflict and productive negotiation.",
+      "related_terms": ["Competitive Interdependence", "Superordinate Goal", "Deutsch Theory"],
+      "frameworks": ["deutsch"]
+    },
+    {
+      "term": "Competitive Interdependence",
+      "definition": "Deutsch's concept of goal structures in which one party can only achieve its goals at the expense of others. Generates coercion, deception, reduced communication, and hostile attributions. The structural driver of destructive conflict.",
+      "related_terms": ["Cooperative Interdependence", "Destructive Conflict", "Zero-Sum"],
+      "frameworks": ["deutsch"]
+    },
+    {
+      "term": "Conflict Mode",
+      "definition": "Thomas-Kilmann's concept of a characteristic way of addressing conflict, defined by two dimensions: assertiveness (concern for self) and cooperativeness (concern for other). Five modes: competing, collaborating, compromising, avoiding, accommodating. No mode is universally best; effectiveness depends on context.",
+      "related_terms": ["TKI", "Assertiveness", "Cooperativeness", "Dual Concern Model"],
+      "frameworks": ["thomas_kilmann"]
+    },
+    {
+      "term": "Trust",
+      "definition": "Mayer, Davis, and Schoorman define trust as the willingness to be vulnerable to the actions of another party based on the expectation that they will perform a particular action important to the trustor. Trust is a function of perceived ability, benevolence, and integrity.",
+      "related_terms": ["Ability", "Benevolence", "Integrity", "Distrust", "Trust-Building"],
+      "frameworks": ["mayer_trust"]
+    },
+    {
+      "term": "Distrust",
+      "definition": "Active expectation of harm or bad faith from another party. Not merely the absence of trust — distrust is a positive belief that the other party will act against one's interests. Distrust and low trust are distinct states with different intervention implications.",
+      "related_terms": ["Trust", "Mayer Trust Model", "Hostile Attribution", "Trust-Building"],
+      "frameworks": ["mayer_trust"]
+    },
+    {
+      "term": "Causal Diagram (DAG)",
+      "definition": "A directed acyclic graph used to represent causal assumptions, as developed by Pearl. Nodes represent variables; directed edges represent direct causal effects. DAGs enable identification of confounders, mediators, and colliders, and support counterfactual reasoning about intervention effects.",
+      "related_terms": ["Causal Inference", "SCM", "Confounding", "Mediation Analysis"],
+      "frameworks": ["pearl_causal"]
+    },
+    {
+      "term": "Counterfactual Reasoning",
+      "definition": "The third level of Pearl's causal hierarchy: reasoning about what would have happened under different circumstances. 'What if X had not occurred?' Enables responsibility attribution, learning from experience, and evaluation of alternative intervention scenarios.",
+      "related_terms": ["Causal Hierarchy", "DAG", "Pearl Causal", "Intervention"],
+      "frameworks": ["pearl_causal"]
+    },
+    {
+      "term": "Wheel of Emotions",
+      "definition": "Plutchik's model of eight basic emotions arranged in a circumplex: joy, trust, fear, surprise, sadness, disgust, anger, anticipation. Emotions vary in intensity (inner/outer cone) and combine to produce complex emotions (dyads). A tool for mapping the emotional climate of conflict.",
+      "related_terms": ["Primary Emotion", "Emotional Contagion", "Contempt", "Anger", "Fear"],
+      "frameworks": ["plutchik"]
+    },
+    {
+      "term": "Emotional Contagion",
+      "definition": "The tendency for emotions to spread between individuals or within groups, amplifying collective anger, fear, or disgust in conflict settings. Emotional contagion at the group level can drive escalatory dynamics independently of rational strategic calculations.",
+      "related_terms": ["Plutchik", "Group Emotion", "Escalation", "De-escalation"],
+      "frameworks": ["plutchik"]
+    },
+    {
+      "term": "Contempt",
+      "definition": "A Plutchik dyad emotion combining disgust and anger; also theorised by Gottman as the most destructive emotion in relationships. Contempt communicates the belief that the other person is beneath consideration. In conflict, contempt blocks empathy and is highly predictive of relationship deterioration.",
+      "related_terms": ["Plutchik", "Disgust", "Anger", "Trust", "De-escalation"],
+      "frameworks": ["plutchik"]
+    },
+    {
+      "term": "Provention",
+      "definition": "Burton's preferred term for proactive conflict prevention: addressing the root causes that deny basic human needs before violent conflict erupts. Contrasts with management or containment approaches that address conflicts after they have become violent.",
+      "related_terms": ["Burton Needs Theory", "Structural Prevention", "Early Warning", "Peacebuilding"],
+      "frameworks": ["burton"]
+    },
+    {
+      "term": "Glasl Escalation Stages",
+      "definition": "Friedrich Glasl's nine-stage model of conflict escalation, grouped into three levels: Win-Win (stages 1–3, self-help sufficient), Win-Lose (stages 4–6, mediation required), and Lose-Lose (stages 7–9, power intervention required). The model maps the progressive deterioration of the conflict relationship.",
+      "related_terms": ["Glasl", "Escalation", "Win-Win", "Win-Lose", "Lose-Lose"],
+      "frameworks": ["glasl"]
+    },
+    {
+      "term": "Win-Win",
+      "definition": "Glasl stages 1–3. Both parties still believe they can benefit from resolution; self-help and direct negotiation are possible. In Fisher/Ury's framework, integrative (value-creating) solutions that satisfy both parties' interests are the goal.",
+      "related_terms": ["Glasl Stages", "Integrative Bargaining", "Collaborative Mode"],
+      "frameworks": ["glasl", "fisher_ury"]
+    },
+    {
+      "term": "Lose-Lose",
+      "definition": "Glasl stages 7–9. Parties accept significant self-harm to damage the opponent. No positive outcome is conceivable. Dehumanisation of the adversary is complete. Power intervention (external authority, coercion, enforcement) is the only effective response.",
+      "related_terms": ["Glasl Stages", "Win-Lose", "Dehumanisation", "Power Intervention"],
+      "frameworks": ["glasl"]
+    },
+    {
+      "term": "Reservation Value",
+      "definition": "The point at which a negotiator is indifferent between accepting a deal and exercising their BATNA. Also called 'walk-away point.' No rational negotiator accepts terms below their reservation value. The ZOPA is the range between the two parties' reservation values.",
+      "related_terms": ["BATNA", "ZOPA", "Walk-Away Point", "Negotiation"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "Moral Imagination",
+      "definition": "Lederach's concept of the capacity to imagine and generate constructive responses to conflict that transcend the existing web of relationships. Moral imagination involves holding the web of relationships while envisioning a different future, engaging the paradoxical nature of conflict, and taking creative risks for peace.",
+      "related_terms": ["Conflict Transformation", "Peacebuilding", "Lederach", "Creative Problem-Solving"],
+      "frameworks": ["lederach"]
+    },
+    {
+      "term": "Elicitive Approach",
+      "definition": "Lederach's method of conflict intervention that draws out local knowledge, models, and resources for addressing conflict, rather than prescriptively transferring external techniques. Contrasted with prescriptive approaches that impose Western ADR models on non-Western contexts.",
+      "related_terms": ["Conflict Transformation", "Local Ownership", "Lederach", "Cultural Competence"],
+      "frameworks": ["lederach"]
+    },
+    {
+      "term": "Integrative Bargaining",
+      "definition": "A negotiation strategy that seeks to expand the range of outcomes by identifying compatible interests, trading issues of unequal value, and creating value before claiming it. Contrasted with distributive (zero-sum) bargaining. The basis of principled negotiation.",
+      "related_terms": ["Principled Negotiation", "Options Generation", "ZOPA", "Cooperative Interdependence"],
+      "frameworks": ["fisher_ury", "deutsch"]
+    },
+    {
+      "term": "Distributive Bargaining",
+      "definition": "A negotiation approach treating the available outcomes as a fixed pie to be divided between parties. One party's gain is the other's loss. Also called positional bargaining or zero-sum negotiation. Less efficient than integrative bargaining and more damaging to relationships.",
+      "related_terms": ["Positional Bargaining", "Zero-Sum", "Integrative Bargaining"],
+      "frameworks": ["fisher_ury"]
+    },
+    {
+      "term": "Coercive Power",
+      "definition": "French and Raven's power base derived from the ability to punish, harm, or impose negative consequences. Highly effective in the short term but typically generates resentment, resistance, and relationship damage. Over-reliance on coercive power is associated with escalation and agreement non-compliance.",
+      "related_terms": ["Power Asymmetry", "Reward Power", "French & Raven", "Power-Based Approach"],
+      "frameworks": ["french_raven"]
+    },
+    {
+      "term": "Legitimate Power",
+      "definition": "French and Raven's power base derived from a position of formal authority accepted as rightful by those subject to it. Legitimate power is socially constructed and can be contested or eroded through legitimacy crises. The basis of institutional authority.",
+      "related_terms": ["Coercive Power", "Positional Power", "Legitimacy", "Authority"],
+      "frameworks": ["french_raven"]
+    },
+    {
+      "term": "Referent Power",
+      "definition": "French and Raven's power base derived from personal identification, admiration, or affinity. The influenced party complies because they identify with or wish to be associated with the influencer. The basis of charismatic leadership and soft power.",
+      "related_terms": ["Expert Power", "Soft Power", "French & Raven", "Charisma"],
+      "frameworks": ["french_raven"]
+    },
+    {
+      "term": "Confidence-Building Measures (CBMs)",
+      "definition": "Actions taken to increase transparency, reduce misperception, and build trust between conflicting parties before or alongside formal negotiations. Examples: military hotlines, inspection regimes, prisoner exchanges, public statements of intent. Designed to break security dilemmas and create conditions for de-escalation.",
+      "related_terms": ["Trust-Building", "Security Dilemma", "De-escalation", "GRIT"],
+      "frameworks": ["mayer_trust", "burton"]
+    },
+    {
+      "term": "GRIT",
+      "definition": "Graduated and Reciprocated Initiatives in Tension Reduction. Osgood's (1962) de-escalation strategy: one party makes a series of unilateral, conciliatory gestures, publicly announced, inviting reciprocation. Designed to break the spiral of mutual hostility through graduated trust-building steps.",
+      "related_terms": ["De-escalation", "Trust-Building", "Confidence-Building Measures", "Reciprocity"],
+      "frameworks": ["deutsch", "mayer_trust"]
+    },
+    {
+      "term": "Loop-Back Mechanism",
+      "definition": "Ury, Brett, and Goldberg's procedural design feature that allows parties to return to interest-based negotiation after a rights or power test, preventing escalation locks. A well-designed dispute system includes loops from rights and power processes back to the interest level.",
+      "related_terms": ["Dispute Systems Design", "Interests-Rights-Power", "De-escalation"],
+      "frameworks": ["ury_brett_goldberg"]
+    },
+    {
+      "term": "Superordinate Goal",
+      "definition": "A shared goal that can only be achieved through cooperation between parties who are otherwise in conflict. Sherif's (1954) Robbers Cave experiments demonstrated that superordinate goals can reduce intergroup hostility more effectively than mere contact. Basis of cooperative interdependence design.",
+      "related_terms": ["Cooperative Interdependence", "Deutsch Theory", "Common Ground"],
+      "frameworks": ["deutsch"]
+    },
+    {
+      "term": "Alternative Story",
+      "definition": "In narrative mediation, a new account of the conflict relationship constructed by the parties that is not saturated with blame and hostility. Built on unique outcomes — exceptions to the dominant conflict narrative. The alternative story enables parties to re-author their relationship.",
+      "related_terms": ["Narrative Mediation", "Dominant Narrative", "Unique Outcomes", "Winslade & Monk"],
+      "frameworks": ["winslade_monk"]
+    },
+    {
+      "term": "Unique Outcomes",
+      "definition": "Winslade and Monk's term for exceptions to the dominant conflict narrative — moments when the conflict 'should have' dominated the relationship but did not. Used as building blocks for the alternative story in narrative mediation.",
+      "related_terms": ["Alternative Story", "Narrative Mediation", "Externalisation"],
+      "frameworks": ["winslade_monk"]
+    },
+    {
+      "term": "Post-Conflict Reconciliation",
+      "definition": "The process of rebuilding relationships and social trust following violent conflict. Encompasses truth-telling, acknowledgement, apology, reparation, and institutional reform. Lederach argues that reconciliation addresses the meeting point of truth, mercy, justice, and peace.",
+      "related_terms": ["Transitional Justice", "Truth Commission", "Peacebuilding", "Forgiveness"],
+      "frameworks": ["lederach", "kriesberg"]
+    },
+    {
+      "term": "Structural Causal Model (SCM)",
+      "definition": "Pearl's formal framework combining directed acyclic graphs with functional equations to represent the complete causal structure of a system. Enables reasoning at all three levels of the causal hierarchy: association, intervention, and counterfactual.",
+      "related_terms": ["DAG", "Causal Hierarchy", "Do-Calculus", "Counterfactual"],
+      "frameworks": ["pearl_causal"]
+    },
+    {
+      "term": "Do-Calculus",
+      "definition": "Pearl's formal mathematical framework for computing the effects of deliberate interventions in a causal system, using the do-operator (do(X=x)). Enables causal inference from observational data by simulating the effect of setting a variable to a specific value through intervention.",
+      "related_terms": ["SCM", "DAG", "Causal Hierarchy", "Intervention"],
+      "frameworks": ["pearl_causal"]
+    },
+    {
+      "term": "Confounding",
+      "definition": "A variable that causally influences both the presumed cause and the outcome, creating a spurious association between them. Failing to account for confounders leads to incorrect causal inference. In conflict analysis, historical grievances often confound the relationship between specific triggers and conflict outcomes.",
+      "related_terms": ["DAG", "Causal Inference", "Spurious Correlation", "Pearl Causal"],
+      "frameworks": ["pearl_causal"]
+    },
+    {
+      "term": "Identity Conflict",
+      "definition": "A conflict in which the core incompatibility is about the recognition, security, or expression of collective identity (ethnic, national, religious, cultural). Per Burton, identity needs are non-negotiable; per Rothman, identity-based conflicts require recognition-focused interventions before interests can be addressed.",
+      "related_terms": ["Burton Needs", "Recognition", "Ethnic Conflict", "Interest-Based Negotiation"],
+      "frameworks": ["burton", "galtung"]
+    },
+    {
+      "term": "Dual Concern Model",
+      "definition": "The theoretical foundation of the Thomas-Kilmann Conflict Mode Instrument. Conflict modes vary on two independent dimensions: assertiveness (concern for self/own outcomes) and cooperativeness (concern for other/relationship). The five TKI modes map onto the four quadrants and midpoint of this space.",
+      "related_terms": ["TKI", "Conflict Mode", "Assertiveness", "Cooperativeness"],
+      "frameworks": ["thomas_kilmann"]
+    },
+    {
+      "term": "Constructive Controversy",
+      "definition": "Deutsch-influenced pedagogical and organizational method in which opposing viewpoints are structured to be advocated cooperatively, aiming to improve decision quality through productive epistemic conflict. The norm is 'we are all trying to find the best answer' rather than 'I must win.'",
+      "related_terms": ["Deutsch Theory", "Cooperative Interdependence", "Productive Conflict"],
+      "frameworks": ["deutsch"]
+    },
+    {
+      "term": "Peacemaking",
+      "definition": "Galtung's term for the diplomatic and negotiation activities that produce formal agreements to end direct violence. Distinguished from peacekeeping (monitoring and enforcing ceasefires) and peacebuilding (long-term structural and cultural transformation). All three are required for sustainable peace.",
+      "related_terms": ["Peacekeeping", "Peacebuilding", "Galtung", "Positive Peace"],
+      "frameworks": ["galtung", "lederach"]
+    },
+    {
+      "term": "Escalation Spiral",
+      "definition": "The self-reinforcing cycle in which hostile actions by one party trigger retaliatory responses by the other, each round increasing intensity. Driven by mirror images, hostile attributions, and the crude law of social relations. Glasl's nine stages describe the progressive deterioration of the spiral.",
+      "related_terms": ["Glasl Escalation", "Security Dilemma", "Deutsch Theory", "Retaliation"],
+      "frameworks": ["glasl", "deutsch"]
+    },
+    {
+      "term": "Mirror Image",
+      "definition": "The psychological phenomenon in which each party in a conflict perceives itself as virtuous, reasonable, and defensive, while perceiving the opponent as aggressive, unreasonable, and threatening — often in near-identical ways. Mirror images sustain escalation by making each party's defensive actions appear offensive to the other.",
+      "related_terms": ["Hostile Attribution", "Escalation Spiral", "Security Dilemma", "Perception"],
+      "frameworks": ["glasl", "deutsch"]
+    },
+    {
+      "term": "Multi-Track Diplomacy",
+      "definition": "A framework developed by Diamond and McDonald identifying nine tracks of international peacemaking: government, non-governmental, business, private citizen, research and education, activism, religious, funding, and public opinion/communication. Recognises that sustainable peace requires engagement across all tracks simultaneously.",
+      "related_terms": ["Track II Diplomacy", "Lederach Nested Paradigm", "Civil Society"],
+      "frameworks": ["lederach"]
+    },
+    {
+      "term": "ABC Triangle",
+      "definition": "Galtung's tripartite model of conflict: Attitudes/Assumptions (A), Behaviour (B), and Contradiction/Context (C). Sustainable peace requires addressing all three dimensions — changing attitudes, modifying behaviour, and transforming the structural contradiction. Addressing only one dimension produces incomplete or unstable resolution.",
+      "related_terms": ["Galtung", "Conflict Transformation", "Direct Violence", "Structural Violence"],
+      "frameworks": ["galtung"]
+    },
+    {
+      "term": "Breakout Time",
+      "definition": "In nuclear non-proliferation contexts, the estimated time required for a state to produce enough weapons-grade fissile material for a single nuclear device once it decides to do so. A key indicator in the JCPOA negotiations — the agreement was designed to extend Iran's breakout time to at least 12 months.",
+      "related_terms": ["JCPOA", "Non-Proliferation", "Verification", "IAEA"],
+      "frameworks": []
+    },
+    {
+      "term": "Snapback Mechanism",
+      "definition": "A provision in the JCPOA and UN Security Council Resolution 2231 allowing any original JCPOA participant to trigger the reimposition of pre-2015 UN sanctions on Iran if it determines Iran is in significant non-compliance. Designed to prevent a UN Security Council veto from blocking sanction enforcement.",
+      "related_terms": ["JCPOA", "Sanctions", "UN Security Council", "Non-Proliferation"],
+      "frameworks": []
+    }
+  ]
 }

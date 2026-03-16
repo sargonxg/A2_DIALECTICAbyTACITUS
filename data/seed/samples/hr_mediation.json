@@ -1,12 +1,129 @@
 {
   "_comment": "Alex vs Maya Northwind — HR mediation case, Tier 1 (Essential) example",
-  "_status": "TODO: Populate in Prompt 10",
   "workspace": {
     "name": "Alex vs Maya Northwind — HR Mediation",
     "domain": "workplace",
     "scale": "micro",
     "tier": "essential"
   },
-  "nodes": [],
-  "edges": []
+  "nodes": [
+    {
+      "id": "actor_alex",
+      "label": "Actor",
+      "name": "Alex Chen",
+      "actor_type": "person",
+      "description": "Alex Chen, a mid-level software developer at Northwind Technologies with three years of tenure. Experienced a public code review incident in which their work was criticised in a team channel in terms perceived as demeaning. Filed a formal HR complaint. Primary claimant in the mediation.",
+      "role_title": "Software Developer",
+      "gender": "non-binary",
+      "age": 29
+    },
+    {
+      "id": "actor_maya",
+      "label": "Actor",
+      "name": "Maya Okonkwo",
+      "actor_type": "person",
+      "description": "Maya Okonkwo, a senior software developer and team lead at Northwind Technologies with seven years of tenure. Conducted the code review that triggered the complaint. Considers the review to have been technically appropriate and direct feedback consistent with team norms. Respondent in the mediation.",
+      "role_title": "Senior Developer / Team Lead",
+      "gender": "female",
+      "age": 37
+    },
+    {
+      "id": "actor_jordan",
+      "label": "Actor",
+      "name": "Jordan Reyes",
+      "actor_type": "person",
+      "description": "Jordan Reyes, a certified mediator and HR Business Partner at Northwind Technologies. Appointed to facilitate the mediation between Alex and Maya following the formal HR complaint. Has no supervisory relationship with either party.",
+      "role_title": "HR Business Partner / Mediator",
+      "gender": "male",
+      "age": 44
+    },
+    {
+      "id": "conflict_code_review",
+      "label": "Conflict",
+      "name": "Code Review Incident — Northwind Technologies",
+      "glasl_stage": 3,
+      "kriesberg_phase": "emerging",
+      "status": "active",
+      "violence_type": "none",
+      "scale": "micro",
+      "domain": "workplace",
+      "summary": "A workplace conflict arising from a public code review in which Alex perceived Maya's comments as unprofessional and personally demeaning. The incident has escalated from an informal grievance to a formal HR complaint. The conflict sits at Glasl stage 3 (actions not words) — Alex has filed a formal complaint rather than engaging in further dialogue. Core issues are communication style and professional respect."
+    },
+    {
+      "id": "event_code_review_incident",
+      "label": "Event",
+      "event_type": "disapprove",
+      "severity": 0.55,
+      "occurred_at": "2025-11-14",
+      "description": "Maya posted a code review comment in the team's public Slack channel (#code-reviews) on Alex's pull request for the authentication module. The comments included phrases such as 'this is not production-ready' and 'basic error handling missing — did you even test this?' in a tone Alex experienced as mocking and demeaning. Other team members observed the exchange. Alex did not respond in the channel but reported feeling humiliated.",
+      "performer_id": "actor_maya",
+      "target_id": "actor_alex"
+    },
+    {
+      "id": "event_formal_complaint",
+      "label": "Event",
+      "event_type": "demand",
+      "severity": 0.45,
+      "occurred_at": "2025-11-21",
+      "description": "Alex filed a formal complaint with HR alleging that Maya's conduct constituted workplace harassment under the company's Code of Conduct. Alex stated that the public nature of the critique caused reputational harm and that Maya's management style has previously been dismissive. Alex requested either a formal apology, Maya's removal from their code review chain, or both.",
+      "performer_id": "actor_alex",
+      "target_id": "actor_jordan"
+    },
+    {
+      "id": "event_mediation_session",
+      "label": "Event",
+      "event_type": "consult",
+      "severity": 0.2,
+      "occurred_at": "2025-12-05",
+      "description": "First joint mediation session facilitated by Jordan Reyes. Both parties were given uninterrupted time to describe their perspectives. Alex described feeling publicly shamed and professionally undermined. Maya expressed surprise at the complaint, explaining that direct critical feedback is standard on the team and that her intent was to maintain code quality. Both agreed to a second session focused on developing a communication protocol.",
+      "performer_id": "actor_jordan",
+      "target_id": "actor_alex"
+    },
+    {
+      "id": "issue_communication_style",
+      "label": "Issue",
+      "name": "Communication Style in Code Reviews",
+      "issue_type": "procedural",
+      "domain_category": "professional_conduct",
+      "salience": 0.85,
+      "divisibility": 0.75,
+      "description": "The parties disagree on what constitutes appropriate feedback in code reviews. Alex expects constructive, respectful language even in public channels; Maya considers direct technical criticism to be the professional norm. This issue is highly divisible — a shared communication protocol can be negotiated."
+    },
+    {
+      "id": "issue_professional_respect",
+      "label": "Issue",
+      "name": "Professional Respect and Recognition",
+      "issue_type": "psychological",
+      "domain_category": "identity_dignity",
+      "salience": 0.9,
+      "divisibility": 0.5,
+      "description": "Alex feels their professional competence and personal dignity were not respected. The public forum amplified the harm. At a deeper level, Alex questions whether Maya treats junior team members as professional equals. This issue has an identity dimension that makes it partly non-divisible — recognition and acknowledgement are required."
+    },
+    {
+      "id": "process_hr_mediation",
+      "label": "Process",
+      "process_type": "mediation_facilitative",
+      "resolution_approach": "interest_based",
+      "status": "active",
+      "formality": "semi_formal",
+      "binding": false,
+      "voluntary": true,
+      "governing_rules": "Northwind Technologies HR Policy — Conflict Resolution Procedure v3.2",
+      "description": "Facilitative mediation conducted by the HR Business Partner. Two sessions planned: first to establish perspectives and rapport; second to develop a shared communication agreement. If mediation fails, the matter proceeds to formal investigation under HR Policy."
+    }
+  ],
+  "edges": [
+    { "source": "actor_alex", "target": "conflict_code_review", "type": "PARTY_TO", "properties": {"side": "side_a", "role": "claimant"} },
+    { "source": "actor_maya", "target": "conflict_code_review", "type": "PARTY_TO", "properties": {"side": "side_b", "role": "respondent"} },
+    { "source": "actor_jordan", "target": "conflict_code_review", "type": "PARTY_TO", "properties": {"side": "third_party", "role": "mediator"} },
+    { "source": "event_code_review_incident", "target": "event_formal_complaint", "type": "CAUSED", "properties": {"mechanism": "escalation", "confidence": 0.95} },
+    { "source": "event_formal_complaint", "target": "event_mediation_session", "type": "CAUSED", "properties": {"mechanism": "precedent", "confidence": 0.9} },
+    { "source": "issue_communication_style", "target": "conflict_code_review", "type": "PART_OF", "properties": {"centrality": "primary"} },
+    { "source": "issue_professional_respect", "target": "conflict_code_review", "type": "PART_OF", "properties": {"centrality": "primary"} },
+    { "source": "actor_alex", "target": "process_hr_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "claimant"} },
+    { "source": "actor_maya", "target": "process_hr_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "respondent"} },
+    { "source": "actor_jordan", "target": "process_hr_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "mediator_facilitator"} },
+    { "source": "conflict_code_review", "target": "process_hr_mediation", "type": "RESOLVED_THROUGH", "properties": {} },
+    { "source": "actor_maya", "target": "actor_alex", "type": "HAS_POWER_OVER", "properties": {"power_domain": "positional", "magnitude": 0.6, "direction": "a_over_b"} }
+  ]
 }
