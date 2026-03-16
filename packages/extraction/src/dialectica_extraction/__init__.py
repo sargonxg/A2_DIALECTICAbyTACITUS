@@ -12,3 +12,39 @@ Uses:
   - Vertex AI text-embedding-005 for 768-dim embeddings
   - LangGraph for stateful pipeline with retry logic
 """
+
+from dialectica_extraction.pipeline import (
+    ExtractionPipeline,
+    ExtractionState,
+    TextChunk,
+    ExtractionError,
+    chunk_document,
+    gliner_prefilter,
+    extract_entities,
+    validate_schema,
+    repair_extraction,
+    extract_relationships,
+    resolve_coreference,
+    validate_structural_step,
+    compute_embeddings,
+    write_to_graph,
+    build_pipeline,
+)
+
+__all__ = [
+    "ExtractionPipeline",
+    "ExtractionState",
+    "TextChunk",
+    "ExtractionError",
+    "chunk_document",
+    "gliner_prefilter",
+    "extract_entities",
+    "validate_schema",
+    "repair_extraction",
+    "extract_relationships",
+    "resolve_coreference",
+    "validate_structural_step",
+    "compute_embeddings",
+    "write_to_graph",
+    "build_pipeline",
+]
