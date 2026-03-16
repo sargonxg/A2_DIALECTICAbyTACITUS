@@ -21,7 +21,7 @@ function nodeColor(label: string): string {
 }
 
 function truncate(str: string, max = 16): string {
-  return str.length > max ? str.slice(0, max - 1) + '\u2026' : str;
+  return str.length > max ? str.slice(0, max - 1) + '…' : str;
 }
 
 interface SimNode extends d3.SimulationNodeDatum {
@@ -62,14 +62,12 @@ export function ForceGraph({
   );
 
   useEffect(() => {
-    const svgEl = svgRef.current;
-    if (!svgEl) return;
-
-    const svg = d3.select(svgEl);
+    const svg = d3.select(svgRef.current!);
     svg.selectAll('*').remove();
 
     if (nodes.length === 0) return;
 
+    // Build sim data
     const simNodes: SimNode[] = nodes.map((n) => ({
       id: n.id,
       label: n.label,
@@ -88,6 +86,7 @@ export function ForceGraph({
         weight: e.weight,
       }));
 
+    // Root group with zoom/pan
     const root = svg.append('g').attr('class', 'root');
 
     const zoom = d3
@@ -99,6 +98,7 @@ export function ForceGraph({
 
     svg.call(zoom).on('dblclick.zoom', null);
 
+    // Arrow marker
     svg
       .append('defs')
       .append('marker')
@@ -114,8 +114,10 @@ export function ForceGraph({
       .attr('fill', '#52525b')
       .style('stroke', 'none');
 
+    // Links
     const link = root
       .append('g')
+      .attr('class', 'links')
       .selectAll('line')
       .data(simLinks)
       .join('line')
@@ -124,8 +126,10 @@ export function ForceGraph({
       .attr('stroke-opacity', 0.6)
       .attr('marker-end', 'url(#arrowhead)');
 
+    // Node groups
     const nodeGroup = root
       .append('g')
+      .attr('class', 'nodes')
       .selectAll<SVGGElement, SimNode>('g')
       .data(simNodes)
       .join('g')
@@ -135,6 +139,7 @@ export function ForceGraph({
         if (original) handleNodeClick(original);
       });
 
+    // Circle
     nodeGroup
       .append('circle')
       .attr('r', 10)
@@ -144,6 +149,7 @@ export function ForceGraph({
       .attr('stroke-width', 1.5)
       .attr('stroke-opacity', 0.4);
 
+    // Label
     nodeGroup
       .append('text')
       .attr('dy', 22)
@@ -153,6 +159,7 @@ export function ForceGraph({
       .attr('pointer-events', 'none')
       .text((d) => truncate(d.name));
 
+    // Drag behavior
     const drag = d3
       .drag<SVGGElement, SimNode>()
       .on('start', (event, d) => {
@@ -172,6 +179,7 @@ export function ForceGraph({
 
     nodeGroup.call(drag);
 
+    // Hover highlight
     nodeGroup
       .on('mouseenter', function (_event, d) {
         d3.select(this)
@@ -181,6 +189,7 @@ export function ForceGraph({
           .attr('stroke-opacity', 0.9)
           .attr('fill-opacity', 1);
 
+        // Highlight connected links
         link
           .attr('stroke-opacity', (l) => {
             const src = typeof l.source === 'object' ? (l.source as SimNode).id : l.source;
@@ -204,6 +213,7 @@ export function ForceGraph({
         link.attr('stroke-opacity', 0.6).attr('stroke', '#3f3f46');
       });
 
+    // Simulation
     const simulation = d3
       .forceSimulation<SimNode>(simNodes)
       .force(
@@ -231,12 +241,11 @@ export function ForceGraph({
 
     simRef.current = simulation;
 
-    const fitTimer = setTimeout(() => {
-      const rootNode = root.node() as SVGGElement | null;
-      if (!rootNode) return;
-      const bounds = rootNode.getBBox();
+    // Initial fit-to-view after settle
+    setTimeout(() => {
+      const bounds = (root.node() as SVGGElement | null)?.getBBox();
+      if (!bounds) return;
       const { x, y, width: bw, height: bh } = bounds;
-      if (bw === 0 || bh === 0) return;
       const scale = Math.min(0.9, 0.9 / Math.max(bw / width, bh / height));
       const tx = width / 2 - scale * (x + bw / 2);
       const ty = height / 2 - scale * (y + bh / 2);
@@ -247,7 +256,6 @@ export function ForceGraph({
     }, 1200);
 
     return () => {
-      clearTimeout(fitTimer);
       simulation.stop();
       simRef.current = null;
     };
@@ -261,13 +269,7 @@ export function ForceGraph({
       >
         <div className="text-center">
           <div className="mx-auto mb-3 h-12 w-12 rounded-full border border-[#27272a] bg-[#09090b] flex items-center justify-center">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5 text-zinc-600"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
+            <svg viewBox="0 0 24 24" className="h-5 w-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={1.5}>
               <circle cx="12" cy="12" r="4" />
               <circle cx="4" cy="6" r="2" />
               <circle cx="20" cy="6" r="2" />
@@ -280,9 +282,7 @@ export function ForceGraph({
             </svg>
           </div>
           <p className="text-sm font-medium text-zinc-500">No graph data</p>
-          <p className="text-xs text-zinc-600 mt-1">
-            Ingest documents to populate the knowledge graph
-          </p>
+          <p className="text-xs text-zinc-600 mt-1">Ingest documents to populate the knowledge graph</p>
         </div>
       </div>
     );
