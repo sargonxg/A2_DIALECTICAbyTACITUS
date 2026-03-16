@@ -1,24 +1,31 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { workspacesApi } from "@/lib/api";
-import type { Workspace } from "@/lib/api";
+import { workspacesApi, type Workspace } from "@/lib/api";
 
-export function useWorkspaceList(): {
+// ─── useWorkspaceList ─────────────────────────────────────────────────────────
+
+interface WorkspaceListState {
   workspaces: Workspace[];
   loading: boolean;
   error: string | null;
   refetch: () => void;
-} {
+}
+
+export function useWorkspaceList(): WorkspaceListState {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
+  const refetch = useCallback(() => {
+    setTick((t) => t + 1);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchWorkspaces() {
+    async function load() {
       setLoading(true);
       setError(null);
       try {
@@ -28,7 +35,9 @@ export function useWorkspaceList(): {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load workspaces");
+          setError(
+            err instanceof Error ? err.message : "Failed to load workspaces",
+          );
         }
       } finally {
         if (!cancelled) {
@@ -37,25 +46,25 @@ export function useWorkspaceList(): {
       }
     }
 
-    fetchWorkspaces();
+    load();
 
     return () => {
       cancelled = true;
     };
   }, [tick]);
 
-  const refetch = useCallback(() => {
-    setTick((t) => t + 1);
-  }, []);
-
   return { workspaces, loading, error, refetch };
 }
 
-export function useWorkspace(id: string): {
+// ─── useWorkspace ─────────────────────────────────────────────────────────────
+
+interface WorkspaceState {
   workspace: Workspace | null;
   loading: boolean;
   error: string | null;
-} {
+}
+
+export function useWorkspace(id: string): WorkspaceState {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +77,7 @@ export function useWorkspace(id: string): {
 
     let cancelled = false;
 
-    async function fetchWorkspace() {
+    async function load() {
       setLoading(true);
       setError(null);
       try {
@@ -78,7 +87,9 @@ export function useWorkspace(id: string): {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load workspace");
+          setError(
+            err instanceof Error ? err.message : "Failed to load workspace",
+          );
         }
       } finally {
         if (!cancelled) {
@@ -87,7 +98,7 @@ export function useWorkspace(id: string): {
       }
     }
 
-    fetchWorkspace();
+    load();
 
     return () => {
       cancelled = true;

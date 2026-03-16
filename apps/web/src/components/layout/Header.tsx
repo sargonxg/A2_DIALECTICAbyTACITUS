@@ -39,7 +39,6 @@ const ROUTE_LABELS: Record<string, string> = {
   data: "Data",
   "graph-health": "Graph Health",
   system: "System",
-  ontology: "Ontology",
 };
 
 function buildBreadcrumbs(pathname: string): Crumb[] {
@@ -49,6 +48,7 @@ function buildBreadcrumbs(pathname: string): Crumb[] {
   let href = "";
   for (const segment of segments) {
     href += `/${segment}`;
+    // Skip dynamic segments like UUIDs for label lookup
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
         segment,
@@ -62,9 +62,14 @@ function buildBreadcrumbs(pathname: string): Crumb[] {
   return crumbs;
 }
 
+function getCurrentPageTitle(crumbs: Crumb[]): string {
+  return crumbs[crumbs.length - 1]?.label ?? "Dashboard";
+}
+
 export function Header() {
   const pathname = usePathname();
   const crumbs = buildBreadcrumbs(pathname);
+  const pageTitle = getCurrentPageTitle(crumbs);
 
   const [apiKeySet, setApiKeySet] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -75,6 +80,7 @@ export function Header() {
       setApiKeySet(!!key && key.trim().length > 0);
     };
     check();
+    // Re-check when storage changes (e.g., from settings dialog)
     window.addEventListener("storage", check);
     return () => window.removeEventListener("storage", check);
   }, []);
@@ -91,19 +97,20 @@ export function Header() {
       localStorage.removeItem("dialectica_api_key");
     }
     setApiKeySet(!!value);
+    // Dispatch storage event for other tabs
     window.dispatchEvent(new Event("storage"));
   }
 
   return (
     <header className="h-14 bg-[#18181b] border-b border-[#27272a] flex items-center justify-between px-6 sticky top-0 z-30">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+      <nav className="flex items-center gap-1.5 text-sm">
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
           return (
             <span key={crumb.href} className="flex items-center gap-1.5">
               {index > 0 && (
-                <ChevronRight size={14} className="text-[#52525b]" aria-hidden="true" />
+                <ChevronRight size={14} className="text-[#52525b]" />
               )}
               {isLast ? (
                 <span className="text-[#fafafa] font-medium">{crumb.label}</span>
@@ -129,7 +136,6 @@ export function Header() {
               apiKeySet ? "bg-green-500" : "bg-[#52525b]"
             }`}
             title={apiKeySet ? "API key configured" : "No API key set"}
-            aria-hidden="true"
           />
           <span className="text-[#a1a1aa] text-xs">
             {apiKeySet ? "API key set" : "No API key"}
@@ -154,7 +160,6 @@ export function Header() {
               <div
                 className="fixed inset-0 z-40"
                 onClick={() => setSettingsOpen(false)}
-                aria-hidden="true"
               />
               <div className="absolute right-0 top-9 z-50 w-80 bg-[#18181b] border border-[#27272a] rounded-lg shadow-xl p-4">
                 <h3 className="text-[#fafafa] text-sm font-semibold mb-3">
