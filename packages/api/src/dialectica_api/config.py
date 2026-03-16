@@ -3,20 +3,38 @@ API Configuration — Pydantic Settings for DIALECTICA API.
 
 All settings load from environment variables with sensible defaults.
 Validated at startup — missing required settings fail fast.
-
-Required:
-  GCP_PROJECT_ID: Google Cloud project
-  SPANNER_INSTANCE_ID: Spanner instance (default: dialectica-graph)
-  SPANNER_DATABASE_ID: Spanner database (default: dialectica)
-  ADMIN_API_KEY: Initial bootstrap admin key
-
-Optional:
-  GRAPH_BACKEND: "spanner" (default) or "neo4j"
-  VERTEX_AI_LOCATION: GCP region (default: us-east1)
-  NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD: Neo4j connection (if backend=neo4j)
-  CORS_ORIGINS: Comma-separated allowed origins
 """
 from __future__ import annotations
 
-# TODO: Implement in Prompt 8
-# from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+
+    # GCP
+    gcp_project_id: str = "local-project"
+    spanner_instance_id: str = "dialectica-graph"
+    spanner_database_id: str = "dialectica"
+    spanner_emulator_host: str = ""
+    vertex_ai_location: str = "us-east1"
+    gemini_flash_model: str = "gemini-2.5-flash-001"
+    gemini_pro_model: str = "gemini-2.5-pro-001"
+
+    # App
+    graph_backend: str = "spanner"  # or "neo4j"
+    admin_api_key: str = "dev-admin-key-change-in-production"
+    log_level: str = "INFO"
+    cors_origins: str = "*"
+
+    # Neo4j (optional)
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "dialectica-dev"
+
+    model_config = {"env_prefix": "", "case_sensitive": False}
+
+
+def get_settings() -> Settings:
+    """Return a new Settings instance (call-site caching via deps.py)."""
+    return Settings()

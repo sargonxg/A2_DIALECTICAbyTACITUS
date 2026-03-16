@@ -7,7 +7,7 @@ license = "Apache-2.0"
 packages = [{include = "dialectica_reasoning", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 dialectica-ontology = {path = "../ontology", develop = true}
 dialectica-graph = {path = "../graph", develop = true}
 google-cloud-aiplatform = "^1.68.0"
