@@ -7,7 +7,7 @@ license = "Apache-2.0"
 packages = [{include = "dialectica_graph", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 dialectica-ontology = {path = "../ontology", develop = true}
 google-cloud-spanner = "^3.49.0"
 neo4j = "^5.24.0"
