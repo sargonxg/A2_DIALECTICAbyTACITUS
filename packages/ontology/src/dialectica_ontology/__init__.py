@@ -10,6 +10,124 @@ Usage:
     from dialectica_ontology.enums import ConflictDomain, GlaslStage
     from dialectica_ontology.tiers import OntologyTier
 """
-# TODO: Export all classes after implementing enums.py, primitives.py, relationships.py
 
 __version__ = "2.0.1"
+
+# Node types (primitives)
+from dialectica_ontology.primitives import (
+    ConflictNode,
+    Actor,
+    Conflict,
+    Event,
+    Issue,
+    Interest,
+    Norm,
+    Process,
+    Outcome,
+    Narrative,
+    EmotionalState,
+    TrustState,
+    PowerDynamic,
+    Location,
+    Evidence,
+    Role,
+    NODE_TYPES,
+)
+
+# Relationships
+from dialectica_ontology.relationships import (
+    ConflictRelationship,
+    EdgeType,
+    EDGE_SCHEMA,
+    validate_relationship,
+)
+
+# Core enums (re-export most commonly used)
+from dialectica_ontology.enums import (
+    ActorType,
+    ConflictScale,
+    ConflictDomain,
+    ConflictStatus,
+    KriesbergPhase,
+    GlaslStage,
+    GlaslLevel,
+    Incompatibility,
+    ViolenceType,
+    Intensity,
+    EventType,
+    EventMode,
+    EventContext,
+    QuadClass,
+    InterestType,
+    NormType,
+    Enforceability,
+    ProcessType,
+    ResolutionApproach,
+    ProcessStatus,
+    OutcomeType,
+    Durability,
+    PrimaryEmotion,
+    EmotionIntensity,
+    NarrativeType,
+    ConflictMode,
+    PowerDomain,
+    RoleType,
+)
+
+__all__ = [
+    # Version
+    "__version__",
+    # Base
+    "ConflictNode",
+    # 15 node types
+    "Actor",
+    "Conflict",
+    "Event",
+    "Issue",
+    "Interest",
+    "Norm",
+    "Process",
+    "Outcome",
+    "Narrative",
+    "EmotionalState",
+    "TrustState",
+    "PowerDynamic",
+    "Location",
+    "Evidence",
+    "Role",
+    "NODE_TYPES",
+    # Relationships
+    "ConflictRelationship",
+    "EdgeType",
+    "EDGE_SCHEMA",
+    "validate_relationship",
+    # Enums
+    "ActorType",
+    "ConflictScale",
+    "ConflictDomain",
+    "ConflictStatus",
+    "KriesbergPhase",
+    "GlaslStage",
+    "GlaslLevel",
+    "Incompatibility",
+    "ViolenceType",
+    "Intensity",
+    "EventType",
+    "EventMode",
+    "EventContext",
+    "QuadClass",
+    "InterestType",
+    "NormType",
+    "Enforceability",
+    "ProcessType",
+    "ResolutionApproach",
+    "ProcessStatus",
+    "OutcomeType",
+    "Durability",
+    "PrimaryEmotion",
+    "EmotionIntensity",
+    "NarrativeType",
+    "ConflictMode",
+    "PowerDomain",
+    "RoleType",
+]
