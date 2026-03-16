@@ -1,5 +1,230 @@
 {
   "_comment": "DIALECTICA Symbolic Rules — Machine-readable conflict grammar rules",
-  "_status": "TODO: Populate in Prompt 10",
-  "rules": []
+  "rules": [
+    {
+      "id": "SR001",
+      "name": "Isolated Conflict — No Party Edges",
+      "category": "structural",
+      "condition": "A Conflict node exists but has zero outgoing PARTY_TO edges connecting it to any Actor nodes",
+      "conclusion": "The conflict graph is structurally incomplete. No parties have been identified as participants. Analysis of interests, power, and escalation cannot proceed without parties.",
+      "severity": "WARNING",
+      "theory_source": "Structural validation — minimum graph integrity requirement"
+    },
+    {
+      "id": "SR002",
+      "name": "Extreme Escalation Without Intervention",
+      "category": "escalation",
+      "condition": "A Conflict node has glasl_stage >= 7 AND no Process node is linked via RESOLVED_THROUGH or PARTICIPATES_IN edges",
+      "conclusion": "The conflict has reached Glasl's Lose-Lose zone (stages 7–9) with no active intervention process. At this stage, parties accept self-harm to damage the opponent. External power intervention is required — moderation and facilitation are no longer sufficient.",
+      "severity": "CRITICAL",
+      "theory_source": "Glasl (1982) — stages 7–9 require power intervention; self-help and mediation are exhausted"
+    },
+    {
+      "id": "SR003",
+      "name": "Mutually Hurting Stalemate Without Process",
+      "category": "ripeness",
+      "condition": "A Conflict node has kriesberg_phase == 'stalemate' AND no Process node with status == 'active' is connected AND no Event node of type AGREE or CONSULT has occurred in the preceding assessment window",
+      "conclusion": "A mutually hurting stalemate (MHS) has been identified but no negotiation process is active. This is a ripe moment that risks being missed. Immediate diplomatic engagement to open a process channel is indicated.",
+      "severity": "WARNING",
+      "theory_source": "Zartman (1985) — MHS is the primary ripeness indicator; ripe moments are perishable"
+    },
+    {
+      "id": "SR004",
+      "name": "Bilateral Critical Trust Deficit",
+      "category": "trust",
+      "condition": "Two Actor nodes that are both PARTY_TO the same Conflict each have an associated TrustState node where overall_trust < 0.2, assessed bilaterally",
+      "conclusion": "Both primary parties exhibit critical-level mutual distrust. Negotiations are highly vulnerable to breakdown. Trust-building measures must precede or accompany substantive dialogue. Interest-based approaches may be premature.",
+      "severity": "CRITICAL",
+      "theory_source": "Mayer, Davis & Schoorman (1995) — trust below threshold inhibits risk-taking in relationship; Lewicki & Bunker trust stages"
+    },
+    {
+      "id": "SR005",
+      "name": "Strong Coercive Power Asymmetry",
+      "category": "power",
+      "condition": "A PowerDynamic node with power_domain == 'coercive' has magnitude > 0.75 AND direction != 'symmetric', with both parties involved in an active Conflict",
+      "conclusion": "A severe coercive power asymmetry is present. The weaker party may be coerced into agreements that do not reflect their interests, reducing durability. Interest-based negotiation may be undermined; rights-based or normative pressure mechanisms should be considered.",
+      "severity": "WARNING",
+      "theory_source": "French & Raven (1959) — coercive power distorts voluntary agreement; Ury/Brett/Goldberg power-based resolution as last resort"
+    },
+    {
+      "id": "SR006",
+      "name": "Deep Causal Chain",
+      "category": "causal",
+      "condition": "The longest directed path of CAUSED edges from any root Event or Issue node to the current Conflict node has depth >= 4",
+      "conclusion": "The conflict has a deep multi-level causal structure with proximate and distal causes separated by four or more causal steps. Surface-level interventions targeting proximate causes are likely to be insufficient. Structural and root-cause analysis is required.",
+      "severity": "WARNING",
+      "theory_source": "Pearl (2000) — deep causal chains require intervention at mediator and structural levels; Galtung structural violence"
+    },
+    {
+      "id": "SR007",
+      "name": "Alliance Cascade Formation",
+      "category": "structural",
+      "condition": "Three or more Actor nodes are connected via ALLIED_WITH edges forming a chain or cluster, and at least one of these actors is PARTY_TO an active Conflict",
+      "conclusion": "An alliance cascade is forming. Secondary parties are being drawn into the conflict through alliance ties. This pattern historically precedes regional or systemic escalation. Alliance network mapping and cascade containment measures are indicated.",
+      "severity": "WARNING",
+      "theory_source": "Glasl stage 4 (coalitions); Kriesberg escalation dynamics; international relations alliance contagion theory"
+    },
+    {
+      "id": "SR008",
+      "name": "Security Dilemma Detected",
+      "category": "escalation",
+      "condition": "Two Actor nodes with OPPOSED_TO edges both have associated PowerDynamic nodes of domain 'coercive' recently updated AND both have Interest nodes of type 'security' with low satisfaction scores AND no TRUSTS edge exists between them",
+      "conclusion": "A security dilemma pattern is present: both parties are increasing coercive capability in response to the other's preparations, deepening mutual insecurity. Classic security dilemma spiral risk. Transparency measures, communication channels, and confidence-building measures are urgently needed.",
+      "severity": "WARNING",
+      "theory_source": "Burton (1990) — security as basic human need; Jervis (1978) security dilemma; Glasl escalation spiral"
+    },
+    {
+      "id": "SR009",
+      "name": "Active Conflict With No Resolution Process",
+      "category": "ripeness",
+      "condition": "A Conflict node with status == 'active' AND glasl_stage >= 4 has no Process node connected via any resolution-oriented edge AND has been in active status for an extended period",
+      "conclusion": "An actively escalating conflict has no formal or informal resolution process in place. Without a process channel, escalation to higher Glasl stages is the default trajectory. Immediate process design and third-party engagement are indicated.",
+      "severity": "WARNING",
+      "theory_source": "Kriesberg — conflict left without process tends to escalate; Lederach peacebuilding infrastructure"
+    },
+    {
+      "id": "SR010",
+      "name": "Toxic Emotional Climate Without Trust-Building",
+      "category": "trust",
+      "condition": "One or more Actor nodes have associated EmotionalState nodes where primary_emotion is in ['anger', 'disgust'] with intensity == 'high', AND the bilateral TrustState overall_trust < 0.3, AND no Process node targeting relationship repair is active",
+      "conclusion": "A toxic emotional climate exists with high anger or disgust and critically low trust, but no relationship repair process is underway. This combination is highly predictive of negotiation breakdown. Emotion management and trust-building interventions must precede substantive talks.",
+      "severity": "WARNING",
+      "theory_source": "Plutchik (1980) — contempt/disgust as most corrosive emotions; Mayer et al. (1995) — trust prerequisite for risk-taking"
+    },
+    {
+      "id": "SR011",
+      "name": "Spoiler Actor Detected",
+      "category": "structural",
+      "condition": "An Actor node has a Role node of role_type == 'spoiler' AND is connected via an OPPOSED_TO edge to a Process node that has status == 'active'",
+      "conclusion": "A spoiler actor has been identified who is actively opposed to the ongoing resolution process. Spoilers can undermine even well-designed agreements through targeted violence, defection, or obstructionism. Spoiler management strategies are required.",
+      "severity": "CRITICAL",
+      "theory_source": "Stedman (1997) spoiler management theory; Lederach peacebuilding middle range"
+    },
+    {
+      "id": "SR012",
+      "name": "Competing Dominant Narratives",
+      "category": "narrative",
+      "condition": "Two or more Narrative nodes of narrative_type == 'dominant' are FRAMES-linked to the same Conflict node from different Actor perspectives, and their frame_type values are incompatible (e.g., both claim victimhood or both claim rights)",
+      "conclusion": "Competing dominant narratives are framing the conflict in mutually exclusive ways. Dialogue is likely to produce parallel monologues rather than genuine engagement. Narrative mediation or a process that acknowledges multiple stories is needed before substantive negotiation.",
+      "severity": "WARNING",
+      "theory_source": "Winslade & Monk (2000) — narrative mediation; Cobb (2003) narrative theory of conflict"
+    },
+    {
+      "id": "SR013",
+      "name": "No BATNA Strengthening in Power-Asymmetric Conflict",
+      "category": "power",
+      "condition": "A Conflict involves parties with a PowerDynamic asymmetry (magnitude > 0.6) AND the weaker party's Interest nodes have batna_strength == 'weak' AND no process for BATNA development is underway",
+      "conclusion": "The weaker party has both a power deficit and a weak BATNA, severely limiting their negotiating leverage. Agreements reached under these conditions will likely reflect coercion rather than mutual interests. BATNA strengthening or third-party power balancing is needed before productive negotiation is possible.",
+      "severity": "WARNING",
+      "theory_source": "Fisher & Ury (1981) — BATNA as source of negotiating power; French & Raven (1959) power bases"
+    },
+    {
+      "id": "SR014",
+      "name": "Glasl Level Win-Lose — Mediation Required",
+      "category": "escalation",
+      "condition": "A Conflict node has glasl_stage in [4, 5, 6] (Win-Lose level) AND the only active Process node is of process_type == 'negotiation' without a neutral third party",
+      "conclusion": "The conflict has entered the Win-Lose zone (Glasl stages 4–6) where self-help negotiation is typically insufficient. A neutral third-party mediator is required to manage communication, contain image attacks, and facilitate de-escalation.",
+      "severity": "WARNING",
+      "theory_source": "Glasl (1982) — Win-Lose zone requires mediation; stages 4–6 mapped to process consultation and mediation"
+    },
+    {
+      "id": "SR015",
+      "name": "Needs Denial — Intractability Risk",
+      "category": "structural",
+      "condition": "One or more Interest nodes have interest_type == 'identity' AND satisfaction < 0.2 AND the Conflict has been active for an extended duration without resolution",
+      "conclusion": "Core identity needs are being denied with no progress toward satisfaction. Per Burton's human needs theory, unmet identity needs generate intractable conflicts that resist interest-level bargaining. Recognition-focused and identity-acknowledging processes are required.",
+      "severity": "CRITICAL",
+      "theory_source": "Burton (1990) — non-negotiable basic needs; Rothman (1997) identity-based conflict"
+    },
+    {
+      "id": "SR016",
+      "name": "Process Stalled — Ripeness Decay",
+      "category": "ripeness",
+      "condition": "A Process node has status == 'suspended' or 'abandoned' AND the parent Conflict has kriesberg_phase in ['de_escalating', 'stalemate'] AND no alternative process is active",
+      "conclusion": "A resolution process has stalled or collapsed during a potentially ripe phase. The window of opportunity created by the mutually hurting stalemate may be closing. Rapid re-engagement is needed before parties revert to escalatory strategies or the ripe moment passes.",
+      "severity": "CRITICAL",
+      "theory_source": "Zartman (1985) — ripe moments are perishable; Kriesberg phase transitions"
+    },
+    {
+      "id": "SR017",
+      "name": "Informational Power Imbalance in Negotiation",
+      "category": "power",
+      "condition": "A PowerDynamic node with power_domain == 'informational' has magnitude > 0.7 AND direction != 'symmetric', affecting parties in an active negotiation Process",
+      "conclusion": "One party has a significant informational advantage in the current negotiation. This asymmetry can distort outcomes by enabling information manipulation, deception, or withholding. Transparency mechanisms, information-sharing protocols, or neutral expert assessment are indicated.",
+      "severity": "WARNING",
+      "theory_source": "French & Raven (1965) — informational power; Fisher & Ury — objective criteria to counteract informational advantages"
+    },
+    {
+      "id": "SR018",
+      "name": "Cross-Level Conflict Without Multi-Track Process",
+      "category": "structural",
+      "condition": "Actor nodes at different Lederach tiers (top-level political/military, middle-range civil society, grassroots community) are all PARTY_TO the same Conflict but only one tier has representatives in any active Process node",
+      "conclusion": "The conflict involves actors across multiple social levels but the resolution process is limited to one tier. Single-tier processes (typically top-level) frequently produce agreements that fail at implementation due to lack of grassroots or middle-range buy-in. Multi-track engagement is needed.",
+      "severity": "WARNING",
+      "theory_source": "Lederach (1997) — nested paradigm; multi-track diplomacy (Diamond & McDonald 1996)"
+    },
+    {
+      "id": "SR019",
+      "name": "Zero-Sum Framing of Integrative Potential Issues",
+      "category": "narrative",
+      "condition": "An Issue node has divisibility > 0.6 (i.e., it is a dividable issue with integrative potential) but both parties' associated Interest nodes have stated_position values that frame it as mutually exclusive (zero-sum)",
+      "conclusion": "A potentially integrable issue is being framed in zero-sum terms. Interest mapping may reveal compatible underlying needs that allow value creation. Facilitating interest exploration beneath stated positions is a high-leverage intervention opportunity.",
+      "severity": "INFO",
+      "theory_source": "Fisher & Ury (1981) — positions vs. interests; Raiffa (1982) — integrative bargaining"
+    },
+    {
+      "id": "SR020",
+      "name": "Structural Violence Underlying Direct Conflict",
+      "category": "structural",
+      "condition": "A Conflict node has violence_type == 'direct' AND one or more Issue nodes have domain_category in ['economic_inequality', 'discrimination', 'access_denial'] suggesting structural roots",
+      "conclusion": "Direct violence appears to be rooted in structural violence. Addressing only direct violence (negative peace) will leave the structural drivers intact, creating conditions for recurrence. Long-term peacebuilding must address the structural inequality and discrimination underlying the direct conflict.",
+      "severity": "WARNING",
+      "theory_source": "Galtung (1969) — violence triangle; Lederach — transformation vs. settlement"
+    },
+    {
+      "id": "SR021",
+      "name": "Competitive Interdependence Locking Parties",
+      "category": "structural",
+      "condition": "Both parties have Interest nodes that are structurally incompatible (e.g., both claiming exclusive control of the same resource or territory) AND no reframing or expansion of the pie has been attempted in any Process node",
+      "conclusion": "Pure competitive interdependence — one party can only gain at the other's direct expense — is locking the conflict. Without creative expansion of the issue space (logrolling, package deals, side payments), resolution will default to a power contest. Creative option generation is required.",
+      "severity": "WARNING",
+      "theory_source": "Deutsch (1973) — competitive vs. cooperative interdependence; Fisher & Ury — invent options for mutual gain"
+    },
+    {
+      "id": "SR022",
+      "name": "Avoiding Mode in High-Stakes Conflict",
+      "category": "escalation",
+      "condition": "A key party in a Conflict with glasl_stage >= 4 OR status == 'active' has a ConflictMode annotation of 'avoiding' with no scheduled process engagement",
+      "conclusion": "A party is using an avoiding conflict mode in a high-stakes conflict. While avoidance can be strategic, sustained avoidance at this escalation level allows conditions to deteriorate unchecked and signals to the other party that coercive escalation is not being met. Engaging avoidance patterns is a priority.",
+      "severity": "WARNING",
+      "theory_source": "Thomas & Kilmann (1974) — avoiding mode situational appropriateness; Glasl — inaction enables escalation"
+    },
+    {
+      "id": "SR023",
+      "name": "Cultural Violence Legitimising Direct Conflict",
+      "category": "narrative",
+      "condition": "A Narrative node with frame_type == 'moral' or 'identity' contains content that dehumanises or demonises the opposing party AND is connected via FRAMES to an active Conflict at glasl_stage >= 5",
+      "conclusion": "Cultural violence — narratives that morally legitimise harm against the outgroup — is actively sustaining direct conflict. At this escalation level, such narratives reinforce dehumanisation and block empathy. Counter-narrative and rehumanisation interventions are required alongside process initiatives.",
+      "severity": "CRITICAL",
+      "theory_source": "Galtung (1990) — cultural violence; Glasl stage 5 (loss of face) and stage 7 (dehumanisation)"
+    },
+    {
+      "id": "SR024",
+      "name": "High Conflict Stage with No Outcome Node",
+      "category": "structural",
+      "condition": "A Conflict node with glasl_stage >= 6 AND kriesberg_phase in ['escalating', 'stalemate'] has no Outcome node connected, indicating no scenarios or end-states have been modelled",
+      "conclusion": "A high-intensity conflict has no outcome scenarios modelled in the graph. Without scenario analysis (ceasefire, agreement, escalation outcomes), strategic planning for intervention is blind to the possible end-states. Outcome modelling is a prerequisite for effective strategy.",
+      "severity": "INFO",
+      "theory_source": "Kriesberg — phase transitions; scenario analysis best practice in conflict assessment"
+    },
+    {
+      "id": "SR025",
+      "name": "Post-Conflict Phase Without Reconciliation Process",
+      "category": "structural",
+      "condition": "A Conflict node has kriesberg_phase == 'post_conflict' OR status == 'resolved' AND no Process node of a reconciliation or restorative type is present in the graph",
+      "conclusion": "The conflict has formally ended but no reconciliation process is in place. Research on conflict recurrence consistently shows that negative peace (absence of direct violence) without reconciliation and structural repair has high relapse rates. Post-conflict peacebuilding mechanisms are urgently needed.",
+      "severity": "WARNING",
+      "theory_source": "Lederach (1997) — peacebuilding vs. settlement; Kriesberg post-conflict phase; transitional justice literature"
+    }
+  ]
 }

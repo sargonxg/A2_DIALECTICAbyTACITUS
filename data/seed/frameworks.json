@@ -1,5 +1,950 @@
 {
   "_comment": "DIALECTICA Theory Frameworks — 15 conflict resolution frameworks",
-  "_status": "TODO: Populate in Prompt 4 / Prompt 10",
-  "frameworks": []
+  "frameworks": [
+    {
+      "id": "fisher_ury",
+      "name": "Getting to Yes — Principled Negotiation",
+      "author": "Roger Fisher & William Ury",
+      "year": 1981,
+      "domain": "negotiation",
+      "key_concepts": [
+        {
+          "name": "Interests vs. Positions",
+          "definition": "Positions are what parties say they want; interests are the underlying needs, desires, concerns, and fears that motivate positions. Durable agreements address interests, not positions."
+        },
+        {
+          "name": "BATNA",
+          "definition": "Best Alternative To a Negotiated Agreement. The course of action a party will take if no agreement is reached. The stronger a party's BATNA, the greater its negotiating power."
+        },
+        {
+          "name": "ZOPA",
+          "definition": "Zone of Possible Agreement. The overlap between the parties' reservation values within which a mutually acceptable agreement can be reached."
+        },
+        {
+          "name": "Separate People from the Problem",
+          "definition": "Negotiators should treat relationship issues as distinct from substantive issues. Attacking the problem while being soft on people reduces defensiveness and enables creative problem-solving."
+        },
+        {
+          "name": "Invent Options for Mutual Gain",
+          "definition": "Before converging on a solution, parties should brainstorm widely to expand the pie and identify options that create value for all sides."
+        },
+        {
+          "name": "Objective Criteria",
+          "definition": "Agreements reached by reference to fair standards and independent criteria (market value, expert opinion, law) are more durable than power contests."
+        },
+        {
+          "name": "Principled Negotiation",
+          "definition": "A four-step method (people, interests, options, criteria) that enables joint problem-solving and avoids positional bargaining."
+        },
+        {
+          "name": "Reservation Value",
+          "definition": "The point at which a negotiator is indifferent between accepting a deal and exercising their BATNA. No rational negotiator accepts terms worse than their reservation value."
+        }
+      ],
+      "assessment_indicators": [
+        "Are parties arguing positions or articulating interests?",
+        "Have parties identified and strengthened their BATNAs?",
+        "Is there a ZOPA — do the reservation values overlap?",
+        "Are proposals evaluated against objective criteria?",
+        "Is the relationship being treated separately from the substance?"
+      ],
+      "intervention_strategies": [
+        "Ask 'why?' to surface interests behind stated positions",
+        "Conduct private BATNA analysis with each party before joint sessions",
+        "Map interests using a side-by-side matrix to reveal compatible needs",
+        "Introduce objective criteria (industry standards, precedent, expert data) to depersonalise evaluation",
+        "Use single-text negotiating procedure to manage multiple-issue packages"
+      ],
+      "limitations": [
+        "Assumes parties are willing to reveal their interests — may fail under deep distrust",
+        "Less applicable when one party is substantially more powerful and prefers positional bargaining",
+        "Cultural variation in negotiation norms may render the model inappropriate in some contexts",
+        "Does not address structural power imbalances or systemic injustice",
+        "Optimistic about rationality; underestimates emotional and identity-based drivers"
+      ],
+      "references": [
+        "Fisher, R., & Ury, W. (1981). Getting to Yes: Negotiating Agreement Without Giving In. Houghton Mifflin.",
+        "Fisher, R., Ury, W., & Patton, B. (1991). Getting to Yes (2nd ed.). Penguin Books.",
+        "Ury, W. (1993). Getting Past No. Bantam Books."
+      ]
+    },
+    {
+      "id": "glasl",
+      "name": "Conflict Escalation — Nine-Stage Model",
+      "author": "Friedrich Glasl",
+      "year": 1982,
+      "domain": "escalation_dynamics",
+      "key_concepts": [
+        {
+          "name": "Stage 1 — Hardening",
+          "definition": "Initial tensions and periodic clashes. Parties still believe rational discussion can resolve the dispute. Positions begin to harden."
+        },
+        {
+          "name": "Stage 2 — Debate and Polemics",
+          "definition": "Verbal sparring intensifies. Parties argue to win rather than understand. Black-and-white thinking emerges. Stereotyping begins."
+        },
+        {
+          "name": "Stage 3 — Actions Not Words",
+          "definition": "Parties lose faith in talk; actions replace dialogue. Empathy declines; misinterpretation of intentions accelerates."
+        },
+        {
+          "name": "Stage 4 — Images and Coalitions",
+          "definition": "Parties recruit allies and build coalitions. Images of self as virtuous and other as villain solidify. The conflict becomes a social contest."
+        },
+        {
+          "name": "Stage 5 — Loss of Face",
+          "definition": "Public attacks on the opponent's moral integrity. The goal shifts from winning to discrediting. Saving face becomes paramount."
+        },
+        {
+          "name": "Stage 6 — Strategies of Threats",
+          "definition": "Ultimatums and threats replace persuasion. Credibility of threats must be demonstrated. Fear drives behaviour."
+        },
+        {
+          "name": "Stage 7 — Limited Destructive Blows",
+          "definition": "Parties accept limited self-harm to damage the opponent. Dehumanisation of the adversary is complete. Physical violence may begin."
+        },
+        {
+          "name": "Stage 8 — Fragmentation",
+          "definition": "Systematic destruction of opponent's resources, systems, and support network. The opponent must be dismantled, not merely defeated."
+        },
+        {
+          "name": "Stage 9 — Together into the Abyss",
+          "definition": "Total destruction of the opponent is pursued even at the cost of self-annihilation. No future is imaginable; mutual ruin is the outcome."
+        },
+        {
+          "name": "Three Levels",
+          "definition": "Stages 1–3 are Win-Win (self-help possible); Stages 4–6 are Win-Lose (requires third-party facilitation); Stages 7–9 are Lose-Lose (requires power intervention)."
+        }
+      ],
+      "assessment_indicators": [
+        "What is the current Glasl stage (1–9)?",
+        "Is communication primarily verbal, mixed, or action-based?",
+        "Has dehumanisation of the adversary occurred?",
+        "Are coalitions or alliance networks forming?",
+        "Has physical violence occurred or been threatened with credible intent?"
+      ],
+      "intervention_strategies": [
+        "Stages 1–3: Moderation and facilitated dialogue; de-escalation coaching",
+        "Stages 4–5: Process consultation; shuttle diplomacy; image-repair interventions",
+        "Stage 6: Mediation with active neutrality; third-party pressure on both sides",
+        "Stages 7–8: Arbitration or authoritative mediation; humanitarian access negotiations",
+        "Stage 9: Coercive power intervention; ceasefire enforcement; peacekeeping"
+      ],
+      "limitations": [
+        "Escalation is not always linear — stages can be skipped or reversed",
+        "The model describes dynamics but does not fully explain their causes",
+        "Stage demarcation in practice requires expert judgement and is not always clear-cut",
+        "Primarily developed in Western European contexts; cultural transferability varies",
+        "Does not incorporate structural or systemic drivers of violence"
+      ],
+      "references": [
+        "Glasl, F. (1982). The Process of Conflict Escalation and Roles of Third Parties. In G. B. J. Bomers & R. B. Peterson (Eds.), Conflict Management and Industrial Relations (pp. 119–140). Kluwer.",
+        "Glasl, F. (1997). Confronting Conflict: A First-Aid Kit for Handling Conflict. Hawthorn Press.",
+        "Pruitt, D. G., & Kim, S. H. (2004). Social Conflict: Escalation, Stalemate, and Settlement (3rd ed.). McGraw-Hill."
+      ]
+    },
+    {
+      "id": "kriesberg",
+      "name": "Constructive Conflicts — Conflict Cycle",
+      "author": "Louis Kriesberg",
+      "year": 1998,
+      "domain": "conflict_lifecycle",
+      "key_concepts": [
+        {
+          "name": "Latent Phase",
+          "definition": "Objective conditions for conflict exist (incompatible goals, grievances) but the conflict has not yet been articulated or acknowledged by the parties."
+        },
+        {
+          "name": "Emerging Phase",
+          "definition": "Parties begin to perceive and articulate their grievances. Identity formation around the conflict begins. Collective action problems are being solved."
+        },
+        {
+          "name": "Escalating Phase",
+          "definition": "The conflict intensifies. Parties mobilise resources, expand their demands, and recruit allies. Communication deteriorates and hostile acts increase."
+        },
+        {
+          "name": "Stalemate Phase",
+          "definition": "Neither party can impose its will; the cost of continued conflict rises. A mutually hurting stalemate (MHS) may create ripeness for negotiation."
+        },
+        {
+          "name": "De-escalating Phase",
+          "definition": "Intensity diminishes through negotiation, exhaustion, or changed circumstances. Parties begin to explore settlement options."
+        },
+        {
+          "name": "Terminating Phase",
+          "definition": "The conflict reaches a formal or informal endpoint through agreement, victory, or transformation. The terms of settlement are established."
+        },
+        {
+          "name": "Post-Conflict Phase",
+          "definition": "Implementation of agreements; reconciliation efforts; addressing underlying structural causes to prevent recurrence."
+        },
+        {
+          "name": "Constructive Conflict",
+          "definition": "Kriesberg's normative concept that conflicts can be waged and resolved in ways that are non-destructive, equitable, and produce positive social change."
+        }
+      ],
+      "assessment_indicators": [
+        "Which lifecycle phase is the conflict in?",
+        "Are the drivers of escalation primarily structural, behavioural, or relational?",
+        "Is there evidence of a mutually hurting stalemate?",
+        "Have parties begun signalling willingness to de-escalate?",
+        "Are post-conflict justice and reconciliation mechanisms in place?"
+      ],
+      "intervention_strategies": [
+        "Latent phase: Structural prevention — address root causes before conflict erupts",
+        "Emerging phase: Track II dialogue; early warning systems; confidence-building measures",
+        "Escalating phase: Crisis diplomacy; mediation; ceasefire negotiations",
+        "Stalemate phase: Ripen conditions; offer face-saving exit options; use MHS as entry point",
+        "Post-conflict: Truth commissions; reconciliation processes; institutional reform"
+      ],
+      "limitations": [
+        "Phase model is heuristic — real conflicts often exhibit non-linear dynamics",
+        "Stalemate/ripeness may not be sufficient to generate negotiations without political will",
+        "Constructive conflict norm is culturally situated and may be contested",
+        "Limited attention to the role of spoilers in disrupting phase transitions",
+        "Post-conflict phase often undertheorised in relation to transitional justice"
+      ],
+      "references": [
+        "Kriesberg, L. (1998). Constructive Conflicts: From Escalation to Resolution. Rowman & Littlefield.",
+        "Kriesberg, L., & Dayton, B. W. (2012). Constructive Conflicts: From Escalation to Resolution (4th ed.). Rowman & Littlefield.",
+        "Kriesberg, L. (2007). Conflict Transformation. In The SAGE Handbook of Conflict Resolution. Sage."
+      ]
+    },
+    {
+      "id": "galtung",
+      "name": "Violence Triangle — ABC Conflict Model",
+      "author": "Johan Galtung",
+      "year": 1969,
+      "domain": "peace_studies",
+      "key_concepts": [
+        {
+          "name": "Direct Violence",
+          "definition": "Physical or verbal harm inflicted by an identifiable actor upon another. The visible tip of the violence iceberg: war, assault, murder, torture, verbal abuse."
+        },
+        {
+          "name": "Structural Violence",
+          "definition": "Harm caused by social structures, institutions, and systems that prevent people from meeting their basic needs. No identifiable actor; harm is embedded in the social order (poverty, discrimination, inequality)."
+        },
+        {
+          "name": "Cultural Violence",
+          "definition": "Those aspects of culture — religion, ideology, language, art, science — that legitimate and justify direct and structural violence. The 'soil' in which the other violences grow."
+        },
+        {
+          "name": "ABC Triangle",
+          "definition": "The three dimensions of conflict: Attitudes/Assumptions (A), Behaviour (B), and Contradiction/Context (C). Sustainable peace requires addressing all three."
+        },
+        {
+          "name": "Negative Peace",
+          "definition": "The mere absence of direct violence (ceasefire, armistice). Necessary but insufficient for sustainable peace."
+        },
+        {
+          "name": "Positive Peace",
+          "definition": "The presence of social justice and the elimination of structural and cultural violence. The absence of all three types of violence."
+        },
+        {
+          "name": "Peacemaking",
+          "definition": "Galtung's tripartite intervention model: Peacekeeping (stopping direct violence), Peacemaking (negotiating agreements), Peacebuilding (transforming structures and culture)."
+        }
+      ],
+      "assessment_indicators": [
+        "Is the visible conflict primarily direct, structural, or culturally legitimised?",
+        "What structural inequalities underpin the conflict?",
+        "What cultural narratives legitimate harm against the outgroup?",
+        "Is the current peace negative (absence of war) or positive (social justice)?",
+        "Are attitudes, behaviours, and contradictions all being addressed?"
+      ],
+      "intervention_strategies": [
+        "Address direct violence through peacekeeping and crisis response",
+        "Tackle structural violence through institutional reform, redistribution, and rights-based approaches",
+        "Counter cultural violence through narrative reframing, reconciliation, and education",
+        "Use the TRANSCEND method: creative conflict transformation that transcends incompatibilities",
+        "Pursue positive peace by building institutions that address the root causes of grievance"
+      ],
+      "limitations": [
+        "The concept of structural violence is contested — risks overstretching the concept of violence",
+        "Cultural violence is difficult to operationalise and measure",
+        "The model is normative and ideologically situated in progressive peace studies tradition",
+        "Limited operational guidance for practitioners compared to process-oriented models",
+        "Some critics argue the framework is too broad to generate precise interventions"
+      ],
+      "references": [
+        "Galtung, J. (1969). Violence, Peace, and Peace Research. Journal of Peace Research, 6(3), 167–191.",
+        "Galtung, J. (1990). Cultural Violence. Journal of Peace Research, 27(3), 291–305.",
+        "Galtung, J. (1996). Peace by Peaceful Means. Sage/PRIO."
+      ]
+    },
+    {
+      "id": "lederach",
+      "name": "Conflict Transformation — Nested Paradigm",
+      "author": "John Paul Lederach",
+      "year": 1997,
+      "domain": "peacebuilding",
+      "key_concepts": [
+        {
+          "name": "Conflict Transformation",
+          "definition": "A framework that seeks to change the very relationships, interests, discourses, and social conditions that generate violent conflict — beyond mere settlement of specific issues."
+        },
+        {
+          "name": "Nested Paradigm",
+          "definition": "Lederach's three-tier model of actors: Top (military/political leaders), Middle (civil society, religious, business leaders), and Grassroots (community leaders, NGOs). Each tier requires distinct approaches."
+        },
+        {
+          "name": "Moral Imagination",
+          "definition": "The capacity to imagine and generate constructive responses to conflict that transcend the existing web of relationships. Involves stepping outside the cycles of violence to envision something new."
+        },
+        {
+          "name": "Relational Web",
+          "definition": "Lederach's emphasis on the centrality of relationships in conflict and peacebuilding. Change must occur at the relational level, not merely at the level of agreements."
+        },
+        {
+          "name": "The Conflict Curve",
+          "definition": "A visualisation of conflict intensity over time that helps identify episodes (specific crises) within an overarching conflict system, distinguishing short-term crisis response from long-term transformation."
+        },
+        {
+          "name": "Elicitive Approach",
+          "definition": "Lederach's method of drawing out local knowledge and models for addressing conflict, rather than prescriptively imposing external techniques — contrasted with prescriptive training transfer."
+        },
+        {
+          "name": "Peacebuilding Infrastructure",
+          "definition": "The institutional, relational, and resource capacities that societies develop to sustain transformation — including cross-cutting ties, legitimate processes, and local problem-solving capacity."
+        }
+      ],
+      "assessment_indicators": [
+        "Is intervention addressing all three tiers of the nested paradigm?",
+        "Is change occurring at the relational level or only at the agreement level?",
+        "Are local indigenous resources for conflict transformation being engaged?",
+        "Does the approach develop local peacebuilding capacity or create dependency?",
+        "Is the moral imagination of key actors engaged in constructing new possibilities?"
+      ],
+      "intervention_strategies": [
+        "Engage middle-range leaders as peacebuilders who bridge top and grassroots levels",
+        "Design long-term peacebuilding strategies alongside short-term crisis response",
+        "Use elicitive training methods to build on local cultural resources",
+        "Foster cross-cutting relationships that link communities across conflict lines",
+        "Create platforms and spaces that enable dialogue across all levels of society"
+      ],
+      "limitations": [
+        "Transformation goals are ambitious and long-term — hard to evaluate within project timescales",
+        "The nested paradigm may oversimplify complex multi-layered social structures",
+        "Cultural and contextual specificity limits direct transferability",
+        "The elicitive approach requires facilitators with deep contextual knowledge",
+        "Transformation framing may be contested by parties who prefer settlement"
+      ],
+      "references": [
+        "Lederach, J. P. (1997). Building Peace: Sustainable Reconciliation in Divided Societies. USIP Press.",
+        "Lederach, J. P. (2003). The Little Book of Conflict Transformation. Good Books.",
+        "Lederach, J. P. (2005). The Moral Imagination: The Art and Soul of Building Peace. Oxford University Press."
+      ]
+    },
+    {
+      "id": "zartman",
+      "name": "Ripeness Theory",
+      "author": "I. William Zartman",
+      "year": 1985,
+      "domain": "negotiation_timing",
+      "key_concepts": [
+        {
+          "name": "Ripeness",
+          "definition": "The condition in which a conflict is ready for negotiated resolution. Ripeness is not automatic — it must be perceived by the parties and may be created by skilful diplomacy."
+        },
+        {
+          "name": "Mutually Hurting Stalemate (MHS)",
+          "definition": "The primary indicator of ripeness: both parties perceive themselves in a costly stalemate from which neither can escape by escalation alone. The conflict is 'painful enough' to motivate seeking a way out."
+        },
+        {
+          "name": "Mutually Enticing Opportunity (MEO)",
+          "definition": "Zartman's second ripeness indicator: both parties perceive an opportunity for mutual gain through negotiation. A positive pull toward settlement, complementing the negative push of the MHS."
+        },
+        {
+          "name": "Way Out",
+          "definition": "Parties must not only feel the pain of stalemate but must perceive a viable negotiated alternative — a 'way out' that is acceptable to both. Without this perception, pain alone does not produce ripeness."
+        },
+        {
+          "name": "Ripe Moment",
+          "definition": "The specific juncture at which the conditions for negotiation are propitious. Ripe moments are perishable — if not seized, the window of opportunity may close as one party regains advantage."
+        },
+        {
+          "name": "Ripening",
+          "definition": "The active process by which mediators and parties create the conditions for ripeness — including making costs more visible, offering face-saving options, and building perceived alternatives to continued conflict."
+        }
+      ],
+      "assessment_indicators": [
+        "Do both parties perceive themselves in a mutually hurting stalemate?",
+        "Is there a perceptible way out that both parties consider viable?",
+        "Is a mutually enticing opportunity (MEO) visible to the parties?",
+        "Is a ripe moment currently open or has it recently closed?",
+        "Are key leaders empowered to negotiate, or are they constrained by spoilers?"
+      ],
+      "intervention_strategies": [
+        "Make costs of continued conflict more salient to both parties to generate MHS perception",
+        "Offer face-saving frameworks that allow leaders to negotiate without appearing weak",
+        "Create a MEO by proposing packages that provide tangible gains for both sides",
+        "Seize ripe moments through prompt, decisive diplomatic engagement",
+        "Use mediators to communicate and amplify signals of ripeness between parties"
+      ],
+      "limitations": [
+        "Ripeness is a subjective perception — objectively similar conditions may not generate settlement",
+        "Critics argue the theory is retrospectively explanatory but not prospectively predictive",
+        "The MHS may not be sufficient if parties are constrained by domestic spoilers",
+        "Focus on elite perceptions neglects grassroots readiness for peace",
+        "May justify waiting for suffering to intensify before intervening — ethically problematic"
+      ],
+      "references": [
+        "Zartman, I. W. (1985). Ripe for Resolution: Conflict and Intervention in Africa. Oxford University Press.",
+        "Zartman, I. W. (2000). Ripeness: The Hurting Stalemate and Beyond. In P. C. Stern & D. Druckman (Eds.), International Conflict Resolution After the Cold War. National Academy Press.",
+        "Pruitt, D. G. (2005). Whither Ripeness Theory? Institute for Conflict Analysis and Resolution Working Paper."
+      ]
+    },
+    {
+      "id": "deutsch",
+      "name": "Cooperation and Competition — Crude Law of Social Relations",
+      "author": "Morton Deutsch",
+      "year": 1973,
+      "domain": "social_psychology",
+      "key_concepts": [
+        {
+          "name": "Cooperative Interdependence",
+          "definition": "Goal structures in which parties can only achieve their goals if others also achieve theirs. Produces open communication, sharing of resources, and mutual assistance."
+        },
+        {
+          "name": "Competitive Interdependence",
+          "definition": "Goal structures in which one party can only achieve its goals at the expense of others. Produces coercion, deception, reduced communication, and hostile attributions."
+        },
+        {
+          "name": "The Crude Law of Social Relations",
+          "definition": "The characteristic processes and effects of cooperative relationships tend to recur in competitive ones and vice versa. Small interventions that shift goal structure can change the entire relational dynamic."
+        },
+        {
+          "name": "Productive vs. Destructive Conflict",
+          "definition": "Productive conflict operates under cooperative norms and improves understanding, relationships, and outcomes. Destructive conflict operates under competitive norms and escalates, damages relationships, and produces poor outcomes."
+        },
+        {
+          "name": "Social Climate",
+          "definition": "The overall cooperative or competitive atmosphere of an interaction. Climate is self-reinforcing: cooperative climates elicit cooperative behaviour; competitive climates elicit defensive and competitive responses."
+        },
+        {
+          "name": "Constructive Controversy",
+          "definition": "The pedagogical and organizational application of cooperative conflict: structured disagreement in which opposing views are advocated cooperatively to produce superior decisions."
+        }
+      ],
+      "assessment_indicators": [
+        "Is the prevailing goal structure cooperative or competitive?",
+        "Are parties communicating openly and sharing information?",
+        "Are attributions benign or hostile?",
+        "Is the conflict productive (improving understanding) or destructive (escalating harm)?",
+        "Can goal structure be reframed to introduce cooperative elements?"
+      ],
+      "intervention_strategies": [
+        "Redesign goal structures to introduce positive interdependence (shared superordinate goals)",
+        "Use structured cooperative tasks to shift attributions and build trust",
+        "Establish cooperative process norms before engaging substantive issues",
+        "Apply constructive controversy methods in group decision-making contexts",
+        "Address competitive social climate through team-building and relationship repair"
+      ],
+      "limitations": [
+        "Goal structure theory is most applicable to interpersonal and organisational conflicts; less direct application to international conflicts",
+        "Assumes goal structures are malleable — in many conflicts they reflect deep structural constraints",
+        "The crude law describes tendencies, not deterministic outcomes",
+        "Limited attention to power differentials and how they shape cooperation",
+        "Cultural variation in competitive norms and individualism/collectivism may affect applicability"
+      ],
+      "references": [
+        "Deutsch, M. (1949). A Theory of Cooperation and Competition. Human Relations, 2(2), 129–152.",
+        "Deutsch, M. (1973). The Resolution of Conflict: Constructive and Destructive Processes. Yale University Press.",
+        "Johnson, D. W., & Johnson, R. T. (2005). New Developments in Social Interdependence Theory. Genetic, Social, and General Psychology Monographs, 131(4), 285–358."
+      ]
+    },
+    {
+      "id": "thomas_kilmann",
+      "name": "Conflict Mode Instrument (TKI)",
+      "author": "Kenneth W. Thomas & Ralph H. Kilmann",
+      "year": 1974,
+      "domain": "conflict_styles",
+      "key_concepts": [
+        {
+          "name": "Competing",
+          "definition": "High assertiveness, low cooperativeness. The party pursues its own concerns at the other's expense. Appropriate for emergencies, unpopular decisions, or when you are right and the stakes are high."
+        },
+        {
+          "name": "Collaborating",
+          "definition": "High assertiveness, high cooperativeness. Parties work together to find a solution that fully satisfies both. The integrative mode — most appropriate when both parties' concerns are too important to compromise."
+        },
+        {
+          "name": "Compromising",
+          "definition": "Moderate assertiveness and cooperativeness. Parties seek a mutually acceptable solution that partially satisfies both. Appropriate when goals are moderately important and time is limited."
+        },
+        {
+          "name": "Avoiding",
+          "definition": "Low assertiveness, low cooperativeness. Parties sidestep or postpone the conflict. Appropriate when the issue is trivial, when cooling down is needed, or when gathering more information is necessary."
+        },
+        {
+          "name": "Accommodating",
+          "definition": "Low assertiveness, high cooperativeness. Parties neglect their own concerns to satisfy the other's. Appropriate when the issue is more important to the other party or when preserving harmony is paramount."
+        },
+        {
+          "name": "Dual Concern Model",
+          "definition": "Thomas-Kilmann's theoretical foundation: conflict modes vary on two independent dimensions — assertiveness (concern for self) and cooperativeness (concern for other)."
+        }
+      ],
+      "assessment_indicators": [
+        "What conflict modes are each party predominantly using?",
+        "Are the modes appropriate given the stakes and relationship?",
+        "Is there a misalignment of modes creating escalation or impasse?",
+        "Are parties capable of shifting modes when the situation requires it?",
+        "Is the dominant mode creating long-term relationship damage?"
+      ],
+      "intervention_strategies": [
+        "Administer TKI assessment to raise self-awareness of habitual conflict modes",
+        "Coach parties to recognise when their default mode is counterproductive",
+        "Identify the situationally appropriate mode and build skills to access it",
+        "Facilitate collaborative problem-solving sessions when both parties have high-stakes interests",
+        "Use structured dialogue to shift from competing to compromising or collaborating"
+      ],
+      "limitations": [
+        "Self-report instrument subject to social desirability bias",
+        "Five modes may be too few to capture cultural variation in conflict behaviour",
+        "The model is descriptive of styles, not explanatory of conflict causes",
+        "Limited applicability in contexts of extreme power asymmetry",
+        "Does not account for how modes shift across the lifecycle of a conflict"
+      ],
+      "references": [
+        "Thomas, K. W., & Kilmann, R. H. (1974). Thomas-Kilmann Conflict Mode Instrument. Xicom.",
+        "Thomas, K. W. (1992). Conflict and Conflict Management: Reflections and Update. Journal of Organizational Behavior, 13(3), 265–274.",
+        "Ruble, T. L., & Thomas, K. W. (1976). Support for a Two-Dimensional Model of Conflict Behavior. Organizational Behavior and Human Performance, 16(1), 143–155."
+      ]
+    },
+    {
+      "id": "french_raven",
+      "name": "Bases of Social Power",
+      "author": "John R. P. French Jr. & Bertram Raven",
+      "year": 1959,
+      "domain": "power_dynamics",
+      "key_concepts": [
+        {
+          "name": "Coercive Power",
+          "definition": "Power derived from the ability to punish, harm, or impose negative consequences. Highly effective in the short term but typically damages relationships and generates resistance or resentment."
+        },
+        {
+          "name": "Reward Power",
+          "definition": "Power derived from the ability to provide valued benefits, resources, or positive outcomes. Effective but creates dependency; ceases when rewards are no longer available or credible."
+        },
+        {
+          "name": "Legitimate Power",
+          "definition": "Power derived from a position of formal authority that is accepted as rightful by those subject to it. Dependent on the continuing belief in the legitimacy of the institutional structure."
+        },
+        {
+          "name": "Expert Power",
+          "definition": "Power derived from superior knowledge, skills, or expertise that others recognise as valuable. Highly effective and generates voluntary compliance; limited to the domain of expertise."
+        },
+        {
+          "name": "Referent Power",
+          "definition": "Power derived from personal identification, admiration, or affinity. The influenced party complies because they identify with or wish to be associated with the influencer. Basis of charismatic leadership."
+        },
+        {
+          "name": "Informational Power",
+          "definition": "Raven's 1965 addition: power derived from control of information or the persuasive content of arguments. Differs from expert power in that it operates through the logic of the information itself."
+        },
+        {
+          "name": "Power Asymmetry",
+          "definition": "The differential between parties' power bases that shapes their relative leverage, BATNA strength, and willingness to negotiate. Severe asymmetry can render interest-based negotiation ineffective."
+        }
+      ],
+      "assessment_indicators": [
+        "What are the primary power bases of each party?",
+        "Is there a significant power asymmetry that is distorting the conflict?",
+        "Is coercive power being exercised, and what resistance is it generating?",
+        "Is legitimate power being contested (legitimacy crisis)?",
+        "Is informational power (control of information) a significant factor?"
+      ],
+      "intervention_strategies": [
+        "Conduct power mapping to identify all relevant power bases for each party",
+        "Strengthen weaker party's power bases (expert, informational, referent) to reduce asymmetry",
+        "Identify which power bases are most resistant to third-party challenge",
+        "Challenge coercive power through coalition building, normative pressure, or external intervention",
+        "Leverage expert and informational power to build legitimacy for proposed solutions"
+      ],
+      "limitations": [
+        "The taxonomy is descriptive; it does not explain how power is acquired or maintained",
+        "Power bases interact in complex ways not fully captured by the additive model",
+        "Structural power (class, race, gender) is not adequately captured by the individual bases",
+        "The model focuses on dyadic relationships; less applicable to complex multi-actor systems",
+        "Cultural context shapes which power bases are considered legitimate and effective"
+      ],
+      "references": [
+        "French, J. R. P., & Raven, B. (1959). The Bases of Social Power. In D. Cartwright (Ed.), Studies in Social Power (pp. 150–167). University of Michigan Press.",
+        "Raven, B. H. (1965). Social Influence and Power. In I. D. Steiner & M. Fishbein (Eds.), Current Studies in Social Psychology. Holt, Rinehart & Winston.",
+        "Raven, B. H. (1993). The Bases of Power: Origins and Recent Developments. Journal of Social Issues, 49(4), 227–251."
+      ]
+    },
+    {
+      "id": "mayer_trust",
+      "name": "An Integrative Model of Organizational Trust",
+      "author": "Roger C. Mayer, James H. Davis & F. David Schoorman",
+      "year": 1995,
+      "domain": "trust_theory",
+      "key_concepts": [
+        {
+          "name": "Ability",
+          "definition": "The group of skills, competencies, and characteristics that enable a party to have influence within some specific domain. Trust requires confidence that the trustee can do what is needed."
+        },
+        {
+          "name": "Benevolence",
+          "definition": "The extent to which a trustee is believed to want to do good to the trustor, aside from an egocentric profit motive. A sense of genuine goodwill and care for the trustor's welfare."
+        },
+        {
+          "name": "Integrity",
+          "definition": "The trustor's perception that the trustee adheres to an acceptable set of principles — honesty, fair dealing, keeping promises. Integrity failures are particularly corrosive of trust."
+        },
+        {
+          "name": "Propensity to Trust",
+          "definition": "A stable within-party factor reflecting a general willingness to trust others. Affects the level of trust before data about the specific trustee is available."
+        },
+        {
+          "name": "Risk-Taking in Relationship",
+          "definition": "Trust is operationalised as the trustor's willingness to be vulnerable. Trust is revealed through actual behaviour under conditions of risk and uncertainty."
+        },
+        {
+          "name": "Trust-Distrust Dynamics",
+          "definition": "Trust and distrust are not simply opposites on a single dimension. Low trust does not imply active distrust; high trust and some distrust can coexist in complex relationships."
+        }
+      ],
+      "assessment_indicators": [
+        "How do parties assess each other's ability, benevolence, and integrity?",
+        "Is overall trust high, moderate, or low between key dyads?",
+        "Is distrust active (anticipating harm) or merely low trust (uncertainty)?",
+        "Have specific incidents damaged perceived integrity (broken promises, deception)?",
+        "Is propensity to trust (dispositional) influencing the assessment of specific trustees?"
+      ],
+      "intervention_strategies": [
+        "Use the ABI framework to diagnose which dimension of trust is most deficient",
+        "Address ability deficits through capacity-building and technical assistance",
+        "Address benevolence deficits through relationship-building and perspective-taking",
+        "Address integrity deficits through transparency, apology, and reparative acts",
+        "Build incremental trust through graduated reciprocation in tension reduction (GRIT)"
+      ],
+      "limitations": [
+        "Model was developed in organisational settings; cross-cultural generalisability needs care",
+        "The three dimensions can be difficult to disentangle empirically",
+        "Does not fully account for collective or institutional trust dynamics",
+        "Limited guidance on trust repair after severe breach",
+        "Self-report trust measures are subject to social desirability effects"
+      ],
+      "references": [
+        "Mayer, R. C., Davis, J. H., & Schoorman, F. D. (1995). An Integrative Model of Organizational Trust. Academy of Management Review, 20(3), 709–734.",
+        "Schoorman, F. D., Mayer, R. C., & Davis, J. H. (2007). An Integrative Model of Organizational Trust: Past, Present, and Future. Academy of Management Review, 32(2), 344–354.",
+        "Lewicki, R. J., & Bunker, B. B. (1996). Developing and Maintaining Trust in Work Relationships. In R. M. Kramer & T. R. Tyler (Eds.), Trust in Organizations. Sage."
+      ]
+    },
+    {
+      "id": "plutchik",
+      "name": "Wheel of Emotions",
+      "author": "Robert Plutchik",
+      "year": 1980,
+      "domain": "emotion_theory",
+      "key_concepts": [
+        {
+          "name": "Eight Primary Emotions",
+          "definition": "Plutchik's evolutionary theory posits eight basic emotions arranged as opposing pairs: joy–sadness, trust–disgust, fear–anger, surprise–anticipation. Each has a biological function and adaptive role."
+        },
+        {
+          "name": "Emotional Intensity",
+          "definition": "Each primary emotion can vary in intensity along a gradient (e.g., annoyance → anger → rage; serenity → joy → ecstasy). More intense emotions occupy the inner cone; milder ones the outer."
+        },
+        {
+          "name": "Dyads — Complex Emotions",
+          "definition": "Adjacent primary emotions combine to produce complex emotions (dyads): joy + trust = love; anger + anticipation = aggressiveness; disgust + anger = contempt. More distant combinations are less natural."
+        },
+        {
+          "name": "Wheel Structure",
+          "definition": "The emotions are arranged in a circumplex (wheel) structure. Opposite emotions are incompatible; adjacent emotions are mutually reinforcing. The model has both a circular (valence) and a conical (intensity) dimension."
+        },
+        {
+          "name": "Conflict-Relevant Emotions",
+          "definition": "Anger, fear, disgust, contempt, and anticipation are the most frequently implicated emotions in conflict escalation. Joy, trust, and love are central to de-escalation and reconciliation."
+        },
+        {
+          "name": "Emotional Contagion",
+          "definition": "The tendency for emotions to spread from one person or group to another, amplifying collective anger, fear, or disgust in conflict settings and driving group-level escalation dynamics."
+        }
+      ],
+      "assessment_indicators": [
+        "What are the primary emotions present in each party?",
+        "Are anger, disgust, or contempt dominating — indicating escalatory risk?",
+        "Is fear driving defensive or aggressive behaviour?",
+        "Is there emotional contagion amplifying group-level hostility?",
+        "Are positive emotions (trust, joy) accessible or are they blocked by trauma?"
+      ],
+      "intervention_strategies": [
+        "Use emotion labelling and validation to acknowledge and de-escalate intense emotions",
+        "Design interventions that build trust and positive affect before tackling substantive issues",
+        "Identify and interrupt contempt cycles (the most corrosive emotion in conflict relationships)",
+        "Use perspective-taking exercises to access empathy and attenuate hostile attributions",
+        "Apply trauma-informed approaches when fear and sadness are rooted in past violence"
+      ],
+      "limitations": [
+        "The universality of the eight primary emotions is contested across cultural contexts",
+        "The circumplex model is a useful heuristic but oversimplifies the phenomenology of emotion",
+        "Measuring group emotions with individual emotion instruments creates aggregation challenges",
+        "The model does not specify how emotions are elicited or how they interact with cognition",
+        "Clinical emotion models may be needed for trauma-related emotional states"
+      ],
+      "references": [
+        "Plutchik, R. (1980). Emotion: A Psychoevolutionary Synthesis. Harper & Row.",
+        "Plutchik, R. (2001). The Nature of Emotions. American Scientist, 89(4), 344–350.",
+        "Bodtker, A. M., & Jameson, J. K. (2001). Emotion in Conflict Formation and Its Transformation. International Journal of Conflict Management, 12(3), 259–275."
+      ]
+    },
+    {
+      "id": "pearl_causal",
+      "name": "Causal Hierarchy — Ladder of Causation",
+      "author": "Judea Pearl",
+      "year": 2000,
+      "domain": "causal_reasoning",
+      "key_concepts": [
+        {
+          "name": "Observational Level (Association)",
+          "definition": "The first rung of the causal ladder: seeing. Identifies statistical associations between variables (correlation) without inferring causation. 'What is?' questions."
+        },
+        {
+          "name": "Interventional Level (Do-Calculus)",
+          "definition": "The second rung: doing. Involves predicting the effects of deliberate interventions (do-operators). 'What if I do X?' — the level of controlled experiments and policy analysis."
+        },
+        {
+          "name": "Counterfactual Level (Imagination)",
+          "definition": "The third rung: imagining. Addresses counterfactual questions about what would have happened under different circumstances. 'What if X had not occurred?' Enables responsibility attribution."
+        },
+        {
+          "name": "Causal Diagram (DAG)",
+          "definition": "A directed acyclic graph that encodes causal assumptions. Nodes represent variables; directed edges represent direct causal effects. Used to identify confounders, mediators, and colliders."
+        },
+        {
+          "name": "Confounding",
+          "definition": "A variable that causally influences both the presumed cause and the outcome, creating spurious association. Failing to account for confounders leads to incorrect causal inference."
+        },
+        {
+          "name": "Mediation Analysis",
+          "definition": "The decomposition of a total causal effect into direct and indirect (mediated) components. Identifies the mechanism through which a cause operates — critical for designing effective interventions."
+        },
+        {
+          "name": "Structural Causal Model (SCM)",
+          "definition": "Pearl's formal framework combining DAGs with functional equations to represent the complete causal structure of a system, enabling identification of all three levels of the causal hierarchy."
+        }
+      ],
+      "assessment_indicators": [
+        "Have key causal pathways been identified and represented in a causal diagram?",
+        "Are associations being misread as direct causal relationships?",
+        "Are there important confounders that distort the apparent causal story?",
+        "What is the counterfactual: would the conflict have occurred without the trigger event?",
+        "Is the causal chain depth ≥ 4 levels, indicating a complex proximate–distal structure?"
+      ],
+      "intervention_strategies": [
+        "Build causal diagrams to map proximate, intermediate, and structural causes",
+        "Use do-calculus reasoning to predict the effects of specific interventions",
+        "Conduct counterfactual analysis to evaluate responsibility and attribution claims",
+        "Identify key mediators in causal chains as leverage points for intervention",
+        "Distinguish correlation from causation in conflict narrative analysis"
+      ],
+      "limitations": [
+        "Causal diagram construction requires expert knowledge and can encode analyst biases",
+        "The SCM framework is technically demanding and not accessible to non-specialists",
+        "Cyclic causality (feedback loops) requires extensions beyond standard DAG frameworks",
+        "Data scarcity in conflict contexts limits empirical validation of causal models",
+        "The framework is primarily developed for scientific inference, not practitioner decision-making"
+      ],
+      "references": [
+        "Pearl, J. (2000). Causality: Models, Reasoning, and Inference. Cambridge University Press.",
+        "Pearl, J., Glymour, M., & Jewell, N. P. (2016). Causal Inference in Statistics: A Primer. Wiley.",
+        "Pearl, J., & Mackenzie, D. (2018). The Book of Why: The New Science of Cause and Effect. Basic Books."
+      ]
+    },
+    {
+      "id": "winslade_monk",
+      "name": "Narrative Mediation",
+      "author": "John Winslade & Gerald Monk",
+      "year": 2000,
+      "domain": "narrative_approaches",
+      "key_concepts": [
+        {
+          "name": "Dominant Narrative",
+          "definition": "The prevailing story through which a conflict is understood. Often saturated with blame, victim–villain constructions, and entrenched positions. Sustains the conflict by constraining what is thinkable."
+        },
+        {
+          "name": "Externalisation",
+          "definition": "The narrative technique of separating the problem from the person. The conflict story is externalised as an entity that has acted upon the parties — enabling them to examine it together rather than attack each other."
+        },
+        {
+          "name": "Deconstruction",
+          "definition": "Unpacking the assumptions, social discourses, and power relations that sustain dominant conflict narratives. Reveals that stories are constructions, not objective facts, opening space for alternative stories."
+        },
+        {
+          "name": "Alternative Story",
+          "definition": "A new account of the conflict relationship that is not saturated by blame and hostility. Built on exceptions to the dominant narrative — moments of cooperation, respect, or positive interaction."
+        },
+        {
+          "name": "Unique Outcomes",
+          "definition": "Exceptions to the dominant conflict story — moments when the conflict 'should have' dominated but did not. Used as building blocks for the alternative story."
+        },
+        {
+          "name": "Social Constructionism",
+          "definition": "Winslade and Monk's philosophical foundation: meaning, identity, and conflict are constructed through language and social interaction, not discovered as objective facts. Multiple narratives are always possible."
+        },
+        {
+          "name": "Witnessing",
+          "definition": "The narrative mediation practice of having parties testify to their experience before an audience who can acknowledge and validate it, enabling the alternative story to gain social reality."
+        }
+      ],
+      "assessment_indicators": [
+        "How is each party narrating the conflict — what is the dominant story?",
+        "Are people and problems being conflated (person = the problem)?",
+        "What social discourses are sustaining the dominant conflict narrative?",
+        "Are there unique outcomes (exceptions) in the parties' stories?",
+        "Is there openness to a re-authored narrative of the relationship?"
+      ],
+      "intervention_strategies": [
+        "Map the dominant narrative and identify its constitutive assumptions",
+        "Use externalising language to separate the problem from the people",
+        "Search for unique outcomes to build the foundation of an alternative story",
+        "Ask deconstructive questions that challenge the taken-for-granted aspects of conflict narratives",
+        "Co-author an alternative story that re-describes the relationship and its future"
+      ],
+      "limitations": [
+        "Narrative approach is most effective in relational conflicts; less applicable to resource distribution disputes",
+        "Requires skilled mediators trained in narrative therapy — not easily scalable",
+        "Social constructionist framework is philosophically contentious in some legal and scientific cultures",
+        "Risk of privileging narrative coherence over factual accuracy in disputes where facts matter",
+        "Less developed as a theory of escalation and structural conflict dynamics"
+      ],
+      "references": [
+        "Winslade, J., & Monk, G. (2000). Narrative Mediation: A New Approach to Conflict Resolution. Jossey-Bass.",
+        "Winslade, J., & Monk, G. (2008). Practicing Narrative Mediation: Loosening the Grip of Conflict. Jossey-Bass.",
+        "White, M., & Epston, D. (1990). Narrative Means to Therapeutic Ends. W. W. Norton."
+      ]
+    },
+    {
+      "id": "ury_brett_goldberg",
+      "name": "Getting Disputes Resolved — Interests, Rights, and Power",
+      "author": "William Ury, Jeanne Brett & Stephen Goldberg",
+      "year": 1988,
+      "domain": "dispute_systems_design",
+      "key_concepts": [
+        {
+          "name": "Interest-Based Approach",
+          "definition": "Disputes resolved by focusing on the parties' underlying needs and interests. Produces the most satisfying outcomes at the lowest transaction cost. The preferred approach in Ury/Brett/Goldberg's hierarchy."
+        },
+        {
+          "name": "Rights-Based Approach",
+          "definition": "Disputes resolved by determining which party is right according to law, contract, or accepted standards. More costly than interest-based resolution but provides authoritative precedent. Courts, arbitration, grievance procedures."
+        },
+        {
+          "name": "Power-Based Approach",
+          "definition": "Disputes resolved through the exercise of coercive power — who can impose the greater cost on the other. The most costly approach: strikes, litigation wars, armed conflict. Produces outcomes that do not reflect interests or rights."
+        },
+        {
+          "name": "Cost Hierarchy",
+          "definition": "The core normative proposition: interest-based resolution is cheapest and most satisfying; rights-based is more expensive; power-based is most costly. Effective dispute systems push disputes to the interest level."
+        },
+        {
+          "name": "Loop-Back Provisions",
+          "definition": "Procedural mechanisms that return parties to interest-based negotiation after rights or power tests, preventing escalation locks. A design feature of well-functioning dispute systems."
+        },
+        {
+          "name": "Dispute Systems Design (DSD)",
+          "definition": "The systematic design of organisational or social processes for preventing, managing, and resolving disputes. Applies the interests–rights–power framework to create cost-effective, interest-based institutional channels."
+        },
+        {
+          "name": "Prevention vs. Resolution",
+          "definition": "Effective dispute systems address the upstream causes of disputes (prevention) as well as providing resolution mechanisms. Low-cost, interest-based channels reduce the frequency of escalation to rights/power contests."
+        }
+      ],
+      "assessment_indicators": [
+        "At which level (interest/rights/power) is the dispute currently being contested?",
+        "Is the current approach appropriate given the parties' needs and stakes?",
+        "Are loop-back mechanisms available to return to interest-based dialogue after rights tests?",
+        "What is the relative transaction cost of continuing at the current level?",
+        "Are dispute systems designed to push disputes toward interest-based resolution?"
+      ],
+      "intervention_strategies": [
+        "Diagnose the current level and assess the costs and benefits of staying vs. shifting",
+        "Create interest-based channels where none exist (mediation, facilitated dialogue)",
+        "Design loop-back mechanisms from rights and power processes back to interest-based negotiation",
+        "Use rights tests (advisory opinions, benchmarks) to inform interest-based bargaining without full adjudication",
+        "Conduct dispute systems audits in organisations to identify upstream prevention opportunities"
+      ],
+      "limitations": [
+        "The cost hierarchy is empirically grounded but the 'interests are best' prescription may not hold in all contexts",
+        "Rights-based approaches are sometimes needed to establish precedent and deter future wrongdoing",
+        "Power-based resolution may be necessary when one party refuses interest-based engagement",
+        "DSD is most applicable to institutional settings; less directly applicable to political conflicts",
+        "The framework does not adequately address identity and recognition conflicts that resist interest-framing"
+      ],
+      "references": [
+        "Ury, W., Brett, J. M., & Goldberg, S. B. (1988). Getting Disputes Resolved: Designing Systems to Cut the Costs of Conflict. Jossey-Bass.",
+        "Costantino, C. A., & Merchant, C. S. (1996). Designing Conflict Management Systems. Jossey-Bass.",
+        "Lipsky, D. B., Seeber, R. L., & Fincher, R. D. (2003). Emerging Systems for Managing Workplace Conflict. Jossey-Bass."
+      ]
+    },
+    {
+      "id": "burton",
+      "name": "Human Needs Theory",
+      "author": "John Burton",
+      "year": 1990,
+      "domain": "needs_theory",
+      "key_concepts": [
+        {
+          "name": "Basic Human Needs",
+          "definition": "Universal, non-negotiable requirements for human development and fulfilment: security, identity, recognition, autonomy, participation, distributive justice, and meaning. Unlike interests, needs cannot be traded or bargained away."
+        },
+        {
+          "name": "Non-Negotiable Nature of Needs",
+          "definition": "Because needs are fundamental to human identity and development, parties will fight indefinitely to satisfy them. Conflicts rooted in needs denial are intractable when addressed only at the interest or rights level."
+        },
+        {
+          "name": "Problem-Solving Workshops",
+          "definition": "Burton's signature intervention: small facilitated workshops bringing together representatives of conflicting parties with social scientists to analyse the conflict and generate solutions that address needs on all sides."
+        },
+        {
+          "name": "Identity Needs",
+          "definition": "The need for a secure, recognised collective identity is particularly salient in ethnopolitical conflicts. Identity threats generate powerful group mobilisation and resistance to compromise."
+        },
+        {
+          "name": "Security Dilemma",
+          "definition": "The condition in which one party's efforts to enhance its security necessarily reduces the security of others, generating a cycle of defensive escalation. A structural conflict arising from needs incompatibility."
+        },
+        {
+          "name": "Provention",
+          "definition": "Burton's preferred term for proactive conflict prevention: addressing the conditions that deny basic human needs before violent conflict erupts, rather than managing crises after the fact."
+        },
+        {
+          "name": "Analytical Problem-Solving",
+          "definition": "Burton's methodological principle: the role of the third party is not to mediate agreement but to facilitate analytical thinking about the needs and perceptions underlying the conflict, enabling parties to generate their own solutions."
+        }
+      ],
+      "assessment_indicators": [
+        "Which basic human needs are being denied or threatened in this conflict?",
+        "Is the conflict intractable because it is rooted in non-negotiable needs rather than interests?",
+        "Is identity recognition a central issue?",
+        "Is a security dilemma operating between the parties?",
+        "Would parties benefit from a problem-solving workshop format?"
+      ],
+      "intervention_strategies": [
+        "Identify which specific needs are denied for each party and make them explicit",
+        "Redesign the conflict framing from competing interests to unmet needs",
+        "Convene problem-solving workshops to generate needs-satisfying solutions",
+        "Address identity recognition through acknowledgement, symbolic gestures, and institutional reform",
+        "Break security dilemmas through transparency, confidence-building measures, and security guarantees"
+      ],
+      "limitations": [
+        "The list of universal basic needs is contested — different theorists propose different taxonomies",
+        "The claim that needs are non-negotiable is philosophically contentious and empirically challenged",
+        "Problem-solving workshops are resource-intensive and require expert facilitation",
+        "The model may underestimate the role of rational strategic interests in conflict",
+        "Limited empirical testing of the effectiveness of needs-based interventions compared to alternatives"
+      ],
+      "references": [
+        "Burton, J. (1990). Conflict: Resolution and Provention. St. Martin's Press.",
+        "Burton, J. (1990). Conflict: Basic Human Needs. St. Martin's Press.",
+        "Sandole, D. J. D., & van der Merwe, H. (Eds.). (1993). Conflict Resolution Theory and Practice. Manchester University Press."
+      ]
+    }
+  ]
 }

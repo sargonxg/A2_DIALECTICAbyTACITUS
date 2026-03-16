@@ -21,8 +21,11 @@ dev-down: ## Stop all services
 dev-logs: ## Follow logs for all services
 	docker-compose logs -f
 
-dev-neo4j: ## Start with Neo4j backend
+dev-neo4j: ## Start with Neo4j backend (api-neo4j on port 8081)
 	docker-compose --profile neo4j up
+
+dev-neo4j-build: ## Build and start with Neo4j backend
+	docker-compose --profile neo4j up --build
 
 # ─── Testing ─────────────────────────────────────────────────────────────────
 
@@ -76,7 +79,9 @@ tsc: ## TypeScript type check for web app
 web-lint: ## Lint Next.js app
 	cd apps/web && npx next lint
 
-quality: lint typecheck tsc web-lint ## Run all quality checks
+quality: lint typecheck ## Run Python quality checks
+quality-all: lint typecheck tsc web-lint ## Run all quality checks (Python + TypeScript)
+quality-check: lint typecheck ## Alias for quality
 
 # ─── Database & Seed ─────────────────────────────────────────────────────────
 

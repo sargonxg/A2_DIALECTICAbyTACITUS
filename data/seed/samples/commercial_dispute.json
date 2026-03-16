@@ -1,12 +1,200 @@
 {
-  "_comment": "Commercial contract dispute — Tier 2 (Standard) example",
-  "_status": "TODO: Populate in Prompt 10",
+  "_comment": "Commercial contract dispute — Tier 2 (Standard) example with 6 node types and 12 edge types",
   "workspace": {
-    "name": "Commercial Contract Dispute",
+    "name": "Apex Systems vs Crestline Manufacturing — Software Contract Dispute",
     "domain": "commercial",
     "scale": "meso",
     "tier": "standard"
   },
-  "nodes": [],
-  "edges": []
+  "nodes": [
+    {
+      "id": "actor_apex",
+      "label": "Actor",
+      "name": "Apex Systems Ltd",
+      "actor_type": "organization",
+      "description": "Apex Systems Ltd, a mid-sized ERP software integrator headquartered in Manchester. Contracted to deliver a bespoke inventory management system for Crestline. Claims full contractual performance and disputes liability for post-delivery defects.",
+      "org_type": "private_company",
+      "jurisdiction": "England_and_Wales",
+      "aliases": ["Apex", "Apex Systems"]
+    },
+    {
+      "id": "actor_crestline",
+      "label": "Actor",
+      "name": "Crestline Manufacturing PLC",
+      "actor_type": "organization",
+      "description": "Crestline Manufacturing PLC, a publicly listed precision engineering company. Commissioned the ERP system to replace legacy inventory processes. Claims the delivered system was non-compliant with specifications, causing significant operational disruption and financial loss.",
+      "org_type": "public_company",
+      "jurisdiction": "England_and_Wales",
+      "aliases": ["Crestline", "Crestline Mfg"]
+    },
+    {
+      "id": "actor_mediator_firm",
+      "label": "Actor",
+      "name": "Centre for Commercial Dispute Resolution",
+      "actor_type": "organization",
+      "description": "The Centre for Commercial Dispute Resolution (CCDR), an independent ADR provider appointed by agreement of both parties. Providing a panel mediator and administrative services for the commercial mediation process.",
+      "org_type": "adr_provider",
+      "jurisdiction": "England_and_Wales",
+      "aliases": ["CCDR", "the Centre"]
+    },
+    {
+      "id": "conflict_contract",
+      "label": "Conflict",
+      "name": "ERP Software Delivery Dispute",
+      "glasl_stage": 4,
+      "kriesberg_phase": "stalemate",
+      "status": "active",
+      "violence_type": "none",
+      "scale": "meso",
+      "domain": "commercial",
+      "summary": "A commercial contract dispute between Apex Systems (supplier) and Crestline Manufacturing (client) arising from the delivery of a bespoke ERP inventory management system. Crestline alleges material non-compliance with the technical specification and claims £2.4M in damages for business disruption, system remediation costs, and lost production. Apex asserts full contractual performance and claims the defects resulted from Crestline's failure to provide timely data migration support and specification changes beyond scope. The dispute has proceeded to commercial mediation after failed direct negotiations."
+    },
+    {
+      "id": "event_contract_signed",
+      "label": "Event",
+      "event_type": "agree",
+      "severity": 0.1,
+      "occurred_at": "2023-04-15",
+      "description": "Apex Systems and Crestline Manufacturing signed a fixed-price contract (£1.85M) for delivery of a bespoke inventory management module integrated with Crestline's existing SAP environment. Delivery scheduled 14 months from signature. Contract included acceptance testing procedures and a 12-month warranty period.",
+      "performer_id": "actor_apex",
+      "target_id": "actor_crestline"
+    },
+    {
+      "id": "event_delivery_attempted",
+      "label": "Event",
+      "event_type": "cooperate",
+      "severity": 0.3,
+      "occurred_at": "2024-07-01",
+      "description": "Apex delivered the completed system, two months behind the original schedule. Crestline's IT team conducted acceptance testing and raised 47 defect reports, of which Apex contested 31 as either out-of-scope or Crestline-induced. The system went live under protest, with Crestline reserving its rights.",
+      "performer_id": "actor_apex",
+      "target_id": "actor_crestline"
+    },
+    {
+      "id": "event_operational_failure",
+      "label": "Event",
+      "event_type": "disapprove",
+      "severity": 0.75,
+      "occurred_at": "2024-08-20",
+      "description": "Crestline experienced a critical system failure in the inventory module during peak production, causing a 9-day operational shutdown. Crestline's CEO issued a formal demand for remediation within 14 days and a claims notice for £2.4M in damages. Apex disputed the claim and attributed the failure to Crestline's deviation from the agreed data migration protocol.",
+      "performer_id": "actor_crestline",
+      "target_id": "actor_apex"
+    },
+    {
+      "id": "event_direct_negotiations_failed",
+      "label": "Event",
+      "event_type": "reject",
+      "severity": 0.5,
+      "occurred_at": "2024-11-03",
+      "description": "Three rounds of direct settlement negotiations between the parties' legal representatives failed to produce agreement. Crestline insisted on full damages of £2.4M plus system replacement at Apex's cost. Apex offered a remediation plan worth £250K and rejected any liability for consequential damages. Parties agreed to attempt commercial mediation before commencing litigation.",
+      "performer_id": "actor_crestline",
+      "target_id": "actor_apex"
+    },
+    {
+      "id": "event_mediation_day",
+      "label": "Event",
+      "event_type": "consult",
+      "severity": 0.2,
+      "occurred_at": "2025-01-22",
+      "description": "Full-day commercial mediation at CCDR facilities. Joint opening statements followed by separate caucuses. Mediator identified three potential bridging options: (1) Apex completes full remediation + extended warranty + £600K settlement; (2) Apex provides £1.2M cash settlement and exits; (3) Neutral technical expert report with binding determination on defect attribution. Parties adjourned to consider options.",
+      "performer_id": "actor_mediator_firm",
+      "target_id": "actor_apex"
+    },
+    {
+      "id": "issue_defect_liability",
+      "label": "Issue",
+      "name": "Defect Attribution and Liability",
+      "issue_type": "substantive",
+      "domain_category": "contract_performance",
+      "salience": 0.95,
+      "divisibility": 0.5,
+      "description": "The central technical question: which of the 47 defect reports constitute material non-compliance by Apex, and which resulted from Crestline's specification changes or data migration failures? Expert evidence is contested. This issue is divisible — a neutral technical expert could apportion liability."
+    },
+    {
+      "id": "issue_quantum_damages",
+      "label": "Issue",
+      "name": "Quantum of Damages",
+      "issue_type": "substantive",
+      "domain_category": "financial_liability",
+      "salience": 0.85,
+      "divisibility": 0.8,
+      "description": "Crestline claims £2.4M including £900K direct remediation costs, £1.1M production losses, and £400K management time. Apex disputes the quantum at every level. This issue is highly divisible — a range of payment structures (lump sum, staged payments, remediation credits) are available."
+    },
+    {
+      "id": "issue_ongoing_relationship",
+      "label": "Issue",
+      "name": "Future Commercial Relationship",
+      "issue_type": "relationship",
+      "domain_category": "commercial_continuity",
+      "salience": 0.5,
+      "divisibility": 0.9,
+      "description": "Crestline's parent group has three other subsidiaries that use Apex Systems as their ERP integrator. A full litigation outcome could destroy a £4M+ ongoing commercial relationship. Both parties have an interest in a resolution that preserves the possibility of future engagement."
+    },
+    {
+      "id": "interest_apex_cash",
+      "label": "Interest",
+      "description": "Apex's financial interest: minimise cash outflow and protect profit margin on the contract. Their BATNA is litigation, where independent assessment of the defect attribution may be more favourable than Crestline's all-or-nothing position.",
+      "interest_type": "substantive",
+      "priority": 1,
+      "stated": false,
+      "stated_position": "We delivered to specification; any defects resulted from client-side failures",
+      "batna_description": "Commercial litigation with expert determination; Apex's legal team assesses 60% chance of limiting liability to £400K",
+      "batna_strength": "moderate"
+    },
+    {
+      "id": "interest_apex_reputation",
+      "label": "Interest",
+      "description": "Apex's reputational interest: avoiding a public litigation outcome that would be visible to its client base in the manufacturing sector. A negotiated settlement with confidentiality clause protects its market position.",
+      "interest_type": "substantive",
+      "priority": 2,
+      "stated": false,
+      "stated_position": "We stand behind our work and are prepared to defend our performance record",
+      "batna_description": "Litigation is public; adverse press could cost Apex more in lost future contracts than the settlement value",
+      "batna_strength": "weak"
+    },
+    {
+      "id": "interest_crestline_compensation",
+      "label": "Interest",
+      "description": "Crestline's financial interest: recovering genuine losses from the operational disruption. Board has approved the legal budget but prefers a faster resolution to allow management to refocus on operations.",
+      "interest_type": "substantive",
+      "priority": 1,
+      "stated": true,
+      "stated_position": "We are entitled to full compensation of £2.4M for a demonstrably defective system",
+      "batna_description": "Commercial litigation; Crestline's counsel assesses strong case on direct defects but uncertain recovery on consequential damages",
+      "batna_strength": "moderate"
+    },
+    {
+      "id": "process_commercial_mediation",
+      "label": "Process",
+      "process_type": "mediation_evaluative",
+      "resolution_approach": "rights_based",
+      "status": "active",
+      "formality": "formal",
+      "binding": false,
+      "voluntary": true,
+      "governing_rules": "CCDR Commercial Mediation Rules 2024; ICC Mediation Guidelines",
+      "description": "Evaluative commercial mediation with neutral third-party mediator. The mediator is empowered to offer non-binding assessments of merits. If mediation fails, parties have agreed to expedited commercial arbitration under LCIA Rules rather than court proceedings."
+    }
+  ],
+  "edges": [
+    { "source": "actor_apex", "target": "conflict_contract", "type": "PARTY_TO", "properties": {"side": "side_a", "role": "supplier_respondent"} },
+    { "source": "actor_crestline", "target": "conflict_contract", "type": "PARTY_TO", "properties": {"side": "side_b", "role": "client_claimant"} },
+    { "source": "actor_mediator_firm", "target": "conflict_contract", "type": "PARTY_TO", "properties": {"side": "third_party", "role": "adr_provider"} },
+    { "source": "event_contract_signed", "target": "event_delivery_attempted", "type": "CAUSED", "properties": {"mechanism": "precedent", "confidence": 1.0} },
+    { "source": "event_delivery_attempted", "target": "event_operational_failure", "type": "CAUSED", "properties": {"mechanism": "escalation", "confidence": 0.8} },
+    { "source": "event_operational_failure", "target": "event_direct_negotiations_failed", "type": "CAUSED", "properties": {"mechanism": "escalation", "confidence": 0.9} },
+    { "source": "event_direct_negotiations_failed", "target": "event_mediation_day", "type": "CAUSED", "properties": {"mechanism": "precedent", "confidence": 0.95} },
+    { "source": "issue_defect_liability", "target": "conflict_contract", "type": "PART_OF", "properties": {"centrality": "core"} },
+    { "source": "issue_quantum_damages", "target": "conflict_contract", "type": "PART_OF", "properties": {"centrality": "core"} },
+    { "source": "issue_ongoing_relationship", "target": "conflict_contract", "type": "PART_OF", "properties": {"centrality": "secondary"} },
+    { "source": "actor_apex", "target": "interest_apex_cash", "type": "HAS_INTEREST", "properties": {"priority": 1} },
+    { "source": "actor_apex", "target": "interest_apex_reputation", "type": "HAS_INTEREST", "properties": {"priority": 2} },
+    { "source": "actor_crestline", "target": "interest_crestline_compensation", "type": "HAS_INTEREST", "properties": {"priority": 1} },
+    { "source": "actor_apex", "target": "process_commercial_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "respondent"} },
+    { "source": "actor_crestline", "target": "process_commercial_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "claimant"} },
+    { "source": "actor_mediator_firm", "target": "process_commercial_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "mediator"} },
+    { "source": "conflict_contract", "target": "process_commercial_mediation", "type": "RESOLVED_THROUGH", "properties": {"partial": false} },
+    { "source": "interest_apex_cash", "target": "issue_quantum_damages", "type": "MOTIVATED_BY", "properties": {} },
+    { "source": "interest_crestline_compensation", "target": "issue_defect_liability", "type": "MOTIVATED_BY", "properties": {} },
+    { "source": "actor_crestline", "target": "actor_apex", "type": "HAS_POWER_OVER", "properties": {"power_domain": "economic", "magnitude": 0.55, "description": "Crestline controls future contract awards to Apex for group subsidiaries"} }
+  ]
 }
