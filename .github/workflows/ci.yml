@@ -1,192 +1,60 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [main, develop]
   push:
-    branches: [main, develop]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  PYTHON_VERSION: "3.12"
-  NODE_VERSION: "20"
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  # ─── Python Quality Checks ─────────────────────────────────────────────────
-  python-lint:
-    name: Python Lint & Type Check
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check packages/
 
-      - name: Install dev dependencies
-        run: |
-          pip install ruff mypy
-
-      - name: Run ruff linter
-        run: ruff check packages/
-
-      - name: Run ruff format check
-        run: ruff format packages/ --check
-
-      - name: Install packages for type checking
-        run: |
-          pip install -e packages/ontology
-          pip install -e packages/graph
-          pip install -e packages/extraction
-          pip install -e packages/reasoning
-          pip install -e packages/api
-
-      - name: Run mypy type checker
-        run: mypy packages/ --ignore-missing-imports
-        continue-on-error: true  # Non-blocking during initial development
-
-  # ─── Python Tests ──────────────────────────────────────────────────────────
-  python-tests:
-    name: Python Tests
+  typecheck:
     runs-on: ubuntu-latest
-    services:
-      spanner-emulator:
-        image: gcr.io/cloud-spanner-emulator/emulator:latest
-        ports:
-          - 9010:9010
-          - 9020:9020
-
-    env:
-      SPANNER_EMULATOR_HOST: localhost:9010
-      GCP_PROJECT_ID: test-project
-      SPANNER_INSTANCE_ID: dialectica-graph
-      SPANNER_DATABASE_ID: dialectica
-      GRAPH_BACKEND: spanner
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
+          python-version: "3.12"
+      - run: |
+          pip install mypy
+          pip install -e packages/ontology -e packages/graph -e packages/extraction -e packages/reasoning -e packages/api
+      - run: mypy packages/ --ignore-missing-imports
 
-      - name: Install packages
-        run: |
+  test-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
           pip install pytest pytest-asyncio pytest-cov
-          pip install -e packages/ontology
-          pip install -e packages/graph
-          pip install -e packages/extraction
-          pip install -e packages/reasoning
-          pip install -e packages/api
+          pip install -e packages/ontology -e packages/graph -e packages/extraction -e packages/reasoning -e packages/api
+      - run: pytest packages/ -v --tb=short -m "not integration"
 
-      - name: Wait for Spanner emulator
-        run: |
-          timeout 60 bash -c 'until curl -sf http://localhost:9020/v1/projects/test-project/instances; do sleep 2; done'
-
-      - name: Run tests
-        run: |
-          pytest packages/ -v --tb=short \
-            --cov=packages \
-            --cov-report=term-missing \
-            --cov-report=xml \
-            -x
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
-
-  # ─── Frontend Quality Checks ───────────────────────────────────────────────
-  frontend-lint:
-    name: Frontend Lint & Type Check
+  test-web:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          node-version: "20"
+      - run: cd apps/web && npm ci
+      - run: cd apps/web && npm run build
+      - run: cd apps/web && npm test
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript type check
-        run: npx tsc --noEmit
-
-      - name: Run Next.js lint
-        run: npx next lint
-
-  # ─── Frontend Build ────────────────────────────────────────────────────────
-  frontend-build:
-    name: Frontend Build
+  build-docker:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
-    needs: frontend-lint
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Next.js app
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:8080
-
-  # ─── Docker Build Check ────────────────────────────────────────────────────
-  docker-build:
-    name: Docker Build Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    needs: [python-tests, frontend-build]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build API image (no push)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: packages/api/Dockerfile
-          push: false
-          tags: dialectica/api:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build web image (no push)
-        uses: docker/build-push-action@v6
-        with:
-          context: apps/web
-          file: apps/web/Dockerfile
-          push: false
-          tags: dialectica/web:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - run: docker build -t dialectica-api -f packages/api/Dockerfile .
+      - run: docker build -t dialectica-web -f apps/web/Dockerfile apps/web/

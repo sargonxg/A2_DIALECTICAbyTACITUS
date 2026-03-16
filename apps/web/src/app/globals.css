@@ -1,24 +1,58 @@
-/*
- * DIALECTICA Global Styles — Dark mode only design system.
- *
- * TODO: Full implementation in Prompt 9
- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #09090b;
-  --surface: #18181b;
-  --border: #27272a;
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --accent: #0d9488;
-  --radius: 0.5rem;
+@layer base {
+  * {
+    border-color: theme("colors.border");
+  }
+  body {
+    @apply bg-background text-text-primary antialiased;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-active rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-secondary;
+  }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--text-primary);
-  font-family: var(--font-instrument-sans), system-ui, sans-serif;
+@layer components {
+  .card {
+    @apply bg-surface rounded-lg border border-border p-4;
+  }
+  .card-hover {
+    @apply card transition-colors hover:border-border-hover hover:bg-surface-hover;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium;
+  }
+  .input-base {
+    @apply bg-surface border border-border rounded-md px-3 py-2 text-sm text-text-primary
+           placeholder:text-text-secondary focus:outline-none focus:ring-1 focus:ring-accent
+           focus:border-accent transition-colors;
+  }
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-white font-medium px-4 py-2 rounded-md
+           transition-colors text-sm;
+  }
+  .btn-secondary {
+    @apply bg-surface hover:bg-surface-hover text-text-primary border border-border
+           font-medium px-4 py-2 rounded-md transition-colors text-sm;
+  }
+  .btn-danger {
+    @apply bg-danger/10 hover:bg-danger/20 text-danger font-medium px-4 py-2 rounded-md
+           transition-colors text-sm;
+  }
+  .btn-ghost {
+    @apply hover:bg-surface-hover text-text-secondary hover:text-text-primary
+           px-3 py-2 rounded-md transition-colors text-sm;
+  }
 }
