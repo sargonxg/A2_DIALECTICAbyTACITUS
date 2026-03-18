@@ -1,138 +1,61 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import { Calendar, Globe, Layers, Activity, Hash, RefreshCw, AlertCircle } from 'lucide-react';
-import { useWorkspace } from '@/hooks/useWorkspace';
-import { useEscalation } from '@/hooks/useReasoning';
-import { ConflictStats } from '@/components/workspace/ConflictStats';
-import { GlaslStageIndicator } from '@/components/analysis/GlaslStageIndicator';
-import { KriesbergPhaseTracker } from '@/components/analysis/KriesbergPhaseTracker';
+import { useParams } from "next/navigation";
+import { useWorkspaceDetail } from "@/hooks/useApi";
+import ConflictStats from "@/components/workspace/ConflictStats";
+import GlaslStageIndicator from "@/components/analysis/GlaslStageIndicator";
+import KriesbergPhaseTracker from "@/components/analysis/KriesbergPhaseTracker";
+import Link from "next/link";
+import { Brain, Upload, Network } from "lucide-react";
 
-function formatDate(d: string): string {
-  try {
-    return new Date(d).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  } catch {
-    return d;
-  }
-}
+export default function WorkspaceOverview() {
+  const { id } = useParams();
+  const { data: workspace, isLoading } = useWorkspaceDetail(id as string);
 
-function MetaRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-[#27272a] last:border-0">
-      <span className="mt-0.5 text-zinc-500 shrink-0">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium">{label}</p>
-        <p className="text-sm text-zinc-200 mt-0.5">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-export default function WorkspaceOverviewPage() {
-  const params = useParams();
-  const id = params.id as string;
-
-  const { workspace, loading: wsLoading, error: wsError } = useWorkspace(id);
-  const { data: escalation, loading: escLoading, error: escError } = useEscalation(id);
-
-  if (wsLoading) {
-    return (
-      <div className="p-6 space-y-4 animate-pulse">
-        <div className="h-32 rounded-xl bg-[#18181b] border border-[#27272a]" />
-        <div className="h-48 rounded-xl bg-[#18181b] border border-[#27272a]" />
-        <div className="h-48 rounded-xl bg-[#18181b] border border-[#27272a]" />
-      </div>
-    );
-  }
-
-  if (wsError || !workspace) {
-    return (
-      <div className="p-6">
-        <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-zinc-100">Failed to load workspace</p>
-            <p className="text-sm text-zinc-400 mt-1">{wsError ?? 'Workspace not found'}</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading || !workspace) {
+    return <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="card h-24 animate-pulse bg-surface-hover" />)}</div>;
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl">
-      {/* Metadata card */}
-      <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4">
-          Workspace Metadata
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-          <div>
-            <MetaRow
-              icon={<Hash className="w-3.5 h-3.5" />}
-              label="Workspace ID"
-              value={workspace.id}
-            />
-            <MetaRow
-              icon={<Globe className="w-3.5 h-3.5" />}
-              label="Domain"
-              value={workspace.domain}
-            />
-            <MetaRow
-              icon={<Layers className="w-3.5 h-3.5" />}
-              label="Scale"
-              value={workspace.scale}
-            />
-          </div>
-          <div>
-            <MetaRow
-              icon={<Activity className="w-3.5 h-3.5" />}
-              label="Status"
-              value={workspace.status}
-            />
-            <MetaRow
-              icon={<Calendar className="w-3.5 h-3.5" />}
-              label="Created"
-              value={formatDate(workspace.created_at)}
-            />
-            <MetaRow
-              icon={<RefreshCw className="w-3.5 h-3.5" />}
-              label="Last Updated"
-              value={formatDate(workspace.updated_at)}
-            />
-          </div>
-        </div>
+    <div className="space-y-6">
+      <ConflictStats workspace={workspace} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {workspace.glasl_stage && <GlaslStageIndicator currentStage={workspace.glasl_stage} />}
+        <KriesbergPhaseTracker currentPhase={workspace.kriesberg_phase} />
       </div>
 
-      {/* Conflict stats */}
-      <ConflictStats workspaceId={id} />
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link href={`/workspaces/${id}/ingest`} className="card-hover flex items-center gap-3">
+          <Upload size={20} className="text-accent" />
+          <div>
+            <p className="font-medium text-text-primary">Ingest Documents</p>
+            <p className="text-xs text-text-secondary">Upload and extract entities</p>
+          </div>
+        </Link>
+        <Link href={`/workspaces/${id}/graph`} className="card-hover flex items-center gap-3">
+          <Network size={20} className="text-accent" />
+          <div>
+            <p className="font-medium text-text-primary">Explore Graph</p>
+            <p className="text-xs text-text-secondary">Visualize conflict network</p>
+          </div>
+        </Link>
+        <Link href={`/workspaces/${id}/analysis`} className="card-hover flex items-center gap-3">
+          <Brain size={20} className="text-accent" />
+          <div>
+            <p className="font-medium text-text-primary">Analyze</p>
+            <p className="text-xs text-text-secondary">AI-powered conflict analysis</p>
+          </div>
+        </Link>
+      </div>
 
-      {/* Glasl stage indicator */}
-      {escLoading ? (
-        <div className="rounded-xl border border-[#27272a] bg-[#18181b] h-40 animate-pulse" />
-      ) : escError ? (
-        <div className="rounded-xl border border-[#27272a] bg-[#18181b] p-4">
-          <p className="text-xs text-zinc-500">Escalation data unavailable: {escError}</p>
+      {workspace.node_count === 0 && (
+        <div className="card text-center py-12">
+          <p className="text-text-secondary mb-4">This workspace is empty. Start by ingesting some documents.</p>
+          <Link href={`/workspaces/${id}/ingest`} className="btn-primary">Ingest Documents</Link>
         </div>
-      ) : escalation ? (
-        <GlaslStageIndicator
-          stage={escalation.stage_number ?? 1}
-          level={escalation.level}
-          confidence={escalation.confidence}
-          interventionType={escalation.intervention_type}
-        />
-      ) : null}
-
-      {/* Kriesberg phase tracker */}
-      {workspace.kriesberg_phase ? (
-        <KriesbergPhaseTracker phase={workspace.kriesberg_phase} />
-      ) : escalation ? (
-        <KriesbergPhaseTracker phase="latent" />
-      ) : null}
+      )}
     </div>
   );
 }

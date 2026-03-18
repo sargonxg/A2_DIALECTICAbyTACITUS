@@ -1,124 +1,135 @@
 """
-Theory Knowledge Graph — Node and edge types for the DIALECTICA theory layer.
+Theory Knowledge Graph — Node and edge types for the meta-layer theory graph.
 
-Encodes conflict resolution theory as structured, queryable knowledge:
-  TheoryConcept: Named concept from a framework (BATNA, Hurting Stalemate, etc.)
-  ConflictPattern: Recurring pattern across conflicts (Escalation Spiral, etc.)
-  AnalyticalProcedure: Step-by-step methodology (Stakeholder Mapping, etc.)
-
-Theory graph edge types:
-  BUILDS_ON: TheoryConcept -> TheoryConcept (intellectual lineage)
-  CONTRADICTS: TheoryConcept -> TheoryConcept
-  APPLIES_TO: TheoryConcept -> ConflictPattern
-  DETECTS: AnalyticalProcedure -> ConflictPattern
-  RECOMMENDS: ConflictPattern -> AnalyticalProcedure
-  PREREQUISITE: AnalyticalProcedure -> AnalyticalProcedure
+This separate graph captures conflict resolution theory itself:
+theorists, publications, concepts, methodologies, principles, and patterns.
+It is shared across all tenants as the universal theory scaffold.
 """
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class ProcedureStep(BaseModel):
-    step_number: int
+class TheoryNode(BaseModel):
+    """Base for all theory graph nodes."""
+
+    model_config = ConfigDict(populate_by_name=True, use_enum_values=True)
+
+    id: str
+    label: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TheoryConcept(TheoryNode):
+    """A named concept from a theory (e.g., BATNA, Hurting Stalemate)."""
+
+    label: str = "TheoryConcept"
+    name: str
+    framework_id: str
+    description: str
+    category: str = ""
+    key_authors: list[str] = Field(default_factory=list)
+
+
+class Theorist(TheoryNode):
+    """A person who developed a conflict resolution theory."""
+
+    label: str = "Theorist"
+    name: str
+    affiliation: str = ""
+    key_works: list[str] = Field(default_factory=list)
+    birth_year: int | None = None
+
+
+class Publication(TheoryNode):
+    """A key publication in conflict resolution theory."""
+
+    label: str = "Publication"
     title: str
-    description: str
-    required_data: list[str] = Field(default_factory=list)
-    output: str = ""
+    year: int
+    authors: list[str]
+    publisher: str = ""
+    isbn: str = ""
 
 
-class TheoryConcept(BaseModel):
-    """A named concept from a conflict resolution theory framework."""
-    id: str
-    name: str
-    framework_id: str
-    definition: str
-    examples: list[str] = Field(default_factory=list)
-    related_conflict_node_types: list[str] = Field(default_factory=list)
-    detection_indicators: list[str] = Field(default_factory=list)
-    builds_on: list[str] = Field(default_factory=list)      # other concept IDs
-    contradicts: list[str] = Field(default_factory=list)    # other concept IDs
+class Methodology(TheoryNode):
+    """A method for conflict analysis or resolution."""
 
-
-class ConflictPattern(BaseModel):
-    """A recurring structural pattern across conflicts."""
-    id: str
+    label: str = "Methodology"
     name: str
     description: str
-    graph_signature: str  # Cypher/GQL pattern that detects it
-    theory_concepts: list[str] = Field(default_factory=list)  # TheoryConcept IDs
-    historical_examples: list[str] = Field(default_factory=list)
-    intervention_strategies: list[str] = Field(default_factory=list)
-    frequency: str = "common"  # "rare" | "occasional" | "common"
+    applicable_stages: list[str] = Field(default_factory=list)
+    prerequisites: list[str] = Field(default_factory=list)
 
 
-class AnalyticalProcedure(BaseModel):
-    """A step-by-step analytical methodology from the practitioner literature."""
-    id: str
+class Principle(TheoryNode):
+    """A normative principle for conflict resolution."""
+
+    label: str = "Principle"
     name: str
-    source: str
     description: str
-    steps: list[ProcedureStep] = Field(default_factory=list)
-    required_data: list[str] = Field(default_factory=list)
-    output_type: str
-    detects_patterns: list[str] = Field(default_factory=list)  # ConflictPattern IDs
-    prerequisites: list[str] = Field(default_factory=list)     # other procedure IDs
-    time_required: str = "1-2 hours"
-    skill_level: str = "intermediate"
+    source_framework: str = ""
 
 
-class TheoryMatch(BaseModel):
-    """Result of matching workspace patterns against theory graph."""
-    pattern_id: str
-    pattern_name: str
-    confidence: float
-    applicable_concepts: list[str] = Field(default_factory=list)
-    recommended_procedures: list[str] = Field(default_factory=list)
+class Pattern(TheoryNode):
+    """A recurring conflict pattern recognized by theory."""
+
+    label: str = "Pattern"
+    name: str
+    description: str
+    indicators: list[str] = Field(default_factory=list)
+    graph_signature: dict[str, Any] = Field(default_factory=dict)
 
 
-class TheoryGuidance(BaseModel):
-    """Framework-specific guidance contextualised to a workspace."""
-    framework_id: str
-    framework_name: str
-    workspace_id: str
-    applicable_concepts: list[TheoryConcept] = Field(default_factory=list)
-    detected_patterns: list[ConflictPattern] = Field(default_factory=list)
-    recommended_procedures: list[AnalyticalProcedure] = Field(default_factory=list)
-    synthesis: str = ""
+# ─── Theory Edge Types ─────────────────────────────────────────────────────
 
+THEORY_EDGE_TYPES = {
+    "BUILDS_ON": {
+        "source": "TheoryConcept",
+        "target": "TheoryConcept",
+        "description": "Intellectual lineage between concepts",
+    },
+    "CONTRADICTS": {
+        "source": "TheoryConcept",
+        "target": "TheoryConcept",
+        "description": "Theoretical disagreement between concepts",
+    },
+    "AUTHORED_BY": {
+        "source": "Publication",
+        "target": "Theorist",
+        "description": "Authorship relation",
+    },
+    "INTRODUCES": {
+        "source": "Publication",
+        "target": "TheoryConcept",
+        "description": "Publication introduces a concept",
+    },
+    "APPLIES_VIA": {
+        "source": "Methodology",
+        "target": "TheoryConcept",
+        "description": "Method applies a concept",
+    },
+    "EXEMPLIFIES": {
+        "source": "Pattern",
+        "target": "TheoryConcept",
+        "description": "Pattern exemplifies a concept",
+    },
+    "PRESCRIBES": {
+        "source": "Principle",
+        "target": "Methodology",
+        "description": "Principle prescribes a methodology",
+    },
+}
 
-class RecommendedProcedure(BaseModel):
-    """An analytical procedure recommended for a workspace's current state."""
-    procedure: AnalyticalProcedure
-    rationale: str
-    priority: int = 1
-    estimated_value: float = 0.5
-
-
-# ---------------------------------------------------------------------------
-# Theory graph edge type constants
-# ---------------------------------------------------------------------------
-
-THEORY_EDGE_BUILDS_ON = "BUILDS_ON"
-THEORY_EDGE_CONTRADICTS = "CONTRADICTS"
-THEORY_EDGE_APPLIES_TO = "APPLIES_TO"
-THEORY_EDGE_DETECTS = "DETECTS"
-THEORY_EDGE_RECOMMENDS = "RECOMMENDS"
-THEORY_EDGE_PREREQUISITE = "PREREQUISITE"
-
-THEORY_EDGE_TYPES = [
-    THEORY_EDGE_BUILDS_ON,
-    THEORY_EDGE_CONTRADICTS,
-    THEORY_EDGE_APPLIES_TO,
-    THEORY_EDGE_DETECTS,
-    THEORY_EDGE_RECOMMENDS,
-    THEORY_EDGE_PREREQUISITE,
+THEORY_NODE_TYPES = [
+    TheoryConcept,
+    Theorist,
+    Publication,
+    Methodology,
+    Principle,
+    Pattern,
 ]
-
-# ---------------------------------------------------------------------------
-# WORKSPACE_ID for the shared theory graph
-# ---------------------------------------------------------------------------
-
-THEORY_WORKSPACE_ID = "__theory__"

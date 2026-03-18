@@ -1,213 +1,82 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Calendar, AlertTriangle, Loader2, Clock } from 'lucide-react';
-import { graphApi } from '@/lib/api';
-import type { GraphNode } from '@/lib/api';
+import { useRef, useEffect } from "react";
+import * as d3 from "d3";
+import { NODE_COLORS } from "@/lib/utils";
 
-const EVENT_TYPE_COLORS: Record<string, string> = {
-  ceasefire:   '#22c55e',
-  negotiation: '#06b6d4',
-  attack:      '#ef4444',
-  protest:     '#f97316',
-  election:    '#3b82f6',
-  displacement:'#eab308',
-  accord:      '#22c55e',
-  sanction:    '#a855f7',
-  default:     '#6366f1',
-};
-
-function eventTypeColor(type?: string): string {
-  if (!type) return EVENT_TYPE_COLORS.default;
-  const t = type.toLowerCase();
-  for (const key of Object.keys(EVENT_TYPE_COLORS)) {
-    if (t.includes(key)) return EVENT_TYPE_COLORS[key];
-  }
-  return EVENT_TYPE_COLORS.default;
+interface TimelineEvent {
+  id: string;
+  name: string;
+  occurred_at: string;
+  event_type: string;
+  severity: number;
+  actor_id?: string;
 }
 
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return 'Unknown date';
-  try {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
+interface Props {
+  events: TimelineEvent[];
+  width: number;
+  height: number;
+  onEventClick?: (event: TimelineEvent) => void;
 }
 
-function getSeverity(node: GraphNode): number | undefined {
-  const s = node.properties?.severity ?? node.properties?.intensity;
-  if (typeof s === 'number') return s;
-  if (typeof s === 'string') return parseFloat(s) || undefined;
-  return undefined;
-}
-
-function getEventType(node: GraphNode): string | undefined {
-  const t = node.properties?.event_type ?? node.properties?.type;
-  if (typeof t === 'string') return t;
-  return undefined;
-}
-
-function getOccurredAt(node: GraphNode): string | undefined {
-  const d =
-    node.properties?.occurred_at ??
-    node.properties?.date ??
-    node.properties?.timestamp;
-  if (typeof d === 'string') return d;
-  return undefined;
-}
-
-interface EventTimelineProps {
-  workspaceId: string;
-}
-
-export function EventTimeline({ workspaceId }: EventTimelineProps) {
-  const [events, setEvents] = useState<GraphNode[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function EventTimeline({ events, width, height, onEventClick }: Props) {
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    graphApi
-      .getNodes(workspaceId, 'Event')
-      .then(({ nodes }) => {
-        // Sort by occurred_at, most recent first
-        const sorted = [...nodes].sort((a, b) => {
-          const da = getOccurredAt(a) ?? '';
-          const db = getOccurredAt(b) ?? '';
-          return db.localeCompare(da);
-        });
-        setEvents(sorted);
-        setLoading(false);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [workspaceId]);
+    if (!svgRef.current || !events.length) return;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-12 text-zinc-500">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm">Loading events…</span>
-      </div>
-    );
-  }
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
 
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-red-900/40 bg-red-950/20 px-4 py-3 text-sm text-red-400">
-        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-        <span>{error}</span>
-      </div>
-    );
-  }
+    const margin = { top: 20, right: 20, bottom: 40, left: 20 };
+    const w = width - margin.left - margin.right;
+    const h = height - margin.top - margin.bottom;
 
-  if (events.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-        <Clock className="h-8 w-8 text-zinc-700" />
-        <p className="text-sm text-zinc-500">No events recorded</p>
-        <p className="text-xs text-zinc-600">
-          Ingest documents with event mentions to populate the timeline.
-        </p>
-      </div>
-    );
-  }
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-  return (
-    <div className="relative space-y-0">
-      {/* Timeline rail */}
-      <div className="absolute left-[88px] top-0 bottom-0 w-px bg-[#27272a]" />
+    const dates = events.map((e) => new Date(e.occurred_at));
+    const xScale = d3.scaleTime().domain(d3.extent(dates) as [Date, Date]).range([0, w]);
 
-      {events.map((evt, i) => {
-        const eventType = getEventType(evt);
-        const occurredAt = getOccurredAt(evt);
-        const severity = getSeverity(evt);
-        const description = evt.properties?.description as string | undefined;
-        const color = eventTypeColor(eventType);
+    // Axis
+    g.append("g")
+      .attr("transform", `translate(0,${h})`)
+      .call(d3.axisBottom(xScale).ticks(8))
+      .selectAll("text")
+      .attr("fill", "#94a3b8")
+      .style("font-size", "10px");
+    g.selectAll(".domain, .tick line").attr("stroke", "#334155");
 
-        return (
-          <div key={evt.id ?? i} className="relative flex gap-4 pb-5 last:pb-0">
-            {/* Date column */}
-            <div className="w-20 flex-shrink-0 pt-0.5 text-right">
-              <div className="flex items-center justify-end gap-1">
-                <Calendar className="h-3 w-3 text-zinc-600 flex-shrink-0" />
-                <span className="text-[10px] text-zinc-500 leading-tight">
-                  {formatDate(occurredAt)}
-                </span>
-              </div>
-            </div>
+    // Timeline line
+    g.append("line")
+      .attr("x1", 0).attr("y1", h / 2)
+      .attr("x2", w).attr("y2", h / 2)
+      .attr("stroke", "#334155").attr("stroke-width", 1);
 
-            {/* Dot */}
-            <div className="relative z-10 flex-shrink-0 -ml-[4.5px] mt-[3px]">
-              <div
-                className="h-2.5 w-2.5 rounded-full ring-2 ring-[#09090b]"
-                style={{ backgroundColor: color }}
-              />
-            </div>
+    // Events
+    g.selectAll("circle")
+      .data(events)
+      .join("circle")
+      .attr("cx", (d) => xScale(new Date(d.occurred_at)))
+      .attr("cy", h / 2)
+      .attr("r", (d) => Math.max(4, d.severity * 10))
+      .attr("fill", (d) => NODE_COLORS[d.event_type] || "#eab308")
+      .attr("fill-opacity", 0.8)
+      .style("cursor", "pointer")
+      .on("click", (_event, d) => onEventClick?.(d));
 
-            {/* Content */}
-            <div className="flex-1 min-w-0 rounded-lg border border-[#27272a] bg-[#18181b] p-3">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium text-zinc-200 leading-snug">
-                  {evt.name || evt.id}
-                </p>
-                {eventType && (
-                  <span
-                    className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
-                    style={{
-                      backgroundColor: `${color}20`,
-                      color,
-                      border: `1px solid ${color}40`,
-                    }}
-                  >
-                    {eventType}
-                  </span>
-                )}
-              </div>
+    // Labels for significant events
+    g.selectAll("text.label")
+      .data(events.filter((e) => e.severity > 0.7))
+      .join("text")
+      .attr("class", "label")
+      .attr("x", (d) => xScale(new Date(d.occurred_at)))
+      .attr("y", h / 2 - 20)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#94a3b8")
+      .style("font-size", "9px")
+      .text((d) => d.name.slice(0, 20));
+  }, [events, width, height, onEventClick]);
 
-              {description && (
-                <p className="mt-1.5 text-xs text-zinc-500 leading-relaxed line-clamp-2">
-                  {description}
-                </p>
-              )}
-
-              {/* Severity bar */}
-              {severity !== undefined && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[10px] text-zinc-600 w-12">Severity</span>
-                  <div className="flex-1 h-1 rounded-full bg-zinc-800">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(100, severity * 100)}%`,
-                        backgroundColor:
-                          severity > 0.7
-                            ? '#ef4444'
-                            : severity > 0.4
-                            ? '#f97316'
-                            : '#eab308',
-                      }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-zinc-500 tabular-nums w-7 text-right">
-                    {Math.round(severity * 100)}%
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  return <svg ref={svgRef} width={width} height={height} className="bg-background rounded-lg" />;
 }
-
-export default EventTimeline;
