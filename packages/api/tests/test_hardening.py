@@ -60,9 +60,16 @@ async def hardened_client():
     """Async test client with hardened auth configuration."""
     with patch.dict(os.environ, _ENV_OVERRIDES, clear=False):
         app = _make_app()
+
+        # Override graph client so tests don't require Spanner/Neo4j
+        from dialectica_api.deps import get_graph_client
+        app.dependency_overrides[get_graph_client] = lambda: None
+
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
             yield ac
+
+        app.dependency_overrides.clear()
 
 
 # ── Rate Limiting Tests ───────────────────────────────────────────────────────
