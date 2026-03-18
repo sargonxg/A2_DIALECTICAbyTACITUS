@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from dialectica_api.config import get_settings
-from dialectica_api.middleware.auth import AuthMiddleware
+from dialectica_api.middleware.auth import AuthMiddleware, validate_production_config
 from dialectica_api.middleware.tenant import TenantMiddleware
 from dialectica_api.middleware.rate_limit import RateLimitMiddleware
 from dialectica_api.middleware.logging import LoggingMiddleware
@@ -22,6 +22,7 @@ from dialectica_api.middleware.usage import UsageMiddleware
 from dialectica_api.routers import (
     health, workspaces, entities, relationships,
     extraction, graph, reasoning, theory, admin, developers,
+    sdk_info, benchmark,
 )
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(message)s")
@@ -30,6 +31,9 @@ logger = logging.getLogger("dialectica.api")
 
 def create_app() -> FastAPI:
     settings = get_settings()
+
+    # ── Production safety checks ──────────────────────────────────────────
+    validate_production_config()
 
     app = FastAPI(
         title="DIALECTICA API",
@@ -59,6 +63,21 @@ def create_app() -> FastAPI:
     app.add_middleware(TenantMiddleware)
     app.add_middleware(AuthMiddleware)
 
+    # ── Prometheus metrics ────────────────────────────────────────────────
+    try:
+        from prometheus_fastapi_instrumentator import Instrumentator
+
+        Instrumentator(
+            should_group_status_codes=True,
+            should_ignore_untemplated=True,
+            excluded_handlers=["/health", "/health/", "/metrics"],
+        ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=True)
+        logger.info('{"event":"prometheus_enabled","endpoint":"/metrics"}')
+    except ImportError:
+        logger.warning(
+            '{"event":"prometheus_disabled","reason":"prometheus-fastapi-instrumentator not installed"}'
+        )
+
     app.include_router(health.router)
     app.include_router(workspaces.router)
     app.include_router(entities.router)
@@ -69,6 +88,8 @@ def create_app() -> FastAPI:
     app.include_router(theory.router)
     app.include_router(admin.router)
     app.include_router(developers.router)
+    app.include_router(sdk_info.router)
+    app.include_router(benchmark.router)
 
     @app.on_event("startup")
     async def startup() -> None:
@@ -90,6 +111,15 @@ def create_app() -> FastAPI:
                 await _graph_client_instance.close()
             except Exception:
                 pass
+
+        # Clean up rate-limit backend
+        from dialectica_api.middleware.rate_limit import get_rate_limit_backend
+        try:
+            backend = get_rate_limit_backend()
+            await backend.close()
+        except Exception:
+            pass
+
         logger.info('{"event":"shutdown"}')
 
     return app

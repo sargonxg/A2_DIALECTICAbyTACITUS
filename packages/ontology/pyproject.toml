@@ -1,11 +1,32 @@
 [tool.poetry]
 name = "dialectica-ontology"
 version = "2.0.1"
-description = "TACITUS Core Ontology — The Conflict Grammar (15 node types, 20 edge types, 25+ enums)"
+description = "TACITUS Agentic Conflict Ontology (ACO) v2.0 — Graph-native ontology for conflict modeling"
 authors = ["TACITUS <team@tacitus.ai>"]
 license = "Apache-2.0"
 readme = "README.md"
 packages = [{include = "dialectica_ontology", from = "src"}]
+keywords = [
+    "conflict",
+    "ontology",
+    "graph",
+    "negotiation",
+    "peacebuilding",
+    "pydantic",
+    "knowledge-graph",
+    "neurosymbolic",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+
+[tool.poetry.urls]
+homepage = "https://tacitus.me"
+repository = "https://github.com/sargonxg/dialectica"
 
 [tool.poetry.dependencies]
 python = "^3.11"

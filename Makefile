@@ -1,5 +1,6 @@
 .PHONY: dev test lint format typecheck seed seed-schema seed-frameworks seed-samples \
-        create-admin-key deploy build clean docker-build docker-push help
+        create-admin-key deploy build clean docker-build docker-push publish-ontology \
+        sdk-generate sdk-build benchmark help
 
 # ─── Variables ───────────────────────────────────────────────────────────────
 PROJECT_ID ?= $(shell gcloud config get-value project 2>/dev/null)
@@ -56,6 +57,15 @@ test-reasoning: ## Run reasoning package tests
 test-web: ## Run Next.js tests
 	cd apps/web && npm test
 
+test-benchmark: ## Run benchmark tests only
+	pytest packages/api/tests/test_benchmark.py -v
+
+benchmark: ## Run JCPOA benchmark evaluation via API (requires running server)
+	curl -s -X POST http://localhost:8000/v1/admin/benchmark/run \
+		-H "Content-Type: application/json" \
+		-H "X-API-Key: $${ADMIN_API_KEY:-dev-admin-key-change-in-production}" \
+		-d '{"corpus_id":"jcpoa","tier":"standard","include_graph_augmented":true}' | python -m json.tool
+
 # ─── Code Quality ─────────────────────────────────────────────────────────────
 
 lint: ## Run ruff linter
@@ -98,6 +108,14 @@ seed: seed-schema seed-frameworks seed-samples ## Run all seed operations
 
 create-admin-key: ## Generate and store admin API key
 	python infrastructure/scripts/create_admin_key.py
+
+# ─── SDK ──────────────────────────────────────────────────────────────────────
+
+sdk-generate: ## Generate TypeScript SDK from OpenAPI spec
+	bash infrastructure/scripts/generate_sdk.sh
+
+sdk-build: sdk-generate ## Generate and build TypeScript SDK
+	cd packages/sdk-typescript && npx tsc
 
 # ─── Build ────────────────────────────────────────────────────────────────────
 
@@ -155,6 +173,9 @@ install-web: ## Install web app dependencies
 
 install-dev: install install-web ## Install all dependencies including dev tools
 	pip install ruff mypy pytest pytest-asyncio pytest-cov
+
+publish-ontology: ## Build and publish ontology package to PyPI
+	cd packages/ontology && python -m build && twine upload dist/*
 
 clean: ## Clean build artifacts
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

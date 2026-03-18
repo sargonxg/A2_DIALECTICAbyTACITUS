@@ -1,6 +1,21 @@
 version: "3.9"
 
 services:
+  # ─── Redis (rate limiting, caching) ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: dialectica-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
   # ─── Google Cloud Spanner Emulator ──────────────────────────────────────
   spanner-emulator:
     image: gcr.io/cloud-spanner-emulator/emulator:latest
@@ -49,6 +64,8 @@ services:
     depends_on:
       spanner-emulator:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       # GCP
       GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
@@ -63,6 +80,11 @@ services:
       ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-change-in-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Hardening
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      API_KEYS_JSON: ${API_KEYS_JSON:-[]}
       # Google Application Credentials (mount key file in production)
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     volumes:
@@ -131,6 +153,8 @@ services:
     depends_on:
       neo4j:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       GRAPH_BACKEND: neo4j
       NEO4J_URI: bolt://neo4j:7687
@@ -143,6 +167,10 @@ services:
       VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-east1}
       GEMINI_FLASH_MODEL: ${GEMINI_FLASH_MODEL:-gemini-2.5-flash-001}
       GEMINI_PRO_MODEL: ${GEMINI_PRO_MODEL:-gemini-2.5-pro-001}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      API_KEYS_JSON: ${API_KEYS_JSON:-[]}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 15s

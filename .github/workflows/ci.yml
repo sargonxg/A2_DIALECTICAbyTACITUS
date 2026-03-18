@@ -158,6 +158,54 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080
 
+  # ─── SDK Generation Verification ──────────────────────────────────────────
+  sdk-verify:
+    name: SDK Generation & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Python packages
+        run: |
+          pip install -e packages/ontology
+          pip install -e packages/graph
+          pip install -e packages/extraction
+          pip install -e packages/reasoning
+          pip install -e packages/api
+
+      - name: Generate OpenAPI spec
+        run: |
+          python -c "
+          import json
+          from dialectica_api.main import app
+          spec = app.openapi()
+          with open('openapi.json', 'w') as f:
+              json.dump(spec, f, indent=2)
+          print('OpenAPI spec generated successfully')
+          "
+
+      - name: Generate TypeScript types
+        working-directory: packages/sdk-typescript
+        run: |
+          npm install
+          npx openapi-typescript ../../openapi.json -o src/generated/api-types.ts
+
+      - name: Type check SDK
+        working-directory: packages/sdk-typescript
+        run: npx tsc --noEmit
+
   # ─── Docker Build Check ────────────────────────────────────────────────────
   docker-build:
     name: Docker Build Check
