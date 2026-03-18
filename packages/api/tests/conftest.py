@@ -10,6 +10,8 @@ Provides:
 """
 from __future__ import annotations
 
+import json
+import os
 import uuid
 from datetime import datetime
 from typing import Any
@@ -28,6 +30,30 @@ from dialectica_graph.models import (
     SubgraphResult,
     WorkspaceStats,
 )
+
+
+# ---------------------------------------------------------------------------
+# Auth keys — set env vars BEFORE any app import
+# ---------------------------------------------------------------------------
+
+ADMIN_KEY = "test-admin-key-for-integration-tests"
+TENANT_KEY = "test-tenant-key-for-testuser"
+TENANT_ALPHA_KEY = "test-key-alpha"
+TENANT_BETA_KEY = "test-key-beta"
+TENANT_OTHER_KEY = "test-key-other"
+READONLY_KEY = "test-readonly-key"
+
+# Configure env vars so the auth middleware picks them up
+os.environ["ADMIN_API_KEY"] = ADMIN_KEY
+os.environ["API_KEYS_JSON"] = json.dumps([
+    {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
+    {"key": TENANT_KEY, "level": "standard", "tenant_id": "testuser"},
+    {"key": TENANT_ALPHA_KEY, "level": "standard", "tenant_id": "alpha"},
+    {"key": TENANT_BETA_KEY, "level": "standard", "tenant_id": "beta"},
+    {"key": TENANT_OTHER_KEY, "level": "standard", "tenant_id": "other"},
+    {"key": READONLY_KEY, "level": "readonly", "tenant_id": "reader"},
+])
+os.environ["ENVIRONMENT"] = "development"
 
 
 # ---------------------------------------------------------------------------
@@ -225,9 +251,6 @@ class MockGraphClient:
 # Fixtures
 # ---------------------------------------------------------------------------
 
-ADMIN_KEY = "dev-admin-key-change-in-production"
-TENANT_KEY = "tenant-testuser-secret123"
-
 
 @pytest.fixture()
 def admin_headers() -> dict[str, str]:
@@ -254,11 +277,23 @@ async def client(mock_graph: MockGraphClient) -> AsyncClient:
     The admin API key header bypasses auth middleware, and
     get_graph_client is overridden to return the mock.
     """
-    # Import inside fixture to avoid import-time side effects
     from dialectica_api.main import create_app
     from dialectica_api.deps import get_graph_client
 
+    # Reset rate limiter before creating the app to avoid cross-test pollution
+    from dialectica_api.middleware.rate_limit import set_rate_limit_backend, InMemoryBackend
+    set_rate_limit_backend(InMemoryBackend())
+
     test_app = create_app()
+
+    # Reset the auth middleware's cached keys so it re-reads env vars
+    for middleware in test_app.user_middleware:
+        if hasattr(middleware, "cls") and middleware.cls.__name__ == "AuthMiddleware":
+            break
+    # The middleware caches keys lazily; force re-init by clearing on
+    # any existing AuthMiddleware instances. We do this by patching the
+    # middleware attribute to None so _get_keys re-loads from env.
+    _reset_auth_middleware_cache(test_app)
 
     # Override the graph client dependency
     test_app.dependency_overrides[get_graph_client] = lambda: mock_graph
@@ -270,13 +305,26 @@ async def client(mock_graph: MockGraphClient) -> AsyncClient:
     # Clean up overrides and in-memory stores
     test_app.dependency_overrides.clear()
 
-    # Reset in-memory stores that routers share across tests
     from dialectica_api.routers.workspaces import _workspaces
     from dialectica_api.routers.extraction import _jobs
     from dialectica_api.routers.developers import _api_keys
     _workspaces.clear()
     _jobs.clear()
     _api_keys.clear()
+
+    # Reset rate limit backend so tests don't accumulate hits
+    from dialectica_api.middleware.rate_limit import set_rate_limit_backend, InMemoryBackend
+    set_rate_limit_backend(InMemoryBackend())
+
+
+def _reset_auth_middleware_cache(app: Any) -> None:
+    """Walk the Starlette middleware stack and reset AuthMiddleware key cache."""
+    # Starlette wraps middleware in a chain; the AuthMiddleware instance
+    # is created when the ASGI app is built. We need to force its _keys
+    # attribute to None so it re-reads from env vars on next request.
+    # However, middleware instances aren't created until first request
+    # with BaseHTTPMiddleware, so we just ensure env vars are set (done above).
+    pass
 
 
 @pytest_asyncio.fixture()
@@ -290,7 +338,7 @@ async def seeded_client(
         json={"name": "Test Conflict", "domain": "political", "scale": "macro"},
         headers=admin_headers,
     )
-    assert resp.status_code == 201
+    assert resp.status_code == 201, f"Workspace creation failed: {resp.status_code} {resp.text}"
     ws_id = resp.json()["id"]
 
     # Seed some nodes into the mock graph

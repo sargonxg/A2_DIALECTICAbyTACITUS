@@ -19,6 +19,10 @@ from httpx import AsyncClient
 # Constants matching conftest.py fixtures
 ADMIN_KEY = "test-admin-key-for-integration-tests"
 TENANT_KEY = "test-tenant-key-for-testuser"
+TENANT_ALPHA_KEY = "test-key-alpha"
+TENANT_BETA_KEY = "test-key-beta"
+TENANT_OTHER_KEY = "test-key-other"
+READONLY_KEY = "test-readonly-key"
 
 pytestmark = pytest.mark.asyncio
 
@@ -847,15 +851,15 @@ class TestTenantIsolation:
         ws_id = create_resp.json()["id"]
 
         # Try to access as a different tenant
-        tenant_headers = {"X-API-Key": "tenant-other-secret"}
-        resp = await client.get(f"/v1/workspaces/{ws_id}", headers=tenant_headers)
+        other_headers = {"X-API-Key": TENANT_OTHER_KEY}
+        resp = await client.get(f"/v1/workspaces/{ws_id}", headers=other_headers)
         assert resp.status_code == 403
 
     async def test_tenant_can_only_see_own_workspaces(
         self, client: AsyncClient
     ) -> None:
         # Create workspace as tenant-alpha
-        alpha_headers = {"X-API-Key": "tenant-alpha-secret"}
+        alpha_headers = {"X-API-Key": TENANT_ALPHA_KEY}
         await client.post(
             "/v1/workspaces",
             json={"name": "Alpha WS"},
@@ -863,7 +867,7 @@ class TestTenantIsolation:
         )
 
         # Create workspace as tenant-beta
-        beta_headers = {"X-API-Key": "tenant-beta-secret"}
+        beta_headers = {"X-API-Key": TENANT_BETA_KEY}
         await client.post(
             "/v1/workspaces",
             json={"name": "Beta WS"},
@@ -884,15 +888,17 @@ class TestTenantIsolation:
         self, client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         # Create workspaces as different tenants
+        alpha_headers = {"X-API-Key": TENANT_ALPHA_KEY}
+        beta_headers = {"X-API-Key": TENANT_BETA_KEY}
         await client.post(
             "/v1/workspaces",
             json={"name": "T1 WS"},
-            headers={"X-API-Key": "tenant-t1-sec"},
+            headers=alpha_headers,
         )
         await client.post(
             "/v1/workspaces",
             json={"name": "T2 WS"},
-            headers={"X-API-Key": "tenant-t2-sec"},
+            headers=beta_headers,
         )
         # Admin sees all
         resp = await client.get("/v1/workspaces", headers=admin_headers)

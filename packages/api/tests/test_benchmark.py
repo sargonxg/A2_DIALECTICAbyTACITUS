@@ -10,6 +10,9 @@ Covers:
 """
 from __future__ import annotations
 
+import json
+import os
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -35,11 +38,30 @@ def tenant_headers() -> dict[str, str]:
 
 @pytest_asyncio.fixture()
 async def client() -> AsyncClient:
+    # Configure auth keys via environment so middleware recognises both keys
+    os.environ["ADMIN_API_KEY"] = ADMIN_KEY
+    os.environ["API_KEYS_JSON"] = json.dumps([
+        {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
+        {"key": TENANT_KEY, "level": "standard", "tenant_id": "testuser"},
+    ])
+
     from dialectica_api.main import create_app
     from dialectica_api.deps import get_graph_client
 
     test_app = create_app()
     test_app.dependency_overrides[get_graph_client] = lambda: None
+
+    # Reset the auth middleware's cached keys so it picks up our env vars
+    for middleware in getattr(test_app, "user_middleware", []):
+        if hasattr(middleware, "cls"):
+            pass  # Starlette middleware stack
+    # The AuthMiddleware lazily caches keys; force reload by clearing _keys
+    # We walk the middleware stack to find it
+    app_ref = test_app
+    while hasattr(app_ref, "app"):
+        if hasattr(app_ref, "_keys"):
+            app_ref._keys = None
+        app_ref = app_ref.app
 
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
