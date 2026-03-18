@@ -1,63 +1,38 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { graphApi } from "@/lib/api";
-import type { GraphNode, GraphEdge } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
-export function useGraphData(workspaceId: string): {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
-} {
-  const [nodes, setNodes] = useState<GraphNode[]>([]);
-  const [edges, setEdges] = useState<GraphEdge[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
+export function useGraphData(workspaceId: string | undefined) {
+  return useQuery({
+    queryKey: ["graph", workspaceId],
+    queryFn: () => api.getGraph(workspaceId!),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
+}
 
-  useEffect(() => {
-    if (!workspaceId) {
-      setLoading(false);
-      return;
-    }
+export function useSubgraph(
+  workspaceId: string | undefined,
+  nodeId: string | undefined,
+  depth = 2,
+) {
+  return useQuery({
+    queryKey: ["subgraph", workspaceId, nodeId, depth],
+    queryFn: () => api.getSubgraph(workspaceId!, nodeId!, depth),
+    enabled: !!workspaceId && !!nodeId,
+    staleTime: 30_000,
+  });
+}
 
-    let cancelled = false;
-
-    async function fetchGraph() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [nodesResult, edgesResult] = await Promise.all([
-          graphApi.getNodes(workspaceId),
-          graphApi.getEdges(workspaceId),
-        ]);
-        if (!cancelled) {
-          setNodes(nodesResult.nodes ?? []);
-          setEdges(edgesResult.edges ?? []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load graph data");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchGraph();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [workspaceId, tick]);
-
-  const refetch = useCallback(() => {
-    setTick((t) => t + 1);
-  }, []);
-
-  return { nodes, edges, loading, error, refetch };
+export function useEntities(
+  workspaceId: string | undefined,
+  nodeType?: string,
+) {
+  return useQuery({
+    queryKey: ["entities", workspaceId, nodeType],
+    queryFn: () => api.getEntities(workspaceId!, nodeType),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
 }

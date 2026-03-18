@@ -1,48 +1,25 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import { Clock } from 'lucide-react';
-import { useWorkspace } from '@/hooks/useWorkspace';
-import { EventTimeline } from '@/components/timeline/EventTimeline';
-import { EscalationChart } from '@/components/timeline/EscalationChart';
+import { useParams } from "next/navigation";
+import EscalationChart from "@/components/timeline/EscalationChart";
+
+const SAMPLE_DATA = [
+  { date: "2024-01", glasl_stage: 2, sentiment: 0.3 },
+  { date: "2024-03", glasl_stage: 3, sentiment: -0.1 },
+  { date: "2024-05", glasl_stage: 4, sentiment: -0.4 },
+  { date: "2024-07", glasl_stage: 5, sentiment: -0.6 },
+  { date: "2024-09", glasl_stage: 4, sentiment: -0.3 },
+];
 
 export default function TimelinePage() {
-  const params = useParams();
-  const id = params.id as string;
-
-  const { workspace } = useWorkspace(id);
+  const { id } = useParams();
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[#09090b]">
-      {/* Page header */}
-      <div className="px-6 py-4 border-b border-[#27272a] flex items-center gap-2 shrink-0">
-        <Clock className="w-4 h-4 text-zinc-500" />
-        <h2 className="text-sm font-semibold text-zinc-200">
-          {workspace ? `${workspace.name} — Timeline` : 'Timeline'}
-        </h2>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* Event timeline — full width */}
-        <div className="rounded-xl border border-[#27272a] bg-[#18181b] overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#27272a]">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-              Event Timeline
-            </p>
-          </div>
-          <EventTimeline workspaceId={id} />
-        </div>
-
-        {/* Escalation chart — below event timeline */}
-        <div className="rounded-xl border border-[#27272a] bg-[#18181b] overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#27272a]">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-              Escalation Trajectory
-            </p>
-          </div>
-          <EscalationChart workspaceId={id} />
-        </div>
+    <div className="space-y-6">
+      <h2 className="text-lg font-semibold text-text-primary">Timeline</h2>
+      <EscalationChart data={SAMPLE_DATA} />
+      <div className="card text-center py-12">
+        <p className="text-text-secondary">Event timeline visualization will populate as events are extracted.</p>
       </div>
     </div>
   );

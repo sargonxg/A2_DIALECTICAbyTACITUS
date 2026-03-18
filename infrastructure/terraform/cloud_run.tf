@@ -66,7 +66,7 @@ resource "google_cloud_run_v2_service" "api" {
       }
       env {
         name  = "CORS_ORIGINS"
-        value = var.cors_origins != "" ? var.cors_origins : google_cloud_run_v2_service.web.uri
+        value = var.cors_origins != "" ? var.cors_origins : "*"
       }
       env {
         name = "ADMIN_API_KEY"

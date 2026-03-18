@@ -1,104 +1,45 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import { Plus, FolderOpen, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
-import { useWorkspaceList } from "@/hooks/useWorkspace";
-import { WorkspaceCard } from "@/components/workspace/WorkspaceCard";
+import { useWorkspaces } from "@/hooks/useApi";
+import WorkspaceCard from "@/components/workspace/WorkspaceCard";
+import { Plus, Search } from "lucide-react";
 
 export default function WorkspacesPage() {
-  const router = useRouter();
-  const { workspaces, loading, error, refetch } = useWorkspaceList();
+  const [search, setSearch] = useState("");
+  const { data, isLoading } = useWorkspaces();
+
+  const workspaces = (data?.items ?? []).filter(
+    (ws) => !search || ws.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
-    <div className="min-h-full p-8">
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-[#fafafa] mb-1">Workspaces</h1>
-          <p className="text-[#a1a1aa] text-sm">
-            Manage your conflict analysis workspaces.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={refetch}
-            disabled={loading}
-            className="p-2 rounded-md text-[#a1a1aa] hover:text-[#fafafa] hover:bg-[#27272a] transition-colors disabled:opacity-50"
-            title="Refresh"
-            aria-label="Refresh workspaces"
-          >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          </button>
-          <Link
-            href="/workspaces/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md transition-colors"
-          >
-            <Plus size={15} />
-            New Workspace
-          </Link>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-text-primary">Workspaces</h1>
+        <Link href="/workspaces/new" className="btn-primary flex items-center gap-2">
+          <Plus size={16} /> Create Workspace
+        </Link>
       </div>
 
-      {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-24">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 size={32} className="text-teal-500 animate-spin" />
-            <p className="text-[#a1a1aa] text-sm">Loading workspaces…</p>
-          </div>
-        </div>
-      )}
+      <div className="relative max-w-sm">
+        <Search size={14} className="absolute left-3 top-2.5 text-text-secondary" />
+        <input type="text" placeholder="Search workspaces..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-base w-full pl-9" />
+      </div>
 
-      {/* Error state */}
-      {!loading && error && (
-        <div className="bg-[#18181b] border border-red-500/30 rounded-lg p-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[#fafafa] font-medium mb-1">Failed to load workspaces</p>
-              <p className="text-[#a1a1aa] text-sm mb-4">{error}</p>
-              <button
-                onClick={refetch}
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#27272a] hover:bg-[#3f3f46] text-[#fafafa] text-sm rounded-md transition-colors"
-              >
-                <RefreshCw size={13} />
-                Try again
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && !error && workspaces.length === 0 && (
-        <div className="bg-[#18181b] border border-[#27272a] rounded-lg p-12 text-center">
-          <FolderOpen size={40} className="text-[#52525b] mx-auto mb-4" />
-          <h3 className="text-[#fafafa] font-semibold mb-2">No workspaces yet</h3>
-          <p className="text-[#a1a1aa] text-sm mb-6 max-w-sm mx-auto">
-            Create a workspace to begin mapping and analysing a conflict. Each workspace
-            holds a full knowledge graph of actors, events, issues, and dynamics.
-          </p>
-          <Link
-            href="/workspaces/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md transition-colors"
-          >
-            <Plus size={14} />
-            Create your first workspace
-          </Link>
-        </div>
-      )}
-
-      {/* Workspace grid */}
-      {!loading && !error && workspaces.length > 0 && (
+      {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {workspaces.map((workspace) => (
-            <WorkspaceCard
-              key={workspace.id}
-              workspace={workspace}
-              onClick={() => router.push(`/workspaces/${workspace.id}`)}
-            />
-          ))}
+          {[1, 2, 3].map((i) => <div key={i} className="card h-32 animate-pulse bg-surface-hover" />)}
+        </div>
+      ) : workspaces.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-text-secondary">No workspaces yet.</p>
+          <Link href="/workspaces/new" className="text-accent hover:underline text-sm mt-2 inline-block">Create your first workspace</Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {workspaces.map((ws) => <WorkspaceCard key={ws.id} workspace={ws} />)}
         </div>
       )}
     </div>

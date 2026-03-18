@@ -1,208 +1,108 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { Settings, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useWorkspaceStore } from "@/hooks/useWorkspace";
+import {
+  Search,
+  Bell,
+  ChevronRight,
+} from "lucide-react";
+import { useState } from "react";
 
-interface Crumb {
-  label: string;
-  href: string;
-}
+function breadcrumbsFromPath(pathname: string, workspaceName?: string): { label: string; href: string }[] {
+  const parts = pathname.split("/").filter(Boolean);
+  const crumbs: { label: string; href: string }[] = [];
+  let path = "";
 
-const ROUTE_LABELS: Record<string, string> = {
-  "": "Dashboard",
-  workspaces: "Workspaces",
-  ask: "Ask",
-  theory: "Theory",
-  explore: "Explore",
-  compare: "Compare",
-  developers: "Developers",
-  admin: "Admin",
-  new: "New",
-  graph: "Graph",
-  analysis: "Analysis",
-  timeline: "Timeline",
-  actors: "Actors",
-  causal: "Causal Chain",
-  ingest: "Ingest",
-  settings: "Settings",
-  docs: "Documentation",
-  keys: "API Keys",
-  playground: "Playground",
-  sdks: "SDKs",
-  examples: "Examples",
-  "api-keys": "API Keys",
-  extraction: "Extraction",
-  users: "Users",
-  usage: "Usage",
-  data: "Data",
-  "graph-health": "Graph Health",
-  system: "System",
-};
+  for (let i = 0; i < parts.length; i++) {
+    path += "/" + parts[i];
+    let label = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
 
-function buildBreadcrumbs(pathname: string): Crumb[] {
-  const segments = pathname.split("/").filter(Boolean);
-  const crumbs: Crumb[] = [{ label: "Dashboard", href: "/" }];
+    // Replace dynamic segments
+    if (parts[i - 1] === "workspaces" && parts[i] !== "new") {
+      label = workspaceName || "Workspace";
+    }
+    if (parts[i] === "[id]") continue;
 
-  let href = "";
-  for (const segment of segments) {
-    href += `/${segment}`;
-    // Skip dynamic segments like UUIDs for label lookup
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
-        segment,
-      );
-    const label = isUuid
-      ? "Workspace"
-      : (ROUTE_LABELS[segment] ?? segment.charAt(0).toUpperCase() + segment.slice(1));
-    crumbs.push({ label, href });
+    crumbs.push({ label: label.replace(/-/g, " "), href: path });
   }
 
   return crumbs;
 }
 
-function getCurrentPageTitle(crumbs: Crumb[]): string {
-  return crumbs[crumbs.length - 1]?.label ?? "Dashboard";
-}
-
-export function Header() {
+export default function Header() {
   const pathname = usePathname();
-  const crumbs = buildBreadcrumbs(pathname);
-  const pageTitle = getCurrentPageTitle(crumbs);
-
-  const [apiKeySet, setApiKeySet] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  useEffect(() => {
-    const check = () => {
-      const key = localStorage.getItem("dialectica_api_key");
-      setApiKeySet(!!key && key.trim().length > 0);
-    };
-    check();
-    // Re-check when storage changes (e.g., from settings dialog)
-    window.addEventListener("storage", check);
-    return () => window.removeEventListener("storage", check);
-  }, []);
-
-  function handleSettingsClick() {
-    setSettingsOpen((prev) => !prev);
-  }
-
-  function handleApiKeyChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value.trim();
-    if (value) {
-      localStorage.setItem("dialectica_api_key", value);
-    } else {
-      localStorage.removeItem("dialectica_api_key");
-    }
-    setApiKeySet(!!value);
-    // Dispatch storage event for other tabs
-    window.dispatchEvent(new Event("storage"));
-  }
+  const { currentWorkspace } = useWorkspaceStore();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const crumbs = breadcrumbsFromPath(pathname, currentWorkspace?.name);
 
   return (
-    <header className="h-14 bg-[#18181b] border-b border-[#27272a] flex items-center justify-between px-6 sticky top-0 z-30">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm">
-        {crumbs.map((crumb, index) => {
-          const isLast = index === crumbs.length - 1;
-          return (
-            <span key={crumb.href} className="flex items-center gap-1.5">
-              {index > 0 && (
-                <ChevronRight size={14} className="text-[#52525b]" />
-              )}
-              {isLast ? (
-                <span className="text-[#fafafa] font-medium">{crumb.label}</span>
-              ) : (
-                <Link
-                  href={crumb.href}
-                  className="text-[#a1a1aa] hover:text-[#fafafa] transition-colors"
-                >
-                  {crumb.label}
-                </Link>
-              )}
+    <header className="h-14 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-4">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-1 text-sm">
+        {crumbs.map((crumb, i) => (
+          <span key={crumb.href} className="flex items-center gap-1">
+            {i > 0 && <ChevronRight size={14} className="text-text-secondary" />}
+            <span
+              className={
+                i === crumbs.length - 1
+                  ? "text-text-primary font-medium"
+                  : "text-text-secondary"
+              }
+            >
+              {crumb.label}
             </span>
-          );
-        })}
+          </span>
+        ))}
       </nav>
 
-      {/* Right side controls */}
-      <div className="flex items-center gap-3">
-        {/* API key status indicator */}
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              apiKeySet ? "bg-green-500" : "bg-[#52525b]"
-            }`}
-            title={apiKeySet ? "API key configured" : "No API key set"}
-          />
-          <span className="text-[#a1a1aa] text-xs">
-            {apiKeySet ? "API key set" : "No API key"}
+      {/* Right side */}
+      <div className="flex items-center gap-2">
+        {/* Search */}
+        <button
+          onClick={() => setSearchOpen(!searchOpen)}
+          className="btn-ghost flex items-center gap-2"
+        >
+          <Search size={16} />
+          <span className="text-text-secondary text-xs hidden sm:inline">
+            <kbd className="px-1.5 py-0.5 bg-surface rounded text-[10px] border border-border">
+              &#8984;K
+            </kbd>
           </span>
-        </div>
+        </button>
 
-        {/* Settings button */}
-        <div className="relative">
-          <button
-            onClick={handleSettingsClick}
-            className="p-1.5 rounded-md text-[#a1a1aa] hover:text-[#fafafa] hover:bg-[#27272a] transition-colors"
-            title="Settings"
-            aria-label="Open settings"
-          >
-            <Settings size={16} />
-          </button>
-
-          {/* Inline settings popover for API key */}
-          {settingsOpen && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setSettingsOpen(false)}
-              />
-              <div className="absolute right-0 top-9 z-50 w-80 bg-[#18181b] border border-[#27272a] rounded-lg shadow-xl p-4">
-                <h3 className="text-[#fafafa] text-sm font-semibold mb-3">
-                  Settings
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <label
-                      htmlFor="api-key-input"
-                      className="block text-[#a1a1aa] text-xs mb-1.5"
-                    >
-                      API Key
-                    </label>
-                    <input
-                      id="api-key-input"
-                      type="password"
-                      defaultValue={
-                        typeof window !== "undefined"
-                          ? localStorage.getItem("dialectica_api_key") ?? ""
-                          : ""
-                      }
-                      onChange={handleApiKeyChange}
-                      placeholder="Enter your API key..."
-                      className="w-full bg-[#09090b] border border-[#27272a] rounded-md px-3 py-1.5 text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-teal-600 transition-colors"
-                    />
-                    <p className="text-[#52525b] text-xs mt-1">
-                      Stored locally in your browser. Never sent to third parties.
-                    </p>
-                  </div>
-                  <div className="pt-1 border-t border-[#27272a]">
-                    <p className="text-[#a1a1aa] text-xs">
-                      DIALECTICA API:{" "}
-                      <span className="font-mono text-[#fafafa]">
-                        {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        {/* Notifications */}
+        <button className="btn-ghost relative p-2">
+          <Bell size={16} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
+        </button>
       </div>
+
+      {/* Command palette overlay */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-[20vh]"
+          onClick={() => setSearchOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-surface border border-border rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center px-4 border-b border-border">
+              <Search size={16} className="text-text-secondary" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search workspaces, entities, theory..."
+                className="w-full bg-transparent px-3 py-3 text-sm text-text-primary placeholder:text-text-secondary outline-none"
+              />
+            </div>
+            <div className="p-2 text-sm text-text-secondary text-center py-8">
+              Start typing to search...
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

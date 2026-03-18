@@ -1,115 +1,117 @@
-'use client';
+"use client";
 
-import React from 'react';
-import {
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Maximize2,
-  Network,
-  AlignCenter,
-  Circle,
-} from 'lucide-react';
+import { NODE_COLORS } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import type { NodeType } from "@/types/ontology";
+import type { LayoutType } from "@/types/graph";
+import { Search, Maximize, Download } from "lucide-react";
 
-interface GraphControlsProps {
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onReset: () => void;
-  onFitView: () => void;
-  selectedLayout: string;
-  onLayoutChange: (layout: string) => void;
+interface Props {
+  activeNodeTypes: Set<NodeType>;
+  onToggleNodeType: (type: NodeType) => void;
+  layout: LayoutType;
+  onLayoutChange: (layout: LayoutType) => void;
+  confidenceThreshold: number;
+  onConfidenceChange: (val: number) => void;
+  searchQuery: string;
+  onSearchChange: (val: string) => void;
+  onFitToScreen: () => void;
+  onExport: (format: "png" | "svg" | "json") => void;
 }
 
-const LAYOUTS = [
-  { id: 'force-directed', label: 'Force', icon: Network },
-  { id: 'hierarchical',   label: 'Hierarchical', icon: AlignCenter },
-  { id: 'circular',       label: 'Circular', icon: Circle },
+const NODE_TYPES: NodeType[] = [
+  "actor", "conflict", "event", "issue", "interest", "norm",
+  "process", "outcome", "narrative", "emotional_state", "trust_state",
+  "power_dynamic", "location", "evidence", "role",
 ];
 
-function ControlButton({
-  onClick,
-  title,
-  children,
-}: {
-  onClick: () => void;
-  title: string;
-  children: React.ReactNode;
-}) {
+const LAYOUTS: { value: LayoutType; label: string }[] = [
+  { value: "force", label: "Force" },
+  { value: "hierarchy", label: "Hierarchy" },
+  { value: "radial", label: "Radial" },
+  { value: "temporal", label: "Temporal" },
+];
+
+export default function GraphControls({
+  activeNodeTypes, onToggleNodeType, layout, onLayoutChange,
+  confidenceThreshold, onConfidenceChange, searchQuery, onSearchChange,
+  onFitToScreen, onExport,
+}: Props) {
   return (
-    <button
-      onClick={onClick}
-      title={title}
-      className={[
-        'flex items-center justify-center w-9 h-9 rounded-md',
-        'text-zinc-400 hover:text-white hover:bg-white/10',
-        'transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-teal-600/50',
-      ].join(' ')}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function GraphControls({
-  onZoomIn,
-  onZoomOut,
-  onReset,
-  onFitView,
-  selectedLayout,
-  onLayoutChange,
-}: GraphControlsProps) {
-  return (
-    <div className="flex flex-col gap-1 rounded-xl border border-[#27272a] bg-[#18181b] p-2 shadow-xl">
-      {/* Zoom controls */}
-      <ControlButton onClick={onZoomIn} title="Zoom in">
-        <ZoomIn className="w-4 h-4" />
-      </ControlButton>
-      <ControlButton onClick={onZoomOut} title="Zoom out">
-        <ZoomOut className="w-4 h-4" />
-      </ControlButton>
-
-      {/* Divider */}
-      <div className="my-0.5 h-px bg-[#27272a]" />
-
-      {/* Fit / Reset */}
-      <ControlButton onClick={onFitView} title="Fit to view">
-        <Maximize2 className="w-4 h-4" />
-      </ControlButton>
-      <ControlButton onClick={onReset} title="Reset view">
-        <RotateCcw className="w-4 h-4" />
-      </ControlButton>
-
-      {/* Divider */}
-      <div className="my-0.5 h-px bg-[#27272a]" />
-
-      {/* Layout selector */}
-      <div className="flex flex-col gap-0.5">
-        {LAYOUTS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => onLayoutChange(id)}
-            title={label}
-            className={[
-              'flex items-center justify-center w-9 h-9 rounded-md transition-colors duration-150',
-              'focus:outline-none focus:ring-1 focus:ring-teal-600/50',
-              selectedLayout === id
-                ? 'bg-teal-600/20 text-teal-400 ring-1 ring-teal-600/40'
-                : 'text-zinc-400 hover:text-white hover:bg-white/10',
-            ].join(' ')}
-          >
-            <Icon className="w-4 h-4" />
-          </button>
-        ))}
+    <div className="space-y-4 p-4 card">
+      {/* Search */}
+      <div className="relative">
+        <Search size={14} className="absolute left-3 top-2.5 text-text-secondary" />
+        <input
+          type="text"
+          placeholder="Search nodes..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="input-base w-full pl-9"
+        />
       </div>
 
-      {/* Layout label tooltip area */}
-      <div className="px-1 pt-0.5">
-        <p className="text-[9px] text-center uppercase tracking-widest text-zinc-600 font-medium">
-          {LAYOUTS.find((l) => l.id === selectedLayout)?.label ?? 'Layout'}
+      {/* Node type filters */}
+      <div>
+        <p className="text-xs text-text-secondary mb-2 font-semibold uppercase tracking-wider">Node Types</p>
+        <div className="flex flex-wrap gap-1">
+          {NODE_TYPES.map((type) => (
+            <button
+              key={type}
+              onClick={() => onToggleNodeType(type)}
+              className={cn(
+                "badge transition-opacity text-[10px]",
+                activeNodeTypes.has(type) ? "opacity-100" : "opacity-30",
+              )}
+              style={{ backgroundColor: NODE_COLORS[type] + "20", color: NODE_COLORS[type] }}
+            >
+              {type.replace("_", " ")}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Layout */}
+      <div>
+        <p className="text-xs text-text-secondary mb-2 font-semibold uppercase tracking-wider">Layout</p>
+        <div className="flex gap-1">
+          {LAYOUTS.map((l) => (
+            <button
+              key={l.value}
+              onClick={() => onLayoutChange(l.value)}
+              className={cn("badge", layout === l.value ? "bg-accent/20 text-accent" : "bg-surface-hover text-text-secondary")}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Confidence threshold */}
+      <div>
+        <p className="text-xs text-text-secondary mb-2 font-semibold uppercase tracking-wider">
+          Confidence &ge; {confidenceThreshold.toFixed(1)}
         </p>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.1"
+          value={confidenceThreshold}
+          onChange={(e) => onConfidenceChange(parseFloat(e.target.value))}
+          className="w-full accent-accent"
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2">
+        <button onClick={onFitToScreen} className="btn-secondary flex-1 flex items-center justify-center gap-1">
+          <Maximize size={14} /> Fit
+        </button>
+        <button onClick={() => onExport("png")} className="btn-secondary flex-1 flex items-center justify-center gap-1">
+          <Download size={14} /> Export
+        </button>
       </div>
     </div>
   );
 }
-
-export default GraphControls;
