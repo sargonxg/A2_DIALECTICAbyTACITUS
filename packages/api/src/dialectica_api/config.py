@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "dialectica-dev"
 
+    # Rate limiting
+    rate_limit_backend: str = "memory"  # "memory" or "redis"
+    redis_url: str = "redis://localhost:6379"
+
+    # Environment & auth
+    environment: str = "development"  # "development" or "production"
+    api_keys_json: str = "[]"  # JSON array of key definitions
+
     model_config = {"env_prefix": "", "case_sensitive": False}
 
 

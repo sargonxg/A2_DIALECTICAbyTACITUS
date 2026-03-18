@@ -1,5 +1,34 @@
 "use client";
 
+// ─── SDK Migration Guide ─────────────────────────────────────────────────────
+//
+// BEFORE (current — manual API wrapper in @/lib/api):
+//
+//   import { workspacesApi, type Workspace } from "@/lib/api";
+//   const result = await workspacesApi.list();
+//   const ws = await workspacesApi.get(id);
+//
+// AFTER (with @tacitus/dialectica-sdk — fully typed from OpenAPI spec):
+//
+//   import { createDialecticaClient, type Workspace } from "@tacitus/dialectica-sdk";
+//
+//   const client = createDialecticaClient({
+//     apiKey: process.env.NEXT_PUBLIC_DIALECTICA_API_KEY!,
+//     baseUrl: process.env.NEXT_PUBLIC_API_URL,
+//   });
+//
+//   const workspaces = await client.workspaces.list();
+//   const ws = await client.workspaces.get(id);
+//
+//   // Also available:
+//   // await client.entities.list(workspaceId);
+//   // await client.graph.stats(workspaceId);
+//   // await client.reasoning.escalation(workspaceId);
+//   // await client.extraction.extractText(workspaceId, { text: "..." });
+//   // await client.theory.applyAll(workspaceId);
+//
+// ──────────────────────────────────────────────────────────────────────────────
+
 import { useState, useEffect, useCallback } from "react";
 import { workspacesApi, type Workspace } from "@/lib/api";
 
