@@ -3,14 +3,25 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
-    // Enable React 19 features
     reactCompiler: false,
   },
-  // API URL for server-side requests (different from public env for Docker networking)
   env: {
     INTERNAL_API_URL: process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
   },
-  // Security headers
+  // Proxy API calls to the backend (avoids CORS in production)
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${apiUrl}/v1/:path*`,
+      },
+      {
+        source: "/api/health",
+        destination: `${apiUrl}/health`,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -24,7 +35,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Image optimization
   images: {
     remotePatterns: [],
   },

@@ -1,10 +1,12 @@
 # TACITUS Agentic Conflict Ontology (ACO) v2.0
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
 [![Pydantic v2](https://img.shields.io/badge/pydantic-v2-green.svg)](https://docs.pydantic.dev/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-orange.svg)](../../LICENSE)
 
-A graph-native ontology for modeling conflict, disputes, and negotiations across all scales — from interpersonal workplace disputes to geopolitical armed conflicts. Designed for neurosymbolic AI: deterministic Cypher/GQL queries + probabilistic GNN inference.
+The **Conflict Grammar** for computational conflict intelligence. 15 node types, 20 edge types, 25+ controlled vocabularies, 15 theory frameworks.
+
+Part of [DIALECTICA by TACITUS](https://tacitus.me) — making conflict computable enough for better human judgment.
 
 ## Install
 
@@ -12,103 +14,60 @@ A graph-native ontology for modeling conflict, disputes, and negotiations across
 pip install dialectica-ontology
 ```
 
-For development:
-
-```bash
-pip install -e packages/ontology
-```
-
 ## Quick Start
 
 ```python
-from dialectica_ontology import Actor, Conflict, Event
-from dialectica_ontology.enums import (
-    ActorType, ConflictScale, ConflictDomain, ConflictStatus, EventType
-)
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from datetime import datetime
+from dialectica_ontology import Actor, Conflict, Event, Interest
+from dialectica_ontology.enums import ActorType, ConflictDomain
 
-# Create actors
-actor = Actor(
-    name="UN Security Council",
-    actor_type=ActorType.ORGANIZATION,
-)
-
-# Create a conflict
+# Create typed conflict entities
+actor = Actor(name="Party A", actor_type=ActorType.PERSON)
 conflict = Conflict(
-    name="Syria Civil War",
-    scale=ConflictScale.MACRO,
-    domain=ConflictDomain.ARMED,
-    status=ConflictStatus.ACTIVE,
-    glasl_stage=7,  # glasl_level auto-derived to LOSE_LOSE
+    name="Budget Dispute",
+    domain=ConflictDomain.WORKPLACE,
+    scale="micro",
+    status="active",
+    glasl_stage=3,
 )
 
-# Create an event
-event = Event(
-    event_type=EventType.ASSAULT,
-    severity=0.9,
-    occurred_at=datetime(2023, 1, 15),
-)
-
-# Create a relationship
-edge = ConflictRelationship(
-    type=EdgeType.PARTY_TO,
-    source_id=actor.id,
-    target_id=conflict.id,
-    source_label="Actor",
-    target_label="Conflict",
-    confidence=0.95,
-)
+# Access tier-based ontology subsets
+from dialectica_ontology.tiers import OntologyTier, get_available_nodes
+essential_types = get_available_nodes(OntologyTier.ESSENTIAL)  # 7 types
+full_types = get_available_nodes(OntologyTier.FULL)  # all 15 types
 ```
 
-## Features
+## 15 Node Types
 
-### Ontology Structure
+| Node | Description | Tier |
+|------|-------------|------|
+| Actor | Entity with agency (person, org, state, coalition) | Essential |
+| Conflict | Sustained friction pattern with Glasl stage | Essential |
+| Event | Discrete occurrence (PLOVER 16-type coding) | Essential |
+| Issue | Subject matter / incompatibility | Essential |
+| Interest | Underlying need/fear (Fisher/Ury) | Standard |
+| Norm | Rules, laws, contracts, policies | Standard |
+| Process | ADR mechanisms (negotiation, mediation, arbitration) | Standard |
+| Outcome | Results of processes | Standard |
+| Narrative | Dominant/alternative/counter frames | Standard |
+| PowerDynamic | French/Raven power bases | Standard |
+| EmotionalState | Plutchik 8-primary emotions | Full |
+| TrustState | Mayer/Davis/Schoorman model | Full |
+| Location | Hierarchical geography | Full |
+| Evidence | Supporting material with reliability scores | Full |
+| Role | Contextual role reification | Full |
 
-| Component | Count | Description |
-|-----------|-------|-------------|
-| **Node Types** | 15 | Actor, Conflict, Event, Issue, Interest, Norm, Process, Outcome, Narrative, EmotionalState, TrustState, PowerDynamic, Location, Evidence, Role |
-| **Edge Types** | 20 | PARTY_TO, PARTICIPATES_IN, HAS_INTEREST, PART_OF, CAUSED, AT_LOCATION, WITHIN, ALLIED_WITH, OPPOSED_TO, HAS_POWER_OVER, MEMBER_OF, GOVERNED_BY, VIOLATES, RESOLVED_THROUGH, PRODUCES, EXPERIENCES, TRUSTS, PROMOTES, ABOUT, EVIDENCED_BY |
-| **Enumerations** | 28 | Controlled vocabularies for every property (ActorType, GlaslStage, EventType, etc.) |
-| **Theory Frameworks** | 16 | Glasl, Fisher/Ury, Kriesberg, Galtung, Lederach, Zartman, Deutsch, Thomas-Kilmann, French/Raven, Mayer Trust, Plutchik, Pearl Causal, Winslade/Monk, Ury/Brett/Goldberg, Burton |
-| **Compatibility Mappers** | 4 | Bidirectional mappings for PLOVER, ACLED, UCDP, CAMEO |
+## 20 Edge Types
 
-### Three-Tier Progressive Disclosure
+`PARTY_TO` · `PARTICIPATES_IN` · `HAS_INTEREST` · `PART_OF` · `CAUSED` · `AT_LOCATION` · `WITHIN` · `GOVERNED_BY` · `VIOLATES` · `RESOLVED_THROUGH` · `PRODUCES` · `ALLIED_WITH` · `OPPOSED_TO` · `HAS_POWER_OVER` · `MEMBER_OF` · `EXPERIENCES` · `TRUSTS` · `PROMOTES` · `ABOUT` · `EVIDENCED_BY`
 
-| Tier | Nodes | Edges | Use Case |
-|------|-------|-------|----------|
-| **Essential** | 7 | 6 | Quick conflict mapping |
-| **Standard** | 12 | 13 | Structured analysis |
-| **Full** | 15 | 20 | Complete neurosymbolic intelligence |
+## 15 Theory Frameworks
 
-### Schema Generation
+Burton, Deutsch, Fisher/Ury, French/Raven, Galtung, Glasl (9-stage), Kriesberg (7-phase), Lederach, Mayer/Davis/Schoorman (trust), Pearl (causal), Plutchik (emotions), Thomas-Kilmann, Ury/Brett/Goldberg, Winslade/Monk, Zartman (ripeness)
 
-Generate database schemas from the canonical Pydantic models:
+## Links
 
-```python
-from dialectica_ontology.schemas import (
-    generate_cypher_ddl,    # Neo4j / FalkorDB
-    generate_spanner_ddl,   # Google Cloud Spanner
-    generate_gql_schema,    # Spanner Graph (GQL)
-    generate_json_schema,   # API validation
-    generate_turtle,        # OWL/RDF interoperability
-)
-```
-
-### Validation
-
-```python
-from dialectica_ontology.validators import (
-    validate_relationship_types,   # Edge schema compliance
-    validate_subgraph,             # Full structural constraint checking
-    validate_temporal_consistency,  # CAUSED edge temporal ordering
-    validate_tier_compliance,       # Tier access control
-)
-```
-
-## Documentation
-
-Full documentation: [docs/ontology.md](../../docs/ontology.md)
+- [GitHub](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS)
+- [TACITUS](https://tacitus.me)
 
 ## License
 

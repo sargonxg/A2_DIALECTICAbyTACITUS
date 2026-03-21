@@ -249,7 +249,7 @@ def _get_graph_client() -> Any:
     """Get or create the graph client based on environment config."""
     from dialectica_graph import create_graph_client
 
-    backend = os.getenv("GRAPH_BACKEND", "falkordb")
+    backend = os.getenv("GRAPH_BACKEND", "neo4j")
     config: dict[str, Any] = {}
 
     if backend == "falkordb":

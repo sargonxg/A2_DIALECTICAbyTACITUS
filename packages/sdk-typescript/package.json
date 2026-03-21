@@ -1,0 +1,23 @@
+{
+  "name": "@tacitus/dialectica-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for the DIALECTICA API — conflict intelligence platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["dialectica", "tacitus", "conflict", "knowledge-graph", "sdk"],
+  "author": "TACITUS <team@tacitus.ai>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sargonxg/A2_DIALECTICAbyTACITUS",
+    "directory": "packages/sdk-typescript"
+  },
+  "devDependencies": {
+    "typescript": "^5.6"
+  }
+}
