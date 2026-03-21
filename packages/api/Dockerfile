@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy all workspace packages
 COPY pyproject.toml /build/
+COPY README.md /build/
 COPY packages/ontology /build/packages/ontology
 COPY packages/graph /build/packages/graph
 COPY packages/extraction /build/packages/extraction

@@ -10,6 +10,13 @@ authors = [{ name = "TACITUS", email = "team@tacitus.ai" }]
 [tool.uv.workspace]
 members = ["packages/*"]
 
+[tool.uv.sources]
+dialectica-ontology = { workspace = true }
+dialectica-graph = { workspace = true }
+dialectica-extraction = { workspace = true }
+dialectica-reasoning = { workspace = true }
+dialectica-api = { workspace = true }
+
 [dependency-groups]
 dev = [
     "ruff>=0.8",
@@ -22,6 +29,9 @@ dev = [
     "hypothesis>=6.112",
     "testcontainers>=4.8",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = []
 
 [build-system]
 requires = ["hatchling"]
