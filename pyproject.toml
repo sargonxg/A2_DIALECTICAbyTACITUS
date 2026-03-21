@@ -2,7 +2,6 @@
 name = "dialectica"
 version = "2.0.0"
 description = "DIALECTICA by TACITUS — The Universal Data Layer for Human Friction"
-readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.12"
 authors = [{ name = "TACITUS", email = "team@tacitus.ai" }]
@@ -29,13 +28,6 @@ dev = [
     "hypothesis>=6.112",
     "testcontainers>=4.8",
 ]
-
-[tool.hatch.build.targets.wheel]
-packages = []
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.ruff]
 target-version = "py312"
