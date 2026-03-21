@@ -8,6 +8,7 @@ from dialectica_reasoning.symbolic.causal_analysis import CausalAnalyzer
 from dialectica_reasoning.symbolic.network_metrics import NetworkAnalyzer
 from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
 from dialectica_reasoning.symbolic.inference import SymbolicInference
+from dialectica_reasoning.symbolic.firewall import SymbolicFirewall
 
 __all__ = [
     "ConflictGrammarEngine", "RuleEvaluationReport",
@@ -17,4 +18,5 @@ __all__ = [
     "PowerMapper", "PowerMap",
     "CausalAnalyzer", "NetworkAnalyzer",
     "PatternMatcher", "SymbolicInference",
+    "SymbolicFirewall",
 ]

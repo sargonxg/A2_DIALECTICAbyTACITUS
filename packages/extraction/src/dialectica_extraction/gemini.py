@@ -3,6 +3,7 @@ Gemini Extractor — Vertex AI Gemini integration for conflict entity extraction
 
 Uses structured JSON output mode with tier-appropriate prompts.
 Primary model: gemini-2.5-flash-001, complex: gemini-2.5-pro-001.
+Supports LiteLLM as an alternative backend for provider-agnostic access.
 """
 from __future__ import annotations
 

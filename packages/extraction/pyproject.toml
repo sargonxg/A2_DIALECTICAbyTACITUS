@@ -1,32 +1,28 @@
-[tool.poetry]
+[project]
 name = "dialectica-extraction"
 version = "1.0.0"
-description = "DIALECTICA Extraction Pipeline — Gemini + GLiNER + LangGraph for conflict entity extraction"
-authors = ["TACITUS <team@tacitus.ai>"]
+description = "DIALECTICA Extraction Pipeline — Gemini + GLiNER + LangGraph + Instructor for conflict entity extraction"
 license = "Apache-2.0"
-packages = [{include = "dialectica_extraction", from = "src"}]
-
-[tool.poetry.dependencies]
-python = "^3.11"
-dialectica-ontology = {path = "../ontology", develop = true}
-dialectica-graph = {path = "../graph", develop = true}
-google-cloud-aiplatform = "^1.68.0"
-vertexai = "^1.68.0"
-langgraph = "^0.2.0"
-langchain-google-vertexai = "^2.0.0"
-gliner = "^0.2.0"
-pypdf = "^4.3.0"
-python-docx = "^1.1.0"
-httpx = "^0.27.0"
-tenacity = "^9.0.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.0"
-pytest-asyncio = "^0.24.0"
-pytest-mock = "^3.14.0"
-ruff = "^0.6.0"
-mypy = "^1.11.0"
+requires-python = ">=3.12"
+authors = [{ name = "TACITUS", email = "team@tacitus.ai" }]
+dependencies = [
+    "dialectica-ontology",
+    "dialectica-graph",
+    "gliner>=0.2.25",
+    "instructor>=1.7",
+    "google-cloud-aiplatform>=1.70",
+    "langchain-text-splitters>=0.3",
+    "langgraph>=0.2",
+    "litellm>=1.50",
+    "pypdf>=4.3",
+    "python-docx>=1.1",
+    "httpx>=0.27",
+    "tenacity>=9.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dialectica_extraction"]

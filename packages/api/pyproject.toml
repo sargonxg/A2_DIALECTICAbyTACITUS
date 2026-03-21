@@ -1,39 +1,30 @@
-[tool.poetry]
+[project]
 name = "dialectica-api"
 version = "1.0.0"
 description = "DIALECTICA FastAPI Service — The Universal Data Layer for Human Friction"
-authors = ["TACITUS <team@tacitus.ai>"]
 license = "Apache-2.0"
-packages = [{include = "dialectica_api", from = "src"}]
-
-[tool.poetry.dependencies]
-python = "^3.11"
-dialectica-ontology = {path = "../ontology", develop = true}
-dialectica-graph = {path = "../graph", develop = true}
-dialectica-extraction = {path = "../extraction", develop = true}
-dialectica-reasoning = {path = "../reasoning", develop = true}
-fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.31.0"}
-pydantic-settings = "^2.5.0"
-python-multipart = "^0.0.12"
-google-cloud-pubsub = "^2.26.0"
-google-cloud-storage = "^2.18.0"
-google-cloud-secret-manager = "^2.20.0"
-prometheus-fastapi-instrumentator = "^7.0.0"
-prometheus-client = "^0.21.0"
-redis = {version = "^5.0.0", optional = true, extras = ["hiredis"]}
-
-[tool.poetry.extras]
-redis = ["redis"]
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.0"
-pytest-asyncio = "^0.24.0"
-pytest-mock = "^3.14.0"
-httpx = "^0.27.0"
-ruff = "^0.6.0"
-mypy = "^1.11.0"
+requires-python = ">=3.12"
+authors = [{ name = "TACITUS", email = "team@tacitus.ai" }]
+dependencies = [
+    "dialectica-ontology",
+    "dialectica-graph",
+    "dialectica-extraction",
+    "dialectica-reasoning",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic-settings>=2.5",
+    "python-multipart>=0.0.12",
+    "google-cloud-pubsub>=2.26",
+    "google-cloud-storage>=2.18",
+    "google-cloud-secret-manager>=2.20",
+    "prometheus-fastapi-instrumentator>=7.0",
+    "prometheus-client>=0.21",
+    "redis[hiredis]>=5.2",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dialectica_api"]

@@ -4,8 +4,9 @@ DIALECTICA Graph Package — Database abstraction layer.
 Provides a swappable GraphClient interface implemented by:
   SpannerGraphClient: Google Cloud Spanner Graph (primary, GCP-native)
   Neo4jGraphClient: Neo4j Aura (secondary, GDS algorithms)
+  FalkorDBGraphClient: FalkorDB (tenant isolation, graph-per-tenant)
 
-Configure via GRAPH_BACKEND env var: "spanner" (default) or "neo4j".
+Configure via GRAPH_BACKEND env var: "spanner" (default), "neo4j", or "falkordb".
 """
 from __future__ import annotations
 
@@ -36,6 +37,7 @@ __all__ = [
     # Clients (lazy imports)
     "SpannerGraphClient",
     "Neo4jGraphClient",
+    "FalkorDBGraphClient",
 ]
 
 
@@ -46,10 +48,11 @@ def create_graph_client(
     """Factory function to create a GraphClient for the specified backend.
 
     Args:
-        backend: "spanner" or "neo4j".
+        backend: "spanner", "neo4j", or "falkordb".
         config: Backend-specific configuration dict.
             Spanner: {"project_id", "instance_id", "database_id"}
             Neo4j: {"uri", "username", "password", "database"}
+            FalkorDB: {"host", "port", "graph_name", "default_tenant_id"}
 
     Returns:
         A GraphClient instance.
@@ -76,9 +79,18 @@ def create_graph_client(
             password=config.get("password", "dialectica-dev"),
             database=config.get("database", "neo4j"),
         )
+    elif backend == "falkordb":
+        from dialectica_graph.falkordb_client import FalkorDBGraphClient
+
+        return FalkorDBGraphClient(
+            host=config.get("host", "localhost"),
+            port=config.get("port", 6379),
+            graph_name=config.get("graph_name"),
+            default_tenant_id=config.get("default_tenant_id", "default"),
+        )
     else:
         raise ValueError(
-            f"Unsupported graph backend: {backend!r}. Use 'spanner' or 'neo4j'."
+            f"Unsupported graph backend: {backend!r}. Use 'spanner', 'neo4j', or 'falkordb'."
         )
 
 
@@ -90,4 +102,7 @@ def __getattr__(name: str) -> Any:
     if name == "Neo4jGraphClient":
         from dialectica_graph.neo4j_client import Neo4jGraphClient
         return Neo4jGraphClient
+    if name == "FalkorDBGraphClient":
+        from dialectica_graph.falkordb_client import FalkorDBGraphClient
+        return FalkorDBGraphClient
     raise AttributeError(f"module 'dialectica_graph' has no attribute {name!r}")

@@ -113,6 +113,20 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
     restart: unless-stopped
 
+  # ─── FalkorDB (graph-per-tenant isolation) ────────────────────────────────
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: dialectica-falkordb
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
   # ─── Neo4j (Optional — activate via profile) ─────────────────────────────
   neo4j:
     image: neo4j:5-community

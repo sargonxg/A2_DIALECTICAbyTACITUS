@@ -1,8 +1,8 @@
 """
 Tests for dialectica_extraction.pipeline — LangGraph extraction DAG.
 
-Tests chunking, validation, coreference, and the full pipeline flow
-using mocked Gemini calls.
+Tests chunking, validation, coreference, review interrupt checks,
+Instructor integration, and the full pipeline flow using mocked calls.
 """
 from __future__ import annotations
 
@@ -27,11 +27,14 @@ from dialectica_extraction.pipeline import (
     validate_schema,
     resolve_coreference,
     validate_structural_step,
+    check_review_needed,
     write_to_graph,
     should_repair,
+    should_interrupt,
     ExtractionPipeline,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
+    LOW_CONFIDENCE_THRESHOLD,
 )
 from dialectica_extraction.validators.schema import validate_raw_nodes, validate_raw_edges
 from dialectica_extraction.validators.structural import validate_structural
@@ -98,6 +101,12 @@ class TestChunkDocument:
         state: ExtractionState = {"text": "Test", "tier": "essential"}
         result = chunk_document(state)
         assert "chunk_document" in result.get("processing_time", {})
+
+    def test_initializes_review_fields(self):
+        state: ExtractionState = {"text": "Test", "tier": "essential"}
+        result = chunk_document(state)
+        assert result.get("requires_review") is False
+        assert result.get("review_reasons") == []
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -389,6 +398,55 @@ class TestPipelineRouting:
         state: ExtractionState = {"invalid_entities": [{"label": "Bad"}], "retry_count": 3}
         assert should_repair(state) == "max_retries"
 
+    def test_should_interrupt_no_review(self):
+        state: ExtractionState = {"requires_review": False}
+        assert should_interrupt(state) == "proceed"
+
+    def test_should_interrupt_needs_review(self):
+        state: ExtractionState = {"requires_review": True}
+        assert should_interrupt(state) == "needs_review"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  REVIEW CHECK TESTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestCheckReviewNeeded:
+    def test_no_review_when_high_confidence(self):
+        a1 = Actor(name="A1", actor_type="person", confidence=0.9)
+        state: ExtractionState = {
+            "_nodes": [a1],
+            "tier": "essential",
+            "requires_review": False,
+            "review_reasons": [],
+        }
+        result = check_review_needed(state)
+        assert result["requires_review"] is False
+        assert result["review_reasons"] == []
+
+    def test_review_when_low_confidence(self):
+        a1 = Actor(name="A1", actor_type="person", confidence=0.3)
+        state: ExtractionState = {
+            "_nodes": [a1],
+            "tier": "essential",
+            "requires_review": False,
+            "review_reasons": [],
+        }
+        result = check_review_needed(state)
+        assert result["requires_review"] is True
+        assert any("confidence" in r for r in result["review_reasons"])
+
+    def test_review_when_no_nodes(self):
+        state: ExtractionState = {
+            "_nodes": [],
+            "tier": "essential",
+            "requires_review": False,
+            "review_reasons": [],
+        }
+        result = check_review_needed(state)
+        assert result["requires_review"] is False
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  PROMPT TESTS
@@ -426,3 +484,47 @@ class TestPrompts:
         from dialectica_extraction.prompts.system import get_edge_type_descriptions
         desc = get_edge_type_descriptions(OntologyTier.ESSENTIAL)
         assert "PARTY_TO" in desc
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  INSTRUCTOR EXTRACTOR TESTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class TestInstructorExtractors:
+    def test_response_models_valid(self):
+        """Verify response models can be instantiated."""
+        from dialectica_extraction.instructor_extractors import (
+            ExtractedEntity,
+            EntityExtractionResult,
+            ExtractedRelationship,
+            RelationshipExtractionResult,
+        )
+
+        entity = ExtractedEntity(
+            label="Actor",
+            name="Test",
+            confidence=0.9,
+            properties={"actor_type": "person"},
+        )
+        assert entity.label == "Actor"
+
+        result = EntityExtractionResult(entities=[entity])
+        assert len(result.entities) == 1
+
+        rel = ExtractedRelationship(
+            type="PARTY_TO",
+            source_name="Test",
+            target_name="Conflict1",
+            source_label="Actor",
+            target_label="Conflict",
+        )
+        assert rel.type == "PARTY_TO"
+
+        rel_result = RelationshipExtractionResult(relationships=[rel])
+        assert len(rel_result.relationships) == 1
+
+    def test_entity_extraction_result_default(self):
+        from dialectica_extraction.instructor_extractors import EntityExtractionResult
+        result = EntityExtractionResult()
+        assert result.entities == []

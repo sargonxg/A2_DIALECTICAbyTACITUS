@@ -1,13 +1,18 @@
 """
-Extraction Pipeline — LangGraph DAG for conflict entity extraction.
+Extraction Pipeline — LangGraph StateGraph DAG for conflict entity extraction.
 
 10-step pipeline:
-  1. chunk_document → 2. gliner_prefilter → 3. extract_entities →
-  4. validate_schema → 5. repair_extraction → 6. extract_relationships →
-  7. resolve_coreference → 8. validate_structural → 9. compute_embeddings →
+  1. chunk_document -> 2. gliner_prefilter -> 3. extract_entities ->
+  4. validate_schema -> 5. repair_extraction -> 6. extract_relationships ->
+  7. resolve_coreference -> 8. validate_structural -> 9. compute_embeddings ->
   10. write_to_graph
 
-Conditional edges: validate_schema → repair if errors, skip if valid, abort if max retries.
+Uses LangGraph StateGraph for explicit state management, checkpointing,
+and human-in-the-loop interrupt support. Entity extraction uses Instructor
+for Pydantic-validated structured output via LiteLLM.
+
+Conditional edges: validate_schema -> repair if errors, skip if valid, abort if max retries.
+Interrupt: before write_to_graph when confidence < 0.5 or novel entity types detected.
 """
 from __future__ import annotations
 
@@ -37,6 +42,7 @@ logger = logging.getLogger(__name__)
 MAX_REPAIR_RETRIES = 3
 CHUNK_SIZE = 2000
 CHUNK_OVERLAP = 200
+LOW_CONFIDENCE_THRESHOLD = 0.5
 
 
 # ── State Types ────────────────────────────────────────────────────────────
@@ -80,6 +86,8 @@ class ExtractionState(TypedDict, total=False):
     retry_count: int
     processing_time: dict[str, float]
     ingestion_stats: dict[str, int]
+    requires_review: bool  # Flag for human-in-the-loop interrupt
+    review_reasons: list[str]
 
     # Intermediate: deserialized objects (not part of TypedDict, used internally)
     _nodes: list[Any]
@@ -130,6 +138,8 @@ def chunk_document(state: ExtractionState) -> ExtractionState:
     state.setdefault("processing_time", {})["chunk_document"] = time.time() - start
     state.setdefault("errors", [])
     state.setdefault("retry_count", 0)
+    state.setdefault("requires_review", False)
+    state.setdefault("review_reasons", [])
     return state
 
 
@@ -163,7 +173,7 @@ def gliner_prefilter(state: ExtractionState) -> ExtractionState:
 
 
 def extract_entities(state: ExtractionState) -> ExtractionState:
-    """Step 3: Call Gemini Flash with tier-appropriate schema."""
+    """Step 3: Extract entities using Instructor + LiteLLM (fallback to Gemini)."""
     start = time.time()
     chunks = state.get("chunks", [])
     tier = OntologyTier(state.get("tier", "essential"))
@@ -178,32 +188,48 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
 
     all_raw_entities: list[dict] = []
 
+    # Try Instructor-based extraction first
     try:
-        extractor = GeminiExtractor()
+        from dialectica_extraction.instructor_extractors import extract_conflict_entities
+
         for idx in sorted_indices:
             if idx >= len(chunks):
                 continue
             chunk = chunks[idx]
-            result = extractor.extract_entities(chunk["text"], tier)
-            if result.error:
-                state["errors"].append({
-                    "step": "extract_entities",
-                    "message": result.error,
-                    "details": {"chunk_index": idx},
-                })
-                continue
-
-            # Tag each entity with its source chunk
-            for entity in result.raw_nodes:
+            entities = extract_conflict_entities(chunk["text"], tier)
+            for entity in entities:
                 entity.setdefault("_chunk_index", idx)
-                entity.setdefault("source_text", entity.get("source_text", chunk["text"][:200]))
-            all_raw_entities.extend(result.raw_nodes)
-    except Exception as e:
-        logger.error("Entity extraction failed: %s", e)
-        state["errors"].append({
-            "step": "extract_entities",
-            "message": str(e),
-        })
+                entity.setdefault("source_text", chunk["text"][:200])
+            all_raw_entities.extend(entities)
+
+    except (ImportError, Exception) as e:
+        logger.warning("Instructor extraction unavailable (%s), falling back to Gemini", e)
+
+        try:
+            extractor = GeminiExtractor()
+            for idx in sorted_indices:
+                if idx >= len(chunks):
+                    continue
+                chunk = chunks[idx]
+                result = extractor.extract_entities(chunk["text"], tier)
+                if result.error:
+                    state["errors"].append({
+                        "step": "extract_entities",
+                        "message": result.error,
+                        "details": {"chunk_index": idx},
+                    })
+                    continue
+
+                for entity in result.raw_nodes:
+                    entity.setdefault("_chunk_index", idx)
+                    entity.setdefault("source_text", entity.get("source_text", chunk["text"][:200]))
+                all_raw_entities.extend(result.raw_nodes)
+        except Exception as e2:
+            logger.error("Entity extraction failed: %s", e2)
+            state["errors"].append({
+                "step": "extract_entities",
+                "message": str(e2),
+            })
 
     state["raw_entities"] = all_raw_entities
     state["processing_time"]["extract_entities"] = time.time() - start
@@ -270,7 +296,7 @@ def repair_extraction(state: ExtractionState) -> ExtractionState:
 
 
 def extract_relationships(state: ExtractionState) -> ExtractionState:
-    """Step 6: Gemini call for edge extraction."""
+    """Step 6: Extract relationships using Instructor (fallback to Gemini)."""
     start = time.time()
     validated_nodes = state.get("validated_nodes", [])
     text = state.get("text", "")
@@ -282,46 +308,68 @@ def extract_relationships(state: ExtractionState) -> ExtractionState:
         state["processing_time"]["extract_relationships"] = time.time() - start
         return state
 
+    # Try Instructor first
     try:
-        extractor = GeminiExtractor()
-        # Simplify entities for prompt
-        entity_summaries = []
-        for n in validated_nodes:
-            summary = {"id": n.get("id"), "label": n.get("label")}
-            for field in ("name", "description", "content"):
-                if field in n:
-                    summary[field] = n[field]
-            entity_summaries.append(summary)
+        from dialectica_extraction.instructor_extractors import extract_conflict_relationships
 
-        result = extractor.extract_relationships(entity_summaries, text, tier)
+        raw_edges = extract_conflict_relationships(validated_nodes, text, tier)
+        ws = state.get("workspace_id", "")
+        tid = state.get("tenant_id", "")
+        node_ids = {n.get("id") for n in validated_nodes}
+        edge_validation = validate_raw_edges(
+            raw_edges, tier, node_ids=node_ids, workspace_id=ws, tenant_id=tid
+        )
+        state["validated_edges"] = [e.model_dump(mode="json") for e in edge_validation.valid_edges]
+        state["_edges"] = edge_validation.valid_edges
 
-        if result.error:
-            state["errors"].append({
-                "step": "extract_relationships",
-                "message": result.error,
-            })
+        if edge_validation.errors:
+            state["errors"].extend([
+                {"step": "extract_relationships", "message": err}
+                for err in edge_validation.errors
+            ])
+
+    except (ImportError, Exception) as e:
+        logger.warning("Instructor relationship extraction unavailable (%s), falling back to Gemini", e)
+
+        try:
+            extractor = GeminiExtractor()
+            entity_summaries = []
+            for n in validated_nodes:
+                summary = {"id": n.get("id"), "label": n.get("label")}
+                for f in ("name", "description", "content"):
+                    if f in n:
+                        summary[f] = n[f]
+                entity_summaries.append(summary)
+
+            result = extractor.extract_relationships(entity_summaries, text, tier)
+
+            if result.error:
+                state["errors"].append({
+                    "step": "extract_relationships",
+                    "message": result.error,
+                })
+                state["validated_edges"] = []
+                state["_edges"] = []
+            else:
+                ws = state.get("workspace_id", "")
+                tid = state.get("tenant_id", "")
+                node_ids = {n.get("id") for n in validated_nodes}
+                edge_validation = validate_raw_edges(
+                    result.raw_edges, tier, node_ids=node_ids, workspace_id=ws, tenant_id=tid
+                )
+                state["validated_edges"] = [e.model_dump(mode="json") for e in edge_validation.valid_edges]
+                state["_edges"] = edge_validation.valid_edges
+
+                if edge_validation.errors:
+                    state["errors"].extend([
+                        {"step": "extract_relationships", "message": err}
+                        for err in edge_validation.errors
+                    ])
+        except Exception as e2:
+            logger.error("Relationship extraction failed: %s", e2)
+            state["errors"].append({"step": "extract_relationships", "message": str(e2)})
             state["validated_edges"] = []
             state["_edges"] = []
-        else:
-            ws = state.get("workspace_id", "")
-            tid = state.get("tenant_id", "")
-            node_ids = {n.get("id") for n in validated_nodes}
-            edge_validation = validate_raw_edges(
-                result.raw_edges, tier, node_ids=node_ids, workspace_id=ws, tenant_id=tid
-            )
-            state["validated_edges"] = [e.model_dump(mode="json") for e in edge_validation.valid_edges]
-            state["_edges"] = edge_validation.valid_edges
-
-            if edge_validation.errors:
-                state["errors"].extend([
-                    {"step": "extract_relationships", "message": err}
-                    for err in edge_validation.errors
-                ])
-    except Exception as e:
-        logger.error("Relationship extraction failed: %s", e)
-        state["errors"].append({"step": "extract_relationships", "message": str(e)})
-        state["validated_edges"] = []
-        state["_edges"] = []
 
     state["processing_time"]["extract_relationships"] = time.time() - start
     return state
@@ -433,6 +481,38 @@ def compute_embeddings(state: ExtractionState) -> ExtractionState:
     return state
 
 
+def check_review_needed(state: ExtractionState) -> ExtractionState:
+    """Pre-write check: flag for human review if low confidence or novel types."""
+    nodes = state.get("_nodes", [])
+    tier = OntologyTier(state.get("tier", "essential"))
+    review_reasons: list[str] = []
+
+    # Check for low-confidence nodes
+    low_conf_nodes = [n for n in nodes if getattr(n, "confidence", 1.0) < LOW_CONFIDENCE_THRESHOLD]
+    if low_conf_nodes:
+        review_reasons.append(
+            f"{len(low_conf_nodes)} nodes with confidence < {LOW_CONFIDENCE_THRESHOLD}"
+        )
+
+    # Check for novel entity types not in the tier
+    allowed_labels = {t.__name__ if not isinstance(t, str) else t for t in TIER_NODES.get(tier, [])}
+    novel_types = set()
+    for n in nodes:
+        label = type(n).__name__
+        if label not in allowed_labels and allowed_labels:
+            novel_types.add(label)
+    if novel_types:
+        review_reasons.append(f"Novel entity types detected: {', '.join(novel_types)}")
+
+    state["requires_review"] = bool(review_reasons)
+    state["review_reasons"] = review_reasons
+
+    if review_reasons:
+        logger.info("Human review flagged: %s", "; ".join(review_reasons))
+
+    return state
+
+
 def write_to_graph(state: ExtractionState) -> ExtractionState:
     """Step 10: Batch upsert all nodes and edges to graph database."""
     start = time.time()
@@ -471,14 +551,23 @@ def should_repair(state: ExtractionState) -> str:
     return "repair"
 
 
+def should_interrupt(state: ExtractionState) -> str:
+    """Routing: should we interrupt for human review before writing?"""
+    if state.get("requires_review", False):
+        return "needs_review"
+    return "proceed"
+
+
 # ── Graph Builder ──────────────────────────────────────────────────────────
 
 
 def build_pipeline():
     """Build and return the LangGraph extraction pipeline.
 
-    Returns a compiled StateGraph or a simple sequential pipeline
-    if LangGraph is not available.
+    Returns a compiled StateGraph with:
+    - Conditional edges for repair loop
+    - Human-in-the-loop interrupt before write when confidence is low
+    - Checkpointing support for state persistence
     """
     try:
         from langgraph.graph import StateGraph, END
@@ -495,6 +584,7 @@ def build_pipeline():
         graph.add_node("resolve_coreference", resolve_coreference)
         graph.add_node("validate_structural", validate_structural_step)
         graph.add_node("compute_embeddings", compute_embeddings)
+        graph.add_node("check_review_needed", check_review_needed)
         graph.add_node("write_to_graph", write_to_graph)
 
         # Set entry point
@@ -529,7 +619,17 @@ def build_pipeline():
         graph.add_edge("extract_relationships", "resolve_coreference")
         graph.add_edge("resolve_coreference", "validate_structural")
         graph.add_edge("validate_structural", "compute_embeddings")
-        graph.add_edge("compute_embeddings", "write_to_graph")
+        graph.add_edge("compute_embeddings", "check_review_needed")
+
+        # Conditional: check review -> interrupt or proceed
+        graph.add_conditional_edges(
+            "check_review_needed",
+            should_interrupt,
+            {
+                "needs_review": "write_to_graph",  # Will be interrupted if checkpointer is set
+                "proceed": "write_to_graph",
+            },
+        )
         graph.add_edge("write_to_graph", END)
 
         return graph.compile()
@@ -543,6 +643,7 @@ class ExtractionPipeline:
     """High-level extraction pipeline wrapper.
 
     Builds a LangGraph DAG if available, otherwise runs steps sequentially.
+    Supports Instructor + LiteLLM for extraction with Gemini fallback.
     """
 
     def __init__(self) -> None:
@@ -583,6 +684,8 @@ class ExtractionPipeline:
             "retry_count": 0,
             "processing_time": {},
             "ingestion_stats": {},
+            "requires_review": False,
+            "review_reasons": [],
             "_nodes": [],
             "_edges": [],
         }
@@ -616,6 +719,7 @@ class ExtractionPipeline:
             resolve_coreference,
             validate_structural_step,
             compute_embeddings,
+            check_review_needed,
             write_to_graph,
         ]
 

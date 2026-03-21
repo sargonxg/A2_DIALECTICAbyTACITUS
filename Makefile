@@ -31,34 +31,34 @@ dev-neo4j-build: ## Build and start with Neo4j backend
 # ─── Testing ─────────────────────────────────────────────────────────────────
 
 test: ## Run all Python tests
-	pytest packages/ -v --tb=short
+	uv run pytest packages/ -v --tb=short
 
 test-unit: ## Run unit tests only (no integration)
-	pytest packages/ -v --tb=short -m "not integration"
+	uv run pytest packages/ -v --tb=short -m "not integration"
 
 test-integration: ## Run integration tests (requires running Spanner emulator)
-	pytest packages/ -v --tb=short -m "integration"
+	uv run pytest packages/ -v --tb=short -m "integration"
 
 test-api: ## Run API tests only
-	pytest packages/api/tests/ -v
+	uv run pytest packages/api/tests/ -v
 
 test-ontology: ## Run ontology package tests
-	pytest packages/ontology/tests/ -v
+	uv run pytest packages/ontology/tests/ -v
 
 test-graph: ## Run graph package tests
-	pytest packages/graph/tests/ -v
+	uv run pytest packages/graph/tests/ -v
 
 test-extraction: ## Run extraction package tests
-	pytest packages/extraction/tests/ -v
+	uv run pytest packages/extraction/tests/ -v
 
 test-reasoning: ## Run reasoning package tests
-	pytest packages/reasoning/tests/ -v
+	uv run pytest packages/reasoning/tests/ -v
 
 test-web: ## Run Next.js tests
 	cd apps/web && npm test
 
 test-benchmark: ## Run benchmark tests only
-	pytest packages/api/tests/test_benchmark.py -v
+	uv run pytest packages/api/tests/test_benchmark.py -v
 
 benchmark: ## Run JCPOA benchmark evaluation via API (requires running server)
 	curl -s -X POST http://localhost:8000/v1/admin/benchmark/run \
@@ -69,19 +69,19 @@ benchmark: ## Run JCPOA benchmark evaluation via API (requires running server)
 # ─── Code Quality ─────────────────────────────────────────────────────────────
 
 lint: ## Run ruff linter
-	ruff check packages/
+	uv run ruff check packages/
 
 lint-fix: ## Run ruff linter with auto-fix
-	ruff check packages/ --fix
+	uv run ruff check packages/ --fix
 
 format: ## Format code with ruff
-	ruff format packages/
+	uv run ruff format packages/
 
 typecheck: ## Run mypy type checker
-	mypy packages/
+	uv run mypy packages/
 
 typecheck-strict: ## Run mypy in strict mode
-	mypy packages/ --strict
+	uv run mypy packages/ --strict
 
 tsc: ## TypeScript type check for web app
 	cd apps/web && npx tsc --noEmit
@@ -96,18 +96,18 @@ quality-check: lint typecheck ## Alias for quality
 # ─── Database & Seed ─────────────────────────────────────────────────────────
 
 seed-schema: ## Initialize Spanner schema
-	python infrastructure/scripts/init_spanner.py
+	uv run python infrastructure/scripts/init_spanner.py
 
 seed-frameworks: ## Load theory frameworks into database
-	python infrastructure/scripts/seed_frameworks.py
+	uv run python infrastructure/scripts/seed_frameworks.py
 
 seed-samples: ## Load JCPOA and other sample conflict graphs
-	python infrastructure/scripts/seed_sample_data.py
+	uv run python infrastructure/scripts/seed_sample_data.py
 
 seed: seed-schema seed-frameworks seed-samples ## Run all seed operations
 
 create-admin-key: ## Generate and store admin API key
-	python infrastructure/scripts/create_admin_key.py
+	uv run python infrastructure/scripts/create_admin_key.py
 
 # ─── SDK ──────────────────────────────────────────────────────────────────────
 
@@ -161,21 +161,16 @@ deploy: build docker-push deploy-api deploy-web ## Full deploy pipeline
 
 # ─── Utilities ────────────────────────────────────────────────────────────────
 
-install: ## Install all Python dependencies
-	pip install -e packages/ontology
-	pip install -e packages/graph
-	pip install -e packages/extraction
-	pip install -e packages/reasoning
-	pip install -e packages/api
+install: ## Install all Python dependencies via uv
+	uv sync --all-packages
 
 install-web: ## Install web app dependencies
 	cd apps/web && npm install
 
 install-dev: install install-web ## Install all dependencies including dev tools
-	pip install ruff mypy pytest pytest-asyncio pytest-cov
 
 publish-ontology: ## Build and publish ontology package to PyPI
-	cd packages/ontology && python -m build && twine upload dist/*
+	cd packages/ontology && uv build && twine upload dist/*
 
 clean: ## Clean build artifacts
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

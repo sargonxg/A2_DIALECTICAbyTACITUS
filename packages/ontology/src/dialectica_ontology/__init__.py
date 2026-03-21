@@ -128,6 +128,12 @@ from dialectica_ontology.theory import (
     BurtonFramework,
 )
 
+# Confidence types
+from dialectica_ontology.confidence import (
+    ConfidenceType,
+    Conclusion,
+)
+
 # Compatibility mappers
 from dialectica_ontology.compatibility import (
     plover_to_dialectica,
@@ -248,6 +254,9 @@ __all__ = [
     "WinsladeMonkFramework",
     "UryBrettGoldbergFramework",
     "BurtonFramework",
+    # Confidence types
+    "ConfidenceType",
+    "Conclusion",
     # Compatibility mappers
     "plover_to_dialectica",
     "dialectica_to_plover",
