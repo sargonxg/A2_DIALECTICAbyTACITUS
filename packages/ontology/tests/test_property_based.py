@@ -120,28 +120,28 @@ class TestStrEnumValidity:
 
 class TestTierSubsets:
     def test_essential_subset_of_standard(self):
-        essential_nodes = set(type(n).__name__ for n in get_available_nodes(OntologyTier.ESSENTIAL))
-        standard_nodes = set(type(n).__name__ for n in get_available_nodes(OntologyTier.STANDARD))
+        essential_nodes = get_available_nodes(OntologyTier.ESSENTIAL)
+        standard_nodes = get_available_nodes(OntologyTier.STANDARD)
         assert essential_nodes <= standard_nodes, f"Essential nodes not subset of Standard: {essential_nodes - standard_nodes}"
 
     def test_standard_subset_of_full(self):
-        standard_nodes = set(type(n).__name__ for n in get_available_nodes(OntologyTier.STANDARD))
-        full_nodes = set(type(n).__name__ for n in get_available_nodes(OntologyTier.FULL))
+        standard_nodes = get_available_nodes(OntologyTier.STANDARD)
+        full_nodes = get_available_nodes(OntologyTier.FULL)
         assert standard_nodes <= full_nodes, f"Standard nodes not subset of Full: {standard_nodes - full_nodes}"
 
     def test_essential_edges_subset_of_standard(self):
-        essential_edges = set(e.value for e in get_available_edges(OntologyTier.ESSENTIAL))
-        standard_edges = set(e.value for e in get_available_edges(OntologyTier.STANDARD))
+        essential_edges = get_available_edges(OntologyTier.ESSENTIAL)
+        standard_edges = get_available_edges(OntologyTier.STANDARD)
         assert essential_edges <= standard_edges
 
     def test_standard_edges_subset_of_full(self):
-        standard_edges = set(e.value for e in get_available_edges(OntologyTier.STANDARD))
-        full_edges = set(e.value for e in get_available_edges(OntologyTier.FULL))
+        standard_edges = get_available_edges(OntologyTier.STANDARD)
+        full_edges = get_available_edges(OntologyTier.FULL)
         assert standard_edges <= full_edges
 
     def test_full_tier_contains_all_node_types(self):
-        full_nodes = set(type(n).__name__ for n in get_available_nodes(OntologyTier.FULL))
-        all_nodes = set(type(n).__name__ for n in NODE_TYPES)
+        full_nodes = get_available_nodes(OntologyTier.FULL)
+        all_nodes = set(NODE_TYPES.keys())
         assert all_nodes == full_nodes
 
 
