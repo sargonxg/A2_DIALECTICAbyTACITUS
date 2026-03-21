@@ -22,7 +22,7 @@ from dialectica_api.middleware.usage import UsageMiddleware
 from dialectica_api.routers import (
     health, workspaces, entities, relationships,
     extraction, graph, reasoning, theory, admin, developers,
-    sdk_info, benchmark,
+    sdk_info, benchmark, waitlist,
 )
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(message)s")
@@ -90,6 +90,7 @@ def create_app() -> FastAPI:
     app.include_router(developers.router)
     app.include_router(sdk_info.router)
     app.include_router(benchmark.router)
+    app.include_router(waitlist.router)
 
     @app.on_event("startup")
     async def startup() -> None:

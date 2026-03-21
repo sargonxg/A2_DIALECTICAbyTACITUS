@@ -18,7 +18,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 logger = logging.getLogger("dialectica.auth")
 
 # Public paths that don't require authentication
-_PUBLIC_PATHS = {"/health", "/health/", "/docs", "/openapi.json", "/redoc", "/metrics"}
+_PUBLIC_PATHS = {"/health", "/health/", "/docs", "/openapi.json", "/redoc", "/metrics", "/v1/waitlist"}
 
 # Permission levels (ordered from least to most privileged)
 PERMISSION_LEVELS = ("readonly", "standard", "admin")
