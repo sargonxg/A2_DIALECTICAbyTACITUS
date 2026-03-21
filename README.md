@@ -2,6 +2,7 @@
 
 ## The Universal Data Layer for Human Friction
 
+[![CI](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/actions/workflows/ci.yml/badge.svg)](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org)
@@ -10,6 +11,26 @@
 > *"We make conflict computable enough for better human judgment."*
 
 DIALECTICA is a neurosymbolic conflict intelligence platform that structures any conflict — from interpersonal workplace disputes to geopolitical armed conflicts — into a computable knowledge graph. It serves as the universal data backbone for TACITUS products (CONCORDIA, PRAXIS, CiviSphere, Wind Tunnel) and as a developer API platform.
+
+---
+
+## Quick Start
+
+```bash
+cp .env.example .env
+make dev          # Docker Compose: API + Web + Spanner + Redis + FalkorDB + Qdrant
+make seed         # Load frameworks + sample data
+# API: http://localhost:8080/docs | Web: http://localhost:3000
+```
+
+## Documentation
+
+- [Local Development](docs/local-development.md)
+- [Deployment Guide](docs/deployment.md)
+- [API Reference](docs/api-reference.md)
+- [Ontology Reference](docs/ontology.md)
+- [Architecture Deep Dive](docs/architecture.md)
+- [Theory Frameworks](docs/theory-frameworks.md)
 
 ---
 

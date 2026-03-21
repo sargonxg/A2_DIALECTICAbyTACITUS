@@ -1,0 +1,57 @@
+steps:
+  # Build API image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'packages/api/Dockerfile', '-t', '${_REGISTRY}/api:${SHORT_SHA}', '-t', '${_REGISTRY}/api:latest', '.']
+
+  # Build extraction worker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'packages/extraction/Dockerfile', '-t', '${_REGISTRY}/extraction-worker:${SHORT_SHA}', '-t', '${_REGISTRY}/extraction-worker:latest', '.']
+
+  # Build MCP server image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'packages/mcp/Dockerfile', '-t', '${_REGISTRY}/mcp-server:${SHORT_SHA}', '-t', '${_REGISTRY}/mcp-server:latest', '.']
+
+  # Push images
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGISTRY}/api']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGISTRY}/extraction-worker']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGISTRY}/mcp-server']
+
+  # Deploy API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'dialectica-api'
+      - '--image=${_REGISTRY}/api:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+
+  # Deploy extraction worker
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'dialectica-extraction-worker'
+      - '--image=${_REGISTRY}/extraction-worker:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--no-allow-unauthenticated'
+
+substitutions:
+  _REGION: us-east1
+  _REGISTRY: ${_REGION}-docker.pkg.dev/${PROJECT_ID}/dialectica
+
+images:
+  - '${_REGISTRY}/api:${SHORT_SHA}'
+  - '${_REGISTRY}/extraction-worker:${SHORT_SHA}'
+  - '${_REGISTRY}/mcp-server:${SHORT_SHA}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8

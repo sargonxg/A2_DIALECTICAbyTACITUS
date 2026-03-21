@@ -1,0 +1,40 @@
+image:
+  repository: neo4j
+  tag: 5-community
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "2Gi"
+  limits:
+    cpu: "2"
+    memory: "8Gi"
+
+persistence:
+  enabled: true
+  storageClass: premium-rwo
+  size: 8Gi
+
+env:
+  NEO4J_AUTH: neo4j/dialectica-dev
+  NEO4J_PLUGINS: '["apoc"]'
+  NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+
+service:
+  type: ClusterIP
+  boltPort: 7687
+  httpPort: 7474
+
+livenessProbe:
+  exec:
+    command: ["cypher-shell", "-u", "neo4j", "-p", "dialectica-dev", "RETURN 1"]
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 10
+
+readinessProbe:
+  exec:
+    command: ["cypher-shell", "-u", "neo4j", "-p", "dialectica-dev", "RETURN 1"]
+  initialDelaySeconds: 15
+  periodSeconds: 10

@@ -1,0 +1,20 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: dialectica-extraction-worker
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 600
+      containers:
+        - image: REGISTRY/extraction-worker:TAG
+          resources:
+            limits:
+              cpu: "4"
+              memory: 8Gi

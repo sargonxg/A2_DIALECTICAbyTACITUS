@@ -1,0 +1,5 @@
+apiVersion: v2
+name: dialectica-redis
+description: Redis for DIALECTICA rate limiting and caching
+version: 1.0.0
+appVersion: "7"

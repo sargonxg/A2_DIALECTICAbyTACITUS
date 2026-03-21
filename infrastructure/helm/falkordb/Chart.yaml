@@ -1,0 +1,5 @@
+apiVersion: v2
+name: dialectica-falkordb
+description: FalkorDB for DIALECTICA graph-per-tenant isolation
+version: 1.0.0
+appVersion: "latest"

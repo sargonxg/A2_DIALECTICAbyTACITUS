@@ -3,39 +3,145 @@ name: Deploy
 on:
   push:
     branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options: [staging, production]
 
 concurrency:
-  group: deploy
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 env:
   REGION: us-east1
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
     steps:
       - uses: actions/checkout@v4
-      - id: auth
+
+      - id: meta
+        run: echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SA_EMAIL }}
-      - uses: google-github-actions/setup-gcloud@v2
-      - run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-      - run: |
-          REGISTRY="${REGION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/dialectica"
-          docker build -t ${REGISTRY}/api:${{ github.sha }} -f packages/api/Dockerfile .
-          docker push ${REGISTRY}/api:${{ github.sha }}
-          docker build -t ${REGISTRY}/web:${{ github.sha }} -f apps/web/Dockerfile apps/web/
-          docker push ${REGISTRY}/web:${{ github.sha }}
-          gcloud run deploy dialectica-api --image ${REGISTRY}/api:${{ github.sha }} --region ${REGION}
-          gcloud run deploy dialectica-web --image ${REGISTRY}/web:${{ github.sha }} --region ${REGION}
-      - run: |
-          API_URL=$(gcloud run services describe dialectica-api --region ${REGION} --format 'value(status.url)')
-          curl -sf "${API_URL}/health" || exit 1
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/api:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push extraction worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/extraction/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/extraction-worker:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/extraction-worker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push MCP server
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/mcp/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/mcp-server:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/mcp-server:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    needs: build-and-push
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Deploy API to staging
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: dialectica-api-staging
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/api:${{ github.sha }}
+          region: ${{ env.REGION }}
+
+      - name: Health check
+        run: |
+          URL=$(gcloud run services describe dialectica-api-staging --region ${{ env.REGION }} --format 'value(status.url)')
+          curl -sf "$URL/health" || exit 1
+
+  deploy-production:
+    needs: build-and-push
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Deploy API to production
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: dialectica-api
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/api:${{ github.sha }}
+          region: ${{ env.REGION }}
+
+      - name: Deploy extraction worker to production
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: dialectica-extraction-worker
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/dialectica/extraction-worker:${{ github.sha }}
+          region: ${{ env.REGION }}
+
+      - name: Production health check
+        run: |
+          URL=$(gcloud run services describe dialectica-api --region ${{ env.REGION }} --format 'value(status.url)')
+          curl -sf "$URL/health" || exit 1

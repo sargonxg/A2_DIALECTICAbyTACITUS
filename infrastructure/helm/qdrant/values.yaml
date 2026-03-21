@@ -1,0 +1,36 @@
+image:
+  repository: qdrant/qdrant
+  tag: v1.15.4
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "1Gi"
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+
+persistence:
+  enabled: true
+  storageClass: premium-rwo
+  size: 4Gi
+
+service:
+  type: ClusterIP
+  restPort: 6333
+  grpcPort: 6334
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 6333
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 6333
+  initialDelaySeconds: 5
+  periodSeconds: 5
