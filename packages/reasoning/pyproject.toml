@@ -9,9 +9,6 @@ dependencies = [
     "dialectica-ontology",
     "dialectica-graph",
     "dialectica-extraction",
-    "torch>=2.4",
-    "torch-geometric>=2.6",
-    "pykeen>=1.11",
     "google-cloud-aiplatform>=1.68",
     "langgraph>=0.2",
     "langchain-google-vertexai>=2.0",
@@ -19,6 +16,13 @@ dependencies = [
     "networkx>=3.3",
     "python-louvain>=0.16",
     "numpy>=2.1",
+]
+
+[project.optional-dependencies]
+kge = [
+    "torch>=2.4",
+    "torch-geometric>=2.6",
+    "pykeen>=1.11",
     "leidenalg>=0.10",
     "igraph>=0.11",
 ]

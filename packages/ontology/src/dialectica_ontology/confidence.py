@@ -14,7 +14,7 @@ from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
-from python_ulid import ULID
+from ulid import ULID
 
 
 def _ulid() -> str:

@@ -14,6 +14,17 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+try:
+    import gliner  # noqa: F401
+
+    GLINER_AVAILABLE = True
+except ImportError:
+    GLINER_AVAILABLE = False
+    logger.info(
+        "GLiNER not installed — keyword fallback will be used. "
+        "Install with: pip install dialectica-extraction[gliner]"
+    )
+
 # Conflict-specific entity labels for GLiNER
 GLINER_LABELS = [
     "conflict actor",
@@ -90,6 +101,8 @@ class GLiNERPreFilter:
 
     def _check_gliner_enabled(self) -> bool:
         """Check if GLiNER should be used."""
+        if not GLINER_AVAILABLE:
+            return False
         if os.environ.get("GLINER_ENABLED", "true").lower() == "false":
             logger.info("GLiNER disabled via GLINER_ENABLED=false")
             return False

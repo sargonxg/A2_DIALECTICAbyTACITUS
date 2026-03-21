@@ -8,6 +8,7 @@ authors = [{ name = "TACITUS", email = "team@tacitus.ai" }]
 
 [tool.uv.workspace]
 members = ["packages/*"]
+exclude = ["packages/sdk-typescript"]
 
 [tool.uv.sources]
 dialectica-ontology = { workspace = true }

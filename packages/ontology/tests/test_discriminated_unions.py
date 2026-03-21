@@ -3,6 +3,8 @@ Tests for Pydantic discriminated union dispatch across all 15 node types.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pytest
 from pydantic import ValidationError
 
@@ -25,12 +27,12 @@ class TestDiscriminatedUnionDispatch:
         assert c.label == "Conflict"
 
     def test_event_label(self):
-        e = Event(event_type="protest", severity=0.5)
+        e = Event(event_type="protest", severity=0.5, occurred_at=datetime.now(timezone.utc))
         assert e.label == "Event"
 
     def test_all_15_node_types_have_labels(self):
         assert len(NODE_TYPES) == 15
-        labels = {type(n).__name__ for n in NODE_TYPES}
+        labels = set(NODE_TYPES.keys())
         expected = {
             "Actor", "Conflict", "Event", "Issue", "Interest",
             "Norm", "Process", "Outcome", "Narrative",
@@ -40,7 +42,7 @@ class TestDiscriminatedUnionDispatch:
         assert labels == expected
 
     def test_each_node_type_has_unique_label(self):
-        labels = [type(n).__name__ for n in NODE_TYPES]
+        labels = list(NODE_TYPES.keys())
         assert len(labels) == len(set(labels))
 
 
@@ -61,7 +63,7 @@ class TestNodeTypeIds:
         nodes = [
             Actor(name="A", actor_type="person"),
             Conflict(name="C", scale="micro", domain="workplace", status="active"),
-            Event(event_type="protest", severity=0.5),
+            Event(event_type="protest", severity=0.5, occurred_at=datetime.now(timezone.utc)),
         ]
         for node in nodes:
             assert node.id
