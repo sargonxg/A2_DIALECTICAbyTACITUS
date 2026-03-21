@@ -22,11 +22,14 @@ dev-down: ## Stop all services
 dev-logs: ## Follow logs for all services
 	docker-compose logs -f
 
-dev-neo4j: ## Start with Neo4j backend (api-neo4j on port 8081)
-	docker-compose --profile neo4j up
+dev-local: ## Start minimal local stack (Neo4j + Redis + API)
+	docker compose -f docker-compose.local.yml up --build
 
-dev-neo4j-build: ## Build and start with Neo4j backend
-	docker-compose --profile neo4j up --build
+dev-local-down: ## Stop minimal local stack
+	docker compose -f docker-compose.local.yml down
+
+dev-spanner: ## Start with Spanner emulator (activate spanner profile)
+	docker compose --profile spanner up
 
 # ─── Testing ─────────────────────────────────────────────────────────────────
 
