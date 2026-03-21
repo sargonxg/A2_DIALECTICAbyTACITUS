@@ -1,16 +1,25 @@
 """
-Conflict GraphRAG Retriever — Hybrid vector + graph retrieval.
+Conflict GraphRAG Retriever — 4-step hybrid vector + graph retrieval with RRF fusion.
 
-Pipeline: embed query -> vector search -> graph expansion -> rank -> return.
+Pipeline:
+  1. Query Qdrant for top-k=20 semantically similar nodes (filter by tenant_id)
+  2. Graph expansion: 2-hop Cypher from seed nodes with edge-type filtering
+  3. Temporal filter on Event nodes within optional [date_from, date_to] window
+  4. RRF fusion: score(d) = Σ 1/(60 + rank_i(d)) across vector and graph results
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
 from dialectica_graph import GraphClient
 from dialectica_ontology.primitives import ConflictNode
 from dialectica_ontology.relationships import ConflictRelationship
+
+logger = logging.getLogger(__name__)
+
+RRF_K = 60  # Reciprocal Rank Fusion constant
 
 
 @dataclass
@@ -30,26 +39,28 @@ class ConflictGraphRAGRetriever:
     """
     Hybrid vector + graph retriever for conflict knowledge graphs.
 
-    Retrieval pipeline:
-      1. Embed query via configured embedding function
-      2. Vector search for top-k semantically similar nodes
-      3. Graph expansion: traverse N hops from each seed node
-      4. Temporal filtering (if date range provided)
-      5. Rank by relevance score + confidence
+    4-step pipeline:
+      1. Vector search: Qdrant semantic top-k with tenant isolation
+      2. Graph expansion: N-hop traversal from seed nodes via FalkorDB
+      3. Temporal filter: Event nodes within date range
+      4. RRF fusion: combine vector scores + graph proximity scores
     """
 
     def __init__(
         self,
         graph_client: GraphClient,
+        vector_store: object | None = None,
         embed_fn: object | None = None,
     ) -> None:
         self._gc = graph_client
+        self._vs = vector_store  # QdrantVectorStore
         self._embed_fn = embed_fn
 
     async def retrieve(
         self,
         query: str,
         workspace_id: str,
+        tenant_id: str = "",
         top_k: int = 20,
         hops: int = 2,
         node_types: list[str] | None = None,
@@ -57,68 +68,65 @@ class ConflictGraphRAGRetriever:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ) -> RetrievalResult:
-        """
-        Execute hybrid retrieval.
-
-        Args:
-            query: Natural language query
-            workspace_id: Workspace to search
-            top_k: Maximum nodes to return from vector search
-            hops: Graph expansion depth
-            node_types: Filter to specific node labels
-            confidence_threshold: Minimum extraction confidence
-            date_from / date_to: Optional temporal filter
-        """
+        """Execute 4-step hybrid retrieval."""
         result = RetrievalResult(query=query, workspace_id=workspace_id)
+
+        # ── Step 1: Vector search via Qdrant ──────────────────────────────
+        vector_ranked: list[str] = []
+        vector_scores: dict[str, float] = {}
         all_nodes: dict[str, ConflictNode] = {}
-        all_edges: dict[str, ConflictRelationship] = {}
-        scores: dict[str, float] = {}
 
-        # Step 1: Vector search if embeddings available
-        seed_ids: list[str] = []
         try:
-            if hasattr(self._gc, "vector_search"):
-                vector_results = await self._gc.vector_search(
-                    query_text=query,
-                    workspace_id=workspace_id,
-                    top_k=min(top_k, 10),
+            query_emb = self._embed_query(query)
+            if query_emb and self._vs is not None:
+                vs_results = await self._vs.search_semantic(
+                    query_embedding=query_emb,
+                    tenant_id=tenant_id,
+                    top_k=top_k,
                     node_types=node_types,
+                    date_from=date_from,
+                    date_to=date_to,
                 )
-                for scored_node in vector_results:
-                    node = getattr(scored_node, "node", None)
-                    score = getattr(scored_node, "score", 0.5)
-                    if node and float(getattr(node, "confidence", 1.0)) >= confidence_threshold:
-                        seed_ids.append(node.id)
+                for r in vs_results:
+                    nid = r["node_id"]
+                    vector_ranked.append(nid)
+                    vector_scores[nid] = r["score"]
+        except Exception as e:
+            logger.warning("Vector search failed: %s", e)
+
+        # Fallback: keyword search on graph if no vector results
+        if not vector_ranked:
+            try:
+                all_graph_nodes = await self._gc.get_nodes(workspace_id, limit=200)
+                query_lower = query.lower()
+                for node in all_graph_nodes:
+                    name = getattr(node, "name", "") or ""
+                    desc = getattr(node, "description", "") or ""
+                    if query_lower in name.lower() or query_lower in desc.lower():
+                        vector_ranked.append(node.id)
+                        vector_scores[node.id] = 0.6
                         all_nodes[node.id] = node
-                        scores[node.id] = float(score)
-        except Exception:
-            pass  # Fall back to keyword search
+                    if len(vector_ranked) >= top_k:
+                        break
+            except Exception:
+                pass
 
-        # Step 2: Fallback — keyword match on node names if no vector results
-        if not seed_ids:
-            all_graph_nodes = await self._gc.get_nodes(workspace_id, limit=200)
-            query_lower = query.lower()
-            for node in all_graph_nodes:
-                name = getattr(node, "name", "") or ""
-                desc = getattr(node, "description", "") or ""
-                if query_lower in name.lower() or query_lower in desc.lower():
-                    seed_ids.append(node.id)
-                    all_nodes[node.id] = node
-                    scores[node.id] = 0.6
-                if len(seed_ids) >= top_k:
-                    break
+        # Load seed nodes from graph if not already loaded
+        for nid in vector_ranked:
+            if nid not in all_nodes:
+                try:
+                    node = await self._gc.get_node(nid, workspace_id)
+                    if node:
+                        all_nodes[nid] = node
+                except Exception:
+                    pass
 
-        # Step 3: If still no seeds, load most recently updated nodes
-        if not seed_ids:
-            fallback_nodes = await self._gc.get_nodes(workspace_id, limit=top_k)
-            for node in fallback_nodes:
-                if node.id not in all_nodes:
-                    all_nodes[node.id] = node
-                    scores[node.id] = 0.3
-                    seed_ids.append(node.id)
+        # ── Step 2: Graph expansion from seed nodes ───────────────────────
+        graph_ranked: list[str] = []
+        all_edges: dict[str, ConflictRelationship] = {}
 
-        # Step 4: Graph expansion from seed nodes
-        for seed_id in list(seed_ids)[:min(5, len(seed_ids))]:  # expand from top 5
+        seed_ids = vector_ranked[:min(5, len(vector_ranked))]
+        for seed_id in seed_ids:
             try:
                 subgraph = await self._gc.traverse(
                     start_id=seed_id,
@@ -126,56 +134,76 @@ class ConflictGraphRAGRetriever:
                     hops=hops,
                 )
                 for node in getattr(subgraph, "nodes", []):
-                    if node.id not in all_nodes:
-                        conf = float(getattr(node, "confidence", 1.0))
-                        if conf >= confidence_threshold:
-                            all_nodes[node.id] = node
-                            # Decayed score based on distance from seed
-                            all_nodes[node.id] = node
-                            scores[node.id] = scores.get(node.id, scores[seed_id] * 0.7)
+                    conf = float(getattr(node, "confidence", 1.0))
+                    if conf >= confidence_threshold and node.id not in all_nodes:
+                        all_nodes[node.id] = node
+                        graph_ranked.append(node.id)
                 for edge in getattr(subgraph, "edges", []):
                     all_edges[edge.id] = edge
             except Exception:
                 pass
 
-        # Step 5: Temporal filtering
+        # ── Step 3: Temporal filter ───────────────────────────────────────
         if date_from or date_to:
-            filtered: dict[str, ConflictNode] = {}
+            to_remove = []
             for nid, node in all_nodes.items():
                 ts = getattr(node, "occurred_at", None) or getattr(node, "created_at", None)
                 if ts is None:
-                    filtered[nid] = node  # include nodes without timestamp
-                    continue
+                    continue  # Keep nodes without timestamp
                 if date_from and ts < date_from:
-                    continue
-                if date_to and ts > date_to:
-                    continue
-                filtered[nid] = node
-            all_nodes = filtered
+                    to_remove.append(nid)
+                elif date_to and ts > date_to:
+                    to_remove.append(nid)
+            for nid in to_remove:
+                all_nodes.pop(nid, None)
 
-        # Step 6: Filter by node types
+        # Filter by node types
         if node_types:
             type_set = set(node_types)
             all_nodes = {
-                nid: node for nid, node in all_nodes.items()
-                if getattr(node, "label", getattr(node.__class__, "__name__", "")) in type_set
+                nid: n for nid, n in all_nodes.items()
+                if getattr(n, "label", n.__class__.__name__) in type_set
             }
 
-        # Step 7: Rank and truncate
-        ranked = sorted(all_nodes.keys(), key=lambda nid: scores.get(nid, 0), reverse=True)
+        # ── Step 4: RRF fusion ────────────────────────────────────────────
+        rrf_scores: dict[str, float] = {}
+
+        # Vector ranks
+        for rank, nid in enumerate(vector_ranked):
+            if nid in all_nodes:
+                rrf_scores[nid] = rrf_scores.get(nid, 0) + 1.0 / (RRF_K + rank)
+
+        # Graph expansion ranks (by traversal order = proximity)
+        for rank, nid in enumerate(graph_ranked):
+            if nid in all_nodes:
+                rrf_scores[nid] = rrf_scores.get(nid, 0) + 1.0 / (RRF_K + rank)
+
+        # Rank and truncate
+        ranked = sorted(rrf_scores.keys(), key=lambda nid: rrf_scores.get(nid, 0), reverse=True)
         ranked = ranked[:top_k]
 
-        # Compute coverage stats
+        # Coverage stats
         coverage: dict[str, int] = {}
         for nid in ranked:
-            node = all_nodes[nid]
-            label = getattr(node, "label", node.__class__.__name__)
+            label = getattr(all_nodes[nid], "label", all_nodes[nid].__class__.__name__)
             coverage[label] = coverage.get(label, 0) + 1
 
         result.nodes = [all_nodes[nid] for nid in ranked]
         result.edges = list(all_edges.values())
         result.node_ids = ranked
-        result.scores = {nid: round(scores.get(nid, 0), 4) for nid in ranked}
+        result.scores = {nid: round(rrf_scores.get(nid, 0), 4) for nid in ranked}
         result.coverage = coverage
-        result.retrieval_method = "hybrid" if seed_ids else "fallback"
+        result.retrieval_method = "hybrid" if vector_ranked else "fallback"
         return result
+
+    def _embed_query(self, query: str) -> list[float] | None:
+        """Embed the query text."""
+        if self._embed_fn is not None:
+            try:
+                if hasattr(self._embed_fn, "embed_text"):
+                    result = self._embed_fn.embed_text([query])
+                    return result[0] if result else None
+                return self._embed_fn(query)
+            except Exception as e:
+                logger.warning("Query embedding failed: %s", e)
+        return None
