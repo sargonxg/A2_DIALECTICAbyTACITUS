@@ -16,7 +16,7 @@ router = APIRouter(prefix="/v1/admin", tags=["admin"])
 
 class SystemInfo(BaseModel):
     graph_backend: str
-    version: str = "1.0.0"
+    version: str = "2.0.0"
     environment: str = "development"
 
 

@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="DIALECTICA API",
-        version="1.0.0",
+        version="2.0.0",
         description=(
             "The Universal Data Layer for Human Friction. "
             "A neurosymbolic conflict intelligence platform."
