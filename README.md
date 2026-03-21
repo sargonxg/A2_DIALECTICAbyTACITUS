@@ -1,6 +1,6 @@
-# DIALECTICA by TACITUS ◳
+# DIALECTICA by TACITUS
 
-## The Universal Data Layer for Human Friction
+### The universal data layer for human friction and warfare intelligence
 
 [![CI](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/actions/workflows/ci.yml/badge.svg)](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -312,12 +312,67 @@ dialectica/
 
 ---
 
+## API Example
+
+```bash
+# Create a workspace
+curl -X POST http://localhost:8080/v1/workspaces \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"name": "JCPOA Analysis", "template_id": "warfare_political"}'
+
+# Ingest a document
+curl -X POST http://localhost:8080/v1/workspaces/ws-1/extract \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"text": "Iran and the P5+1 signed the JCPOA in July 2015...", "tier": "full"}'
+
+# Query the knowledge graph
+curl http://localhost:8080/v1/workspaces/ws-1/graph?query=nuclear+enrichment \
+  -H "X-API-Key: $API_KEY"
+
+# Get escalation analysis
+curl http://localhost:8080/v1/workspaces/ws-1/analysis/escalation \
+  -H "X-API-Key: $API_KEY"
+```
+
+---
+
+## Feature Matrix
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Conflict Grammar Ontology | Done | 15 node types, 20 edge types, 25+ vocabularies |
+| Multi-database support | Done | FalkorDB + Neo4j + Spanner |
+| Dual vector search | Done | Qdrant semantic (768d) + structural (256d) |
+| LangGraph extraction | Done | 10-step pipeline with repair loop |
+| Instructor + LiteLLM | Done | Pydantic-validated structured extraction |
+| Symbolic firewall | Done | Deterministic conclusions never overridden |
+| GraphRAG retrieval | Done | 4-step hybrid: vector + graph + temporal + RRF |
+| PLOVER event coding | Done | 16 types with severity nuances |
+| ACLED/GDELT/UCDP connectors | Done | Live conflict data integration |
+| MCP server | Done | 5 tools for LLM integration |
+| Pub/Sub async ingestion | Done | Event-driven with DLQ |
+| PyKEEN KGE embeddings | Done | RotatE link prediction |
+| ConfliBERT classifier | Done | Conflict event classification |
+| Community detection | Done | Leiden at 3 resolutions |
+| Domain templates | Done | Human friction, warfare, commercial |
+| GKE/Cloud Run deployment | Done | Terraform + Helm + Cloud Build |
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Follow conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`
+4. Ensure `make quality-all` passes
+5. Submit a pull request
+
+---
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE)
 
 ---
 
-*DIALECTICA by TACITUS ◳ — The Universal Data Layer for Human Friction*
-
-*"We make conflict computable enough for better human judgment."*
+*DIALECTICA by TACITUS — Making conflict computable enough for better human judgment.*

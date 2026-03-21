@@ -1,0 +1,50 @@
+id: human_friction
+name: Human Friction (Workplace / Mediation)
+description: For HR disputes, commercial mediation, and interpersonal conflicts
+tier: standard
+domain: workplace
+
+symbolic_rules:
+  enabled:
+    - escalation
+    - trust_analysis
+    - constraint_engine
+    - pattern_matching
+    - ripeness
+  disabled:
+    - causal_analysis  # Less relevant for workplace
+    - network_metrics  # Small actor networks
+
+extraction:
+  gliner_labels:
+    - person
+    - organization
+    - department
+    - policy
+    - grievance
+  focus_node_types:
+    - Actor
+    - Conflict
+    - Issue
+    - Interest
+    - Process
+    - Outcome
+    - EmotionalState
+    - TrustState
+
+analysis:
+  glasl_stages: [1, 2, 3, 4, 5]  # Win-win and early win-lose
+  frameworks:
+    - thomas_kilmann
+    - fisher_ury
+    - glasl
+    - mayer_trust
+    - deutsch
+  default_mode: trust
+
+actor_types:
+  - person
+  - organization
+  - department
+  - union
+  - legal_counsel

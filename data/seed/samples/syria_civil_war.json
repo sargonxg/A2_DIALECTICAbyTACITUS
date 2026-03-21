@@ -1,0 +1,47 @@
+{
+  "workspace": {
+    "name": "Syria Civil War Analysis",
+    "template_id": "warfare_political",
+    "tier": "full"
+  },
+  "actors": [
+    {"name": "Syrian Government", "actor_type": "state", "description": "Assad regime and allied forces"},
+    {"name": "Free Syrian Army", "actor_type": "armed_group", "description": "Main opposition coalition"},
+    {"name": "ISIS/ISIL", "actor_type": "armed_group", "description": "Islamic State of Iraq and the Levant"},
+    {"name": "Kurdish YPG/SDF", "actor_type": "armed_group", "description": "People's Protection Units / Syrian Democratic Forces"},
+    {"name": "Russia", "actor_type": "state", "description": "Military intervention supporting Assad"},
+    {"name": "United States", "actor_type": "state", "description": "Anti-ISIS coalition lead"},
+    {"name": "Turkey", "actor_type": "state", "description": "Anti-Kurdish operations, opposition support"},
+    {"name": "Iran", "actor_type": "state", "description": "Military and economic support for Assad"},
+    {"name": "Hezbollah", "actor_type": "armed_group", "description": "Lebanese militia supporting Assad"},
+    {"name": "UN Security Council", "actor_type": "organization", "description": "International diplomatic body"},
+    {"name": "Jabhat al-Nusra", "actor_type": "armed_group", "description": "Al-Qaeda affiliate in Syria"},
+    {"name": "European Union", "actor_type": "organization", "description": "Sanctions regime and humanitarian aid"},
+    {"name": "Saudi Arabia", "actor_type": "state", "description": "Opposition funding and diplomatic support"},
+    {"name": "Qatar", "actor_type": "state", "description": "Opposition funding"},
+    {"name": "OPCW", "actor_type": "organization", "description": "Chemical weapons investigations"},
+    {"name": "White Helmets", "actor_type": "organization", "description": "Civil defense volunteers"},
+    {"name": "Human Rights Watch", "actor_type": "organization", "description": "Documentation of war crimes"},
+    {"name": "UNHCR", "actor_type": "organization", "description": "Refugee crisis response"},
+    {"name": "Israel", "actor_type": "state", "description": "Airstrikes on Iranian targets in Syria"},
+    {"name": "Jordan", "actor_type": "state", "description": "Refugee hosting, border security"}
+  ],
+  "conflict": {
+    "name": "Syrian Civil War",
+    "scale": "macro",
+    "domain": "geopolitical",
+    "status": "active",
+    "glasl_stage": 9,
+    "description": "Multi-party armed conflict with international intervention, chemical weapons use, massive displacement"
+  },
+  "events": [
+    {"event_type": "protest", "severity": 0.3, "date": "2011-03-15", "description": "Arab Spring protests begin in Daraa"},
+    {"event_type": "assault", "severity": 0.7, "date": "2011-07-29", "description": "Free Syrian Army formed"},
+    {"event_type": "assault", "severity": 0.95, "date": "2013-08-21", "description": "Ghouta chemical weapons attack"},
+    {"event_type": "exhibit_force_posture", "severity": 0.9, "date": "2014-09-22", "description": "US-led coalition airstrikes begin"},
+    {"event_type": "assault", "severity": 0.9, "date": "2015-09-30", "description": "Russian military intervention begins"},
+    {"event_type": "assault", "severity": 0.95, "date": "2016-12-22", "description": "Fall of Aleppo to government forces"},
+    {"event_type": "assault", "severity": 0.95, "date": "2017-04-07", "description": "Khan Shaykhun chemical attack"},
+    {"event_type": "assault", "severity": 0.8, "date": "2019-10-09", "description": "Turkish Operation Peace Spring"}
+  ]
+}

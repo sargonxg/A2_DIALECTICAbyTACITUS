@@ -1,0 +1,29 @@
+{
+  "workspace": {
+    "name": "Patent Infringement Dispute",
+    "template_id": "commercial_dispute",
+    "tier": "standard"
+  },
+  "actors": [
+    {"name": "TechCorp Inc.", "actor_type": "company", "description": "Patent holder, mid-size semiconductor firm"},
+    {"name": "MegaChip Ltd.", "actor_type": "company", "description": "Alleged infringer, large chip manufacturer"},
+    {"name": "Patent Attorney (TechCorp)", "actor_type": "legal_counsel", "description": "Representing patent holder"},
+    {"name": "Defense Counsel (MegaChip)", "actor_type": "legal_counsel", "description": "Representing alleged infringer"},
+    {"name": "USPTO", "actor_type": "regulator", "description": "US Patent and Trademark Office"},
+    {"name": "ITC", "actor_type": "regulator", "description": "International Trade Commission"}
+  ],
+  "conflict": {
+    "name": "Semiconductor Patent Infringement",
+    "scale": "meso",
+    "domain": "commercial",
+    "status": "active",
+    "description": "TechCorp alleges MegaChip infringes 3 patents on chip architecture; MegaChip claims prior art"
+  },
+  "events": [
+    {"event_type": "demand", "severity": 0.3, "date": "2024-01-10", "description": "TechCorp sends cease-and-desist letter"},
+    {"event_type": "reject", "severity": 0.4, "date": "2024-02-15", "description": "MegaChip rejects claims, asserts prior art"},
+    {"event_type": "coerce", "severity": 0.5, "date": "2024-03-20", "description": "TechCorp files ITC complaint"},
+    {"event_type": "consult", "severity": 0.2, "date": "2024-05-01", "description": "Settlement negotiations begin"},
+    {"event_type": "reject", "severity": 0.4, "date": "2024-06-15", "description": "First settlement offer rejected"}
+  ]
+}

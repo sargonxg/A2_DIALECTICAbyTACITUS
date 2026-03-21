@@ -1,0 +1,51 @@
+id: commercial_dispute
+name: Commercial Dispute Resolution
+description: For business disputes, IP conflicts, contract negotiations
+tier: standard
+domain: commercial
+
+symbolic_rules:
+  enabled:
+    - constraint_engine
+    - trust_analysis
+    - pattern_matching
+    - ripeness
+  disabled:
+    - escalation
+    - causal_analysis
+    - power_analysis
+    - network_metrics
+    - inference
+
+extraction:
+  gliner_labels:
+    - company
+    - person
+    - contract
+    - intellectual_property
+    - financial_amount
+    - jurisdiction
+  focus_node_types:
+    - Actor
+    - Conflict
+    - Issue
+    - Interest
+    - Norm
+    - Process
+    - Outcome
+
+analysis:
+  glasl_stages: [1, 2, 3, 4, 5]
+  frameworks:
+    - fisher_ury
+    - thomas_kilmann
+    - ury_brett_goldberg
+  default_mode: general
+  batna_zopa_emphasis: true
+
+actor_types:
+  - company
+  - person
+  - legal_counsel
+  - regulator
+  - arbitrator

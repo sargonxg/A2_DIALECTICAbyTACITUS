@@ -1,0 +1,30 @@
+{
+  "workspace": {
+    "name": "Tech Company Labor Dispute",
+    "template_id": "human_friction",
+    "tier": "standard"
+  },
+  "actors": [
+    {"name": "Engineering Team Lead", "actor_type": "person", "description": "Senior engineer leading the platform team"},
+    {"name": "VP of Engineering", "actor_type": "person", "description": "Executive overseeing all engineering"},
+    {"name": "HR Director", "actor_type": "person", "description": "Head of human resources"},
+    {"name": "Workers Council", "actor_type": "organization", "description": "Employee representative body"},
+    {"name": "Legal Counsel", "actor_type": "person", "description": "Company legal advisor"},
+    {"name": "CEO", "actor_type": "person", "description": "Chief executive officer"}
+  ],
+  "conflict": {
+    "name": "Engineering Team Restructuring Dispute",
+    "scale": "micro",
+    "domain": "workplace",
+    "status": "active",
+    "glasl_stage": 4,
+    "description": "Team lead disputes forced restructuring, alleges retaliation for speaking up about technical debt"
+  },
+  "events": [
+    {"event_type": "demand", "severity": 0.3, "date": "2024-01-15", "description": "Team lead raises technical debt concerns in all-hands"},
+    {"event_type": "disapprove", "severity": 0.4, "date": "2024-02-01", "description": "VP dismisses concerns publicly"},
+    {"event_type": "coerce", "severity": 0.5, "date": "2024-03-01", "description": "Team restructuring announced, team lead reassigned"},
+    {"event_type": "protest", "severity": 0.4, "date": "2024-03-15", "description": "Team lead files formal grievance"},
+    {"event_type": "consult", "severity": 0.2, "date": "2024-04-01", "description": "HR initiates mediation process"}
+  ]
+}

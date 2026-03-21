@@ -1,0 +1,75 @@
+id: warfare_political
+name: Warfare & Political Conflict
+description: For geopolitical analysis, armed conflicts, UNSC dynamics, JCPOA-type cases
+tier: full
+domain: geopolitical
+
+symbolic_rules:
+  enabled:
+    - escalation
+    - trust_analysis
+    - constraint_engine
+    - causal_analysis
+    - pattern_matching
+    - ripeness
+    - power_analysis
+    - network_metrics
+    - inference
+  disabled: []
+
+extraction:
+  gliner_labels:
+    - state
+    - armed_group
+    - organization
+    - territory
+    - treaty
+    - sanction
+    - weapon_system
+  focus_node_types:
+    - Actor
+    - Conflict
+    - Event
+    - Issue
+    - Interest
+    - Norm
+    - Process
+    - Outcome
+    - Narrative
+    - EmotionalState
+    - TrustState
+    - PowerDynamic
+    - Location
+    - Evidence
+    - Role
+  connectors:
+    - acled
+    - gdelt
+    - ucdp
+
+analysis:
+  glasl_stages: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  frameworks:
+    - glasl
+    - kriesberg
+    - zartman
+    - fisher_ury
+    - galtung
+    - lederach
+    - french_raven
+    - mayer_trust
+    - plutchik
+    - pearl_causal
+    - winslade_monk
+    - burton
+  default_mode: escalation
+  plover_coding: true
+  cross_case_matching: true
+
+actor_types:
+  - state
+  - armed_group
+  - organization
+  - coalition
+  - international_body
+  - non_state_actor
