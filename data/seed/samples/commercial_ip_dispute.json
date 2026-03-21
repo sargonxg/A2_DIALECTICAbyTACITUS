@@ -5,12 +5,12 @@
     "tier": "standard"
   },
   "actors": [
-    {"name": "TechCorp Inc.", "actor_type": "company", "description": "Patent holder, mid-size semiconductor firm"},
-    {"name": "MegaChip Ltd.", "actor_type": "company", "description": "Alleged infringer, large chip manufacturer"},
-    {"name": "Patent Attorney (TechCorp)", "actor_type": "legal_counsel", "description": "Representing patent holder"},
-    {"name": "Defense Counsel (MegaChip)", "actor_type": "legal_counsel", "description": "Representing alleged infringer"},
-    {"name": "USPTO", "actor_type": "regulator", "description": "US Patent and Trademark Office"},
-    {"name": "ITC", "actor_type": "regulator", "description": "International Trade Commission"}
+    {"name": "TechCorp Inc.", "actor_type": "organization", "description": "Patent holder, mid-size semiconductor firm"},
+    {"name": "MegaChip Ltd.", "actor_type": "organization", "description": "Alleged infringer, large chip manufacturer"},
+    {"name": "Patent Attorney (TechCorp)", "actor_type": "person", "description": "Representing patent holder"},
+    {"name": "Defense Counsel (MegaChip)", "actor_type": "person", "description": "Representing alleged infringer"},
+    {"name": "USPTO", "actor_type": "organization", "description": "US Patent and Trademark Office"},
+    {"name": "ITC", "actor_type": "organization", "description": "International Trade Commission"}
   ],
   "conflict": {
     "name": "Semiconductor Patent Infringement",

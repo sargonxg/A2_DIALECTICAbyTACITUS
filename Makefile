@@ -98,16 +98,17 @@ quality-check: lint typecheck ## Alias for quality
 
 # ─── Database & Seed ─────────────────────────────────────────────────────────
 
-seed-schema: ## Initialize Spanner schema
+seed: ## Load all sample data into Neo4j
+	uv run python infrastructure/scripts/seed_sample_data.py
+
+seed-api: ## Load sample data via REST API (tests full stack)
+	uv run python infrastructure/scripts/seed_via_api.py
+
+seed-schema: ## Initialize Spanner schema (Spanner only)
 	uv run python infrastructure/scripts/init_spanner.py
 
 seed-frameworks: ## Load theory frameworks into database
 	uv run python infrastructure/scripts/seed_frameworks.py
-
-seed-samples: ## Load JCPOA and other sample conflict graphs
-	uv run python infrastructure/scripts/seed_sample_data.py
-
-seed: seed-schema seed-frameworks seed-samples ## Run all seed operations
 
 create-admin-key: ## Generate and store admin API key
 	uv run python infrastructure/scripts/create_admin_key.py

@@ -123,7 +123,7 @@
       "id": "issue_ongoing_relationship",
       "label": "Issue",
       "name": "Future Commercial Relationship",
-      "issue_type": "relationship",
+      "issue_type": "psychological",
       "domain_category": "commercial_continuity",
       "salience": 0.5,
       "divisibility": 0.9,
@@ -193,8 +193,8 @@
     { "source": "actor_crestline", "target": "process_commercial_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "claimant"} },
     { "source": "actor_mediator_firm", "target": "process_commercial_mediation", "type": "PARTICIPATES_IN", "properties": {"role": "mediator"} },
     { "source": "conflict_contract", "target": "process_commercial_mediation", "type": "RESOLVED_THROUGH", "properties": {"partial": false} },
-    { "source": "interest_apex_cash", "target": "issue_quantum_damages", "type": "MOTIVATED_BY", "properties": {} },
-    { "source": "interest_crestline_compensation", "target": "issue_defect_liability", "type": "MOTIVATED_BY", "properties": {} },
+    { "source": "interest_apex_cash", "target": "issue_quantum_damages", "type": "HAS_INTEREST", "properties": {} },
+    { "source": "interest_crestline_compensation", "target": "issue_defect_liability", "type": "HAS_INTEREST", "properties": {} },
     { "source": "actor_crestline", "target": "actor_apex", "type": "HAS_POWER_OVER", "properties": {"power_domain": "economic", "magnitude": 0.55, "description": "Crestline controls future contract awards to Apex for group subsidiaries"} }
   ]
 }
