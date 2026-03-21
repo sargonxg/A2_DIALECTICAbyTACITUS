@@ -5,8 +5,25 @@ import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
-  title: "DIALECTICA by TACITUS",
-  description: "The Universal Data Layer for Human Friction",
+  title: {
+    default: "DIALECTICA by TACITUS",
+    template: "%s | DIALECTICA",
+  },
+  description: "Transform any conflict into a computable knowledge graph grounded in 30+ academic frameworks.",
+  openGraph: {
+    type: "website",
+    siteName: "DIALECTICA by TACITUS",
+    title: "DIALECTICA — Make Conflict Computable",
+    description: "From workplace disputes to geopolitical crises — structured intelligence in seconds.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DIALECTICA by TACITUS",
+    description: "Transform any conflict into a computable knowledge graph.",
+    images: ["/og-image.png"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

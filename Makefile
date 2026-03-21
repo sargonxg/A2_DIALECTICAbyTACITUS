@@ -60,6 +60,9 @@ test-reasoning: ## Run reasoning package tests
 test-web: ## Run Next.js tests
 	cd apps/web && npm test
 
+test-e2e: ## Run Playwright E2E tests
+	cd apps/web && npm run test:e2e
+
 test-benchmark: ## Run benchmark tests only
 	uv run pytest packages/api/tests/test_benchmark.py -v
 
