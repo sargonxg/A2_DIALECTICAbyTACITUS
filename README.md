@@ -6,7 +6,8 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org)
-[![Google Cloud](https://img.shields.io/badge/Google_Cloud-Spanner-4285F4.svg)](https://cloud.google.com/spanner)
+[![Neo4j](https://img.shields.io/badge/Neo4j-Aura-008CC1.svg)](https://neo4j.com/cloud/aura/)
+[![Google Cloud](https://img.shields.io/badge/Google_Cloud-Cloud_Run-4285F4.svg)](https://cloud.google.com/run)
 
 > *"We make conflict computable enough for better human judgment."*
 
@@ -18,9 +19,9 @@ DIALECTICA is a neurosymbolic conflict intelligence platform that structures any
 
 ```bash
 cp .env.example .env
-make dev          # Docker Compose: API + Web + Spanner + Redis + FalkorDB + Qdrant
-make seed         # Load frameworks + sample data
-# API: http://localhost:8080/docs | Web: http://localhost:3000
+make dev-local    # Docker Compose: Neo4j + Redis + API (minimal stack)
+make seed         # Load 6 sample conflict graphs (114 nodes, 126 edges)
+# API: http://localhost:8080/docs | Neo4j Browser: http://localhost:7474
 ```
 
 ## Documentation
@@ -231,26 +232,22 @@ curl -X POST https://api.dialectica.tacitus.ai/ask \
 
 ## Database Options
 
-### Primary: Google Cloud Spanner Graph (Recommended)
+### Primary: Neo4j Aura (TACITUS is in Neo4j Startup Program)
+- **Cypher** query language (widely known, ISO GQL compatible)
+- **65+ graph algorithms** via Graph Data Science (community detection, PageRank, centrality)
+- **Native vector search** (since Neo4j 5.11)
+- **Managed service** on GCP — zero ops, automatic backups
+- **Cost**: Free tier available; $65-146/month on GCP Marketplace
+
+### Alternative: Google Cloud Spanner Graph
 - **Unified engine**: graph (GQL) + relational (SQL) + vector search in one system
-- **Dynamic labels**: All 15 node types in one `Nodes` table
-- **Native vector search**: 768-dim embeddings for semantic retrieval
-- **GQL (ISO standard)**: `MATCH (a:actor)-[e:party_to]->(c:conflict) RETURN a, e, c`
 - **99.999% availability**, global consistency, automatic sharding
 - **Cost**: ~$90-157/month at startup scale (100 Processing Units)
 
-### Secondary: Neo4j Aura on GCP
-- **Cypher** query language (widely known)
-- **65+ graph algorithms** via Graph Data Science (community detection, PageRank, centrality)
-- **Native vector search** (since Neo4j 5.11)
-- Use when graph algorithms are required
-- **Cost**: $65-146/month on GCP Marketplace
-
-### Compatible: FalkorDB
+### Development: FalkorDB
 - **OpenCypher** compatible with existing TACITUS pipeline code
 - **GraphBLAS** performance (<1ms simple traversals)
 - Self-hosted option on Cloud Run (~$20-30/month)
-- Suitable for development and testing
 
 The `GraphClient` interface makes backends swappable — configure via `GRAPH_BACKEND` env var.
 
@@ -340,22 +337,22 @@ curl http://localhost:8080/v1/workspaces/ws-1/analysis/escalation \
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Conflict Grammar Ontology | Done | 15 node types, 20 edge types, 25+ vocabularies |
-| Multi-database support | Done | FalkorDB + Neo4j + Spanner |
-| Dual vector search | Done | Qdrant semantic (768d) + structural (256d) |
-| LangGraph extraction | Done | 10-step pipeline with repair loop |
-| Instructor + LiteLLM | Done | Pydantic-validated structured extraction |
-| Symbolic firewall | Done | Deterministic conclusions never overridden |
-| GraphRAG retrieval | Done | 4-step hybrid: vector + graph + temporal + RRF |
-| PLOVER event coding | Done | 16 types with severity nuances |
-| ACLED/GDELT/UCDP connectors | Done | Live conflict data integration |
-| MCP server | Done | 5 tools for LLM integration |
-| Pub/Sub async ingestion | Done | Event-driven with DLQ |
-| PyKEEN KGE embeddings | Done | RotatE link prediction |
-| ConfliBERT classifier | Done | Conflict event classification |
-| Community detection | Done | Leiden at 3 resolutions |
-| Domain templates | Done | Human friction, warfare, commercial |
-| GKE/Cloud Run deployment | Done | Terraform + Helm + Cloud Build |
+| Conflict Grammar Ontology | **Done** | 15 node types, 20 edge types, 25+ vocabularies, 80% test coverage |
+| Multi-database support | **Done** | Neo4j (primary) + FalkorDB + Spanner |
+| Symbolic rules engine | **Done** | 25+ rules, firewall, escalation, ripeness, trust, power |
+| 6 AI agents | **Done** | Analyst, Advisor, Comparator, Forecaster, Mediator, Theorist |
+| LangGraph extraction | **Done** | 10-step pipeline with repair loop |
+| GraphRAG retrieval | **Done** | Hybrid: vector + graph + temporal + RRF |
+| PLOVER event coding | **Done** | 16 types with severity nuances |
+| Sample data seeder | **Done** | 6 scenarios, 114 nodes, 126 edges |
+| FastAPI with auth | **Done** | 14 routers, rate limiting, multi-tenant, 72+ tests |
+| Dual vector search | In Progress | Qdrant semantic (768d) + structural (256d) |
+| ACLED/GDELT/UCDP connectors | In Progress | Connector code exists, needs live integration |
+| MCP server | In Progress | Server scaffolded, 3 tools |
+| PyKEEN KGE embeddings | In Progress | RotatE code exists, optional dep (requires torch) |
+| ConfliBERT classifier | In Progress | Integration code exists, needs model deployment |
+| Cloud Run deployment | In Progress | Dockerfile + deploy scripts ready |
+| Next.js frontend | In Progress | Scaffolded with 9 page directories, needs wiring |
 
 ---
 
