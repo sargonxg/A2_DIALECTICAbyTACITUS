@@ -1,5 +1,58 @@
 steps:
+  # 1. Install and test
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install uv --quiet
+        uv sync --all-packages
+        uv run pytest packages/ontology/tests/ packages/api/tests/test_api.py -v --tb=short -x
+
+  # 2. Build slim image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-east1-docker.pkg.dev/dialectica-tacitus/dialectica/api:latest', '-f', 'packages/api/Dockerfile', '.']
-images:
-  - 'us-east1-docker.pkg.dev/dialectica-tacitus/dialectica/api:latest'
+    args:
+      - 'build'
+      - '-f'
+      - 'packages/api/Dockerfile.cloudrun'
+      - '-t'
+      - '${_REGISTRY}/api:${SHORT_SHA}'
+      - '-t'
+      - '${_REGISTRY}/api:latest'
+      - '.'
+
+  # 3. Push
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGISTRY}/api']
+
+  # 4. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'dialectica-api'
+      - '--image=${_REGISTRY}/api:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--min-instances=1'
+
+  # 5. Verify deployment
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        sleep 10
+        API_URL=$(gcloud run services describe dialectica-api --region=${_REGION} --format='value(status.url)')
+        curl -f "$API_URL/health" || exit 1
+        echo "Deployment verified!"
+
+substitutions:
+  _REGION: us-east1
+  _REGISTRY: us-east1-docker.pkg.dev/${PROJECT_ID}/dialectica
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8

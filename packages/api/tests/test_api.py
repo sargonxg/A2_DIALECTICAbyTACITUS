@@ -50,9 +50,11 @@ class TestHealth:
         resp = await client.get("/health")
         assert resp.status_code == 200
         body = resp.json()
-        assert body["status"] == "ok"
+        assert body["status"] in ("healthy", "degraded")
         assert "timestamp" in body
         assert body["version"] == "2.0.0"
+        assert "graph_backend" in body
+        assert "checks" in body
 
     async def test_health_no_auth_required(self, client: AsyncClient) -> None:
         """Health endpoint should be publicly accessible without API key."""

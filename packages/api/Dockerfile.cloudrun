@@ -1,0 +1,53 @@
+# Slim Cloud Run Dockerfile — No torch, no GLiNER, < 500MB
+# Usage: docker build -f packages/api/Dockerfile.cloudrun -t dialectica-api .
+
+# --- Stage 1: Builder with UV ---
+FROM python:3.12-slim AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+WORKDIR /build
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends gcc g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace root
+COPY pyproject.toml README.md ./
+
+# Copy all workspace packages
+COPY packages/ontology packages/ontology
+COPY packages/graph packages/graph
+COPY packages/extraction packages/extraction
+COPY packages/reasoning packages/reasoning
+COPY packages/api packages/api
+
+# Install WITHOUT optional heavy deps (torch, pykeen, gliner excluded)
+RUN uv sync --all-packages --no-dev --no-editable
+
+# --- Stage 2: Production ---
+FROM python:3.12-slim
+WORKDIR /app
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -u 1000 dialectica
+
+# Copy installed venv from builder
+COPY --from=builder /build/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+
+# Copy seed data for demo
+COPY data /app/data
+
+USER dialectica
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+CMD ["uvicorn", "dialectica_api.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8080", \
+     "--workers", "2"]

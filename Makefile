@@ -149,19 +149,11 @@ tf-apply: ## Apply Terraform changes
 tf-destroy: ## Destroy Terraform resources
 	cd infrastructure/terraform && terraform destroy -var="project_id=$(PROJECT_ID)"
 
-deploy-api: ## Deploy API to Cloud Run
-	gcloud run deploy dialectica-api \
-		--image $(REGISTRY)/api:$(IMAGE_TAG) \
-		--region $(REGION) \
-		--project $(PROJECT_ID)
+deploy: ## Deploy API to Cloud Run (requires gcloud auth)
+	bash infrastructure/scripts/deploy-cloudrun.sh $(PROJECT_ID) $(REGION)
 
-deploy-web: ## Deploy web to Cloud Run
-	gcloud run deploy dialectica-web \
-		--image $(REGISTRY)/web:$(IMAGE_TAG) \
-		--region $(REGION) \
-		--project $(PROJECT_ID)
-
-deploy: build docker-push deploy-api deploy-web ## Full deploy pipeline
+setup-secrets: ## Store Neo4j Aura credentials in Secret Manager
+	bash infrastructure/scripts/setup-secrets.sh $(PROJECT_ID)
 
 # ─── Utilities ────────────────────────────────────────────────────────────────
 
