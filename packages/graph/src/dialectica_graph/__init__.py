@@ -2,11 +2,11 @@
 DIALECTICA Graph Package — Database abstraction layer.
 
 Provides a swappable GraphClient interface implemented by:
-  SpannerGraphClient: Google Cloud Spanner Graph (primary, GCP-native)
-  Neo4jGraphClient: Neo4j Aura (secondary, GDS algorithms)
+  Neo4jGraphClient: Neo4j Aura (primary — TACITUS is in Neo4j Startup Program)
+  SpannerGraphClient: Google Cloud Spanner Graph (alternative, GCP-native)
   FalkorDBGraphClient: FalkorDB (tenant isolation, graph-per-tenant)
 
-Configure via GRAPH_BACKEND env var: "spanner" (default), "neo4j", or "falkordb".
+Configure via GRAPH_BACKEND env var: "neo4j" (default), "spanner", or "falkordb".
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ __all__ = [
 
 
 def create_graph_client(
-    backend: str = "spanner",
+    backend: str = "neo4j",
     config: dict[str, Any] | None = None,
 ) -> GraphClient:
     """Factory function to create a GraphClient for the specified backend.

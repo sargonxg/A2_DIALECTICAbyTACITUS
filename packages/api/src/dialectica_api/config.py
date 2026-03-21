@@ -22,15 +22,16 @@ class Settings(BaseSettings):
     gemini_pro_model: str = "gemini-2.5-pro-001"
 
     # App
-    graph_backend: str = "spanner"  # or "neo4j"
+    graph_backend: str = "neo4j"  # "neo4j" (primary), "spanner", or "falkordb"
     admin_api_key: str = "dev-admin-key-change-in-production"
     log_level: str = "INFO"
     cors_origins: str = "*"
 
-    # Neo4j (optional)
+    # Neo4j (primary — TACITUS is in Neo4j Startup Program)
     neo4j_uri: str = "bolt://localhost:7687"
     neo4j_user: str = "neo4j"
     neo4j_password: str = "dialectica-dev"
+    neo4j_database: str = "neo4j"
 
     # Rate limiting
     rate_limit_backend: str = "memory"  # "memory" or "redis"

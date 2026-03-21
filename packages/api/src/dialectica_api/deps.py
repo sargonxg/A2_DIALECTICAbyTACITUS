@@ -49,6 +49,7 @@ def get_graph_client(settings: Settings = Depends(get_settings)) -> Any:
                 "uri": settings.neo4j_uri,
                 "username": settings.neo4j_user,
                 "password": settings.neo4j_password,
+                "database": settings.neo4j_database,
             }
 
         _graph_client_instance = create_graph_client(

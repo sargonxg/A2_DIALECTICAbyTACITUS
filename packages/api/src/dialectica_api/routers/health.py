@@ -23,6 +23,7 @@ class HealthResponse(BaseModel):
     status: str
     timestamp: str
     version: str = "2.0.0"
+    graph_backend: str = ""
 
 
 class ServiceCheck(BaseModel):
@@ -48,11 +49,14 @@ _start_time = time.time()
 
 
 @router.get("/health", response_model=HealthResponse, include_in_schema=True)
-async def health_check() -> HealthResponse:
+async def health_check(
+    settings: Any = Depends(get_settings),
+) -> HealthResponse:
     """Basic liveness check — returns 200 if process is running."""
     return HealthResponse(
         status="ok",
         timestamp=datetime.utcnow().isoformat(),
+        graph_backend=settings.graph_backend,
     )
 
 

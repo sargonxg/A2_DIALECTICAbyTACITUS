@@ -16,42 +16,27 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-  # ─── Google Cloud Spanner Emulator ──────────────────────────────────────
-  spanner-emulator:
-    image: gcr.io/cloud-spanner-emulator/emulator:latest
-    container_name: dialectica-spanner-emulator
+  # ─── Neo4j (Primary Graph Database) ─────────────────────────────────────
+  neo4j:
+    image: neo4j:5-community
+    container_name: dialectica-neo4j
     ports:
-      - "9010:9010"   # gRPC
-      - "9020:9020"   # REST / HTTP
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9020/v1/projects/test-project/instances"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-    restart: unless-stopped
-
-  # ─── Spanner Setup (one-shot init) ──────────────────────────────────────
-  spanner-init:
-    image: python:3.12-slim
-    container_name: dialectica-spanner-init
-    depends_on:
-      spanner-emulator:
-        condition: service_healthy
+      - "7474:7474"   # Browser
+      - "7687:7687"   # Bolt
     environment:
-      SPANNER_EMULATOR_HOST: spanner-emulator:9010
-      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
-      SPANNER_INSTANCE_ID: ${SPANNER_INSTANCE_ID:-dialectica-graph}
-      SPANNER_DATABASE_ID: ${SPANNER_DATABASE_ID:-dialectica}
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/dialectica-dev}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
     volumes:
-      - ./infrastructure/scripts:/scripts
-      - ./packages:/packages
-    command: >
-      sh -c "
-        pip install google-cloud-spanner --quiet &&
-        python /scripts/init_spanner.py
-      "
-    restart: on-failure
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "dialectica-dev", "RETURN 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
 
   # ─── DIALECTICA API ──────────────────────────────────────────────────────
   api:
@@ -62,21 +47,23 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      spanner-emulator:
+      neo4j:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
       # GCP
       GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
-      SPANNER_INSTANCE_ID: ${SPANNER_INSTANCE_ID:-dialectica-graph}
-      SPANNER_DATABASE_ID: ${SPANNER_DATABASE_ID:-dialectica}
-      SPANNER_EMULATOR_HOST: spanner-emulator:9010
       VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-east1}
       GEMINI_FLASH_MODEL: ${GEMINI_FLASH_MODEL:-gemini-2.5-flash-001}
       GEMINI_PRO_MODEL: ${GEMINI_PRO_MODEL:-gemini-2.5-pro-001}
+      # Graph — Neo4j primary
+      GRAPH_BACKEND: neo4j
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-dialectica-dev}
+      NEO4J_DATABASE: ${NEO4J_DATABASE:-neo4j}
       # App
-      GRAPH_BACKEND: ${GRAPH_BACKEND:-spanner}
       ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-change-in-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
@@ -162,71 +149,46 @@ services:
       GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
     restart: unless-stopped
 
-  # ─── Neo4j (Optional — activate via profile) ─────────────────────────────
-  neo4j:
-    image: neo4j:5-community
-    container_name: dialectica-neo4j
+  # ─── Google Cloud Spanner Emulator (optional — activate via profile) ─────
+  spanner-emulator:
+    image: gcr.io/cloud-spanner-emulator/emulator:latest
+    container_name: dialectica-spanner-emulator
     profiles:
-      - neo4j
+      - spanner
     ports:
-      - "7474:7474"   # Browser
-      - "7687:7687"   # Bolt
-    environment:
-      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/dialectica-dev}
-      NEO4J_PLUGINS: '["apoc"]'
-      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
-    volumes:
-      - neo4j-data:/data
-      - neo4j-logs:/logs
+      - "9010:9010"   # gRPC
+      - "9020:9020"   # REST / HTTP
     healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "dialectica-dev", "RETURN 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
-
-  # ─── API (Neo4j backend variant) ─────────────────────────────────────────
-  # Use: docker-compose --profile neo4j up
-  # The default 'api' service uses Spanner emulator.
-  # When using neo4j profile, set GRAPH_BACKEND=neo4j and NEO4J_* vars.
-  api-neo4j:
-    build:
-      context: .
-      dockerfile: packages/api/Dockerfile
-    container_name: dialectica-api-neo4j
-    profiles:
-      - neo4j
-    ports:
-      - "8081:8080"   # Exposed on 8081 to avoid conflict with default api
-    depends_on:
-      neo4j:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      GRAPH_BACKEND: neo4j
-      NEO4J_URI: bolt://neo4j:7687
-      NEO4J_USER: ${NEO4J_USER:-neo4j}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-dialectica-dev}
-      ADMIN_API_KEY: ${ADMIN_API_KEY:-dev-admin-key-change-in-production}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
-      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
-      VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-east1}
-      GEMINI_FLASH_MODEL: ${GEMINI_FLASH_MODEL:-gemini-2.5-flash-001}
-      GEMINI_PRO_MODEL: ${GEMINI_PRO_MODEL:-gemini-2.5-pro-001}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-redis}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
-      API_KEYS_JSON: ${API_KEYS_JSON:-[]}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 15s
+      test: ["CMD", "curl", "-f", "http://localhost:9020/v1/projects/test-project/instances"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 15s
     restart: unless-stopped
+
+  # ─── Spanner Setup (one-shot init — optional) ─────────────────────────────
+  spanner-init:
+    image: python:3.12-slim
+    container_name: dialectica-spanner-init
+    profiles:
+      - spanner
+    depends_on:
+      spanner-emulator:
+        condition: service_healthy
+    environment:
+      SPANNER_EMULATOR_HOST: spanner-emulator:9010
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-local-project}
+      SPANNER_INSTANCE_ID: ${SPANNER_INSTANCE_ID:-dialectica-graph}
+      SPANNER_DATABASE_ID: ${SPANNER_DATABASE_ID:-dialectica}
+    volumes:
+      - ./infrastructure/scripts:/scripts
+      - ./packages:/packages
+    command: >
+      sh -c "
+        pip install google-cloud-spanner --quiet &&
+        python /scripts/init_spanner.py
+      "
+    restart: on-failure
 
 volumes:
   qdrant-data:
