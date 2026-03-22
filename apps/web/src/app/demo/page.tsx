@@ -206,13 +206,14 @@ The IAEA has requested expanded access under the Additional Protocol, including 
 /* ------------------------------------------------------------------ */
 
 const FALLBACK_NODES: GraphNode[] = [
+  /* ---- 8 Actors ---- */
   {
     id: "actor_alex",
     label: "Actor",
     node_type: "actor",
     name: "Alex Chen",
     confidence: 0.95,
-    properties: { role_title: "Software Developer", actor_type: "person", centrality: 0.7 },
+    properties: { role_title: "Junior Software Engineer", actor_type: "person", centrality: 0.82 },
   },
   {
     id: "actor_maya",
@@ -220,154 +221,419 @@ const FALLBACK_NODES: GraphNode[] = [
     node_type: "actor",
     name: "Maya Okonkwo",
     confidence: 0.95,
-    properties: { role_title: "Senior Developer / Team Lead", actor_type: "person", centrality: 0.75 },
+    properties: { role_title: "Tech Lead", actor_type: "person", centrality: 0.85 },
   },
   {
     id: "actor_jordan",
     label: "Actor",
     node_type: "actor",
     name: "Jordan Reyes",
-    confidence: 0.9,
-    properties: { role_title: "HR Business Partner / Mediator", actor_type: "person", centrality: 0.5 },
+    confidence: 0.92,
+    properties: { role_title: "HR Business Partner / Mediator", actor_type: "person", centrality: 0.6 },
   },
+  {
+    id: "actor_kai",
+    label: "Actor",
+    node_type: "actor",
+    name: "Kai Tanaka",
+    confidence: 0.88,
+    properties: { role_title: "Software Engineer (teammate/witness)", actor_type: "person", centrality: 0.35 },
+  },
+  {
+    id: "actor_elena",
+    label: "Actor",
+    node_type: "actor",
+    name: "Elena Vasquez",
+    confidence: 0.88,
+    properties: { role_title: "Senior Software Engineer", actor_type: "person", centrality: 0.32 },
+  },
+  {
+    id: "actor_priya",
+    label: "Actor",
+    node_type: "actor",
+    name: "Priya Sharma",
+    confidence: 0.85,
+    properties: { role_title: "VP Engineering", actor_type: "person", centrality: 0.45 },
+  },
+  {
+    id: "actor_marcus",
+    label: "Actor",
+    node_type: "actor",
+    name: "Marcus Thompson",
+    confidence: 0.85,
+    properties: { role_title: "VP People", actor_type: "person", centrality: 0.38 },
+  },
+  {
+    id: "actor_northwind",
+    label: "Actor",
+    node_type: "actor",
+    name: "Northwind Technologies",
+    confidence: 0.95,
+    properties: { actor_type: "organization", centrality: 0.5 },
+  },
+
+  /* ---- 1 Conflict ---- */
   {
     id: "conflict_code_review",
     label: "Conflict",
     node_type: "conflict",
     name: "Code Review Incident",
-    confidence: 0.95,
-    properties: { glasl_stage: 3, status: "active", scale: "micro", domain: "workplace", centrality: 1.0 },
+    confidence: 0.96,
+    properties: { glasl_stage: 3, status: "active", scale: "micro", domain: "workplace", kriesberg_phase: "escalating", centrality: 1.0 },
+  },
+
+  /* ---- 6 Events ---- */
+  {
+    id: "event_first_tension",
+    label: "Event",
+    node_type: "event",
+    name: "First Tension",
+    confidence: 0.88,
+    properties: { event_type: "tension", severity: 0.3, occurred_at: "2025-04-10", centrality: 0.42 },
+  },
+  {
+    id: "event_alex_avoids",
+    label: "Event",
+    node_type: "event",
+    name: "Alex Avoids Maya",
+    confidence: 0.85,
+    properties: { event_type: "withdraw", severity: 0.35, occurred_at: "2025-04-25", centrality: 0.38 },
   },
   {
     id: "event_code_review_incident",
     label: "Event",
     node_type: "event",
-    name: "Public Code Review",
-    confidence: 0.92,
-    properties: { event_type: "disapprove", severity: 0.55, occurred_at: "2025-11-14", centrality: 0.65 },
+    name: "Code Review Incident",
+    confidence: 0.95,
+    properties: { event_type: "disapprove", severity: 0.75, occurred_at: "2025-06-15", centrality: 0.72 },
   },
   {
     id: "event_formal_complaint",
     label: "Event",
     node_type: "event",
-    name: "Formal HR Complaint",
-    confidence: 0.9,
-    properties: { event_type: "demand", severity: 0.45, occurred_at: "2025-11-21", centrality: 0.6 },
+    name: "Formal Complaint Filed",
+    confidence: 0.92,
+    properties: { event_type: "demand", severity: 0.65, occurred_at: "2025-06-20", centrality: 0.62 },
+  },
+  {
+    id: "event_team_splits",
+    label: "Event",
+    node_type: "event",
+    name: "Team Splits",
+    confidence: 0.88,
+    properties: { event_type: "polarize", severity: 0.55, occurred_at: "2025-06-25", centrality: 0.48 },
   },
   {
     id: "event_mediation_session",
     label: "Event",
     node_type: "event",
     name: "Mediation Session",
-    confidence: 0.88,
-    properties: { event_type: "consult", severity: 0.2, occurred_at: "2025-12-05", centrality: 0.55 },
+    confidence: 0.9,
+    properties: { event_type: "consult", severity: 0.35, occurred_at: "2025-07-10", centrality: 0.55 },
   },
+
+  /* ---- 3 Issues ---- */
   {
     id: "issue_communication_style",
     label: "Issue",
     node_type: "issue",
     name: "Communication Style",
-    confidence: 0.9,
-    properties: { issue_type: "procedural", salience: 0.85, centrality: 0.6 },
+    confidence: 0.92,
+    properties: { issue_type: "procedural", salience: 0.85, centrality: 0.55 },
   },
   {
     id: "issue_professional_respect",
     label: "Issue",
     node_type: "issue",
     name: "Professional Respect",
-    confidence: 0.92,
-    properties: { issue_type: "psychological", salience: 0.9, centrality: 0.65 },
+    confidence: 0.94,
+    properties: { issue_type: "psychological", salience: 0.9, centrality: 0.58 },
   },
+  {
+    id: "issue_power_imbalance",
+    label: "Issue",
+    node_type: "issue",
+    name: "Power Imbalance",
+    confidence: 0.88,
+    properties: { issue_type: "substantive", salience: 0.75, centrality: 0.48 },
+  },
+
+  /* ---- 4 Interests ---- */
+  {
+    id: "interest_alex_safety",
+    label: "Interest",
+    node_type: "interest",
+    name: "Alex: Psychological Safety",
+    confidence: 0.9,
+    properties: { holder: "Alex Chen", interest_type: "psychological", priority: 5, centrality: 0.42 },
+  },
+  {
+    id: "interest_alex_growth",
+    label: "Interest",
+    node_type: "interest",
+    name: "Alex: Career Growth",
+    confidence: 0.88,
+    properties: { holder: "Alex Chen", interest_type: "substantive", priority: 4, centrality: 0.38 },
+  },
+  {
+    id: "interest_maya_standards",
+    label: "Interest",
+    node_type: "interest",
+    name: "Maya: Code Standards",
+    confidence: 0.9,
+    properties: { holder: "Maya Okonkwo", interest_type: "substantive", priority: 5, centrality: 0.4 },
+  },
+  {
+    id: "interest_maya_authority",
+    label: "Interest",
+    node_type: "interest",
+    name: "Maya: Team Authority",
+    confidence: 0.88,
+    properties: { holder: "Maya Okonkwo", interest_type: "psychological", priority: 5, centrality: 0.38 },
+  },
+
+  /* ---- 2 Norms ---- */
+  {
+    id: "norm_handbook",
+    label: "Norm",
+    node_type: "norm",
+    name: "Employee Handbook",
+    confidence: 0.92,
+    properties: { norm_type: "policy", binding: true, centrality: 0.35 },
+  },
+  {
+    id: "norm_feha",
+    label: "Norm",
+    node_type: "norm",
+    name: "California FEHA",
+    confidence: 0.95,
+    properties: { norm_type: "statute", binding: true, centrality: 0.3 },
+  },
+
+  /* ---- 1 Process ---- */
   {
     id: "process_hr_mediation",
     label: "Process",
     node_type: "process",
-    name: "HR Mediation",
-    confidence: 0.88,
-    properties: { process_type: "mediation_facilitative", status: "active", centrality: 0.55 },
-  },
-  {
-    id: "interest_dignity",
-    label: "Interest",
-    node_type: "interest",
-    name: "Professional Dignity",
-    confidence: 0.85,
-    properties: { holder: "Alex Chen", importance: "high", centrality: 0.45 },
-  },
-  {
-    id: "interest_code_quality",
-    label: "Interest",
-    node_type: "interest",
-    name: "Code Quality Standards",
-    confidence: 0.88,
-    properties: { holder: "Alex Chen", importance: "high", centrality: 0.5 },
-  },
-  {
-    id: "interest_team_velocity",
-    label: "Interest",
-    node_type: "interest",
-    name: "Team Velocity",
-    confidence: 0.85,
-    properties: { holder: "Maya Okonkwo", importance: "high", centrality: 0.45 },
-  },
-  {
-    id: "norm_code_of_conduct",
-    label: "Norm",
-    node_type: "norm",
-    name: "Company Code of Conduct",
+    name: "Facilitative HR Mediation",
     confidence: 0.9,
-    properties: { norm_type: "organizational_policy", centrality: 0.4 },
+    properties: { process_type: "interest_based", status: "active", centrality: 0.52 },
+  },
+
+  /* ---- 1 Outcome ---- */
+  {
+    id: "outcome_agreement",
+    label: "Outcome",
+    node_type: "outcome",
+    name: "Working Agreement Draft",
+    confidence: 0.78,
+    properties: { outcome_type: "agreement", satisfaction_a: 0.6, satisfaction_b: 0.5, centrality: 0.32 },
+  },
+
+  /* ---- 2 Narratives ---- */
+  {
+    id: "narrative_alex_bullying",
+    label: "Narrative",
+    node_type: "narrative",
+    name: "Bullying Narrative",
+    confidence: 0.85,
+    properties: { holder: "Alex Chen", dominance: "dominant", frame_type: "characterization", centrality: 0.4 },
   },
   {
-    id: "emotional_alex_humiliation",
+    id: "narrative_maya_standards",
+    label: "Narrative",
+    node_type: "narrative",
+    name: "Standards Narrative",
+    confidence: 0.85,
+    properties: { holder: "Maya Okonkwo", dominance: "counter", frame_type: "moral", centrality: 0.38 },
+  },
+
+  /* ---- 3 Emotional States ---- */
+  {
+    id: "emotion_alex_fear",
     label: "Emotional State",
     node_type: "emotional_state",
-    name: "Humiliation & Distrust",
-    confidence: 0.82,
-    properties: { holder: "Alex Chen", valence: "negative", intensity: 0.8, centrality: 0.35 },
+    name: "Alex: Fear",
+    confidence: 0.88,
+    properties: { holder: "Alex Chen", valence: "negative", intensity: 0.9, centrality: 0.35 },
   },
   {
-    id: "trust_breakdown",
+    id: "emotion_alex_shame",
+    label: "Emotional State",
+    node_type: "emotional_state",
+    name: "Alex: Shame",
+    confidence: 0.85,
+    properties: { holder: "Alex Chen", valence: "negative", intensity: 0.8, centrality: 0.32 },
+  },
+  {
+    id: "emotion_maya_anger",
+    label: "Emotional State",
+    node_type: "emotional_state",
+    name: "Maya: Anger",
+    confidence: 0.82,
+    properties: { holder: "Maya Okonkwo", valence: "negative", intensity: 0.7, centrality: 0.3 },
+  },
+
+  /* ---- 2 Trust States ---- */
+  {
+    id: "trust_alex_maya",
     label: "Trust State",
     node_type: "trust_state",
-    name: "Trust Breakdown",
-    confidence: 0.85,
-    properties: { between: "Alex \u2194 Maya", level: "low", direction: "deteriorating", centrality: 0.5 },
+    name: "Alex \u2192 Maya Trust",
+    confidence: 0.88,
+    properties: { from: "Alex Chen", to: "Maya Okonkwo", overall: 0.15, basis: "calculus", centrality: 0.4 },
   },
   {
-    id: "power_seniority",
+    id: "trust_alex_jordan",
+    label: "Trust State",
+    node_type: "trust_state",
+    name: "Alex \u2192 Jordan Trust",
+    confidence: 0.85,
+    properties: { from: "Alex Chen", to: "Jordan Reyes", overall: 0.65, basis: "knowledge", centrality: 0.34 },
+  },
+
+  /* ---- 2 Power Dynamics ---- */
+  {
+    id: "power_maya_positional",
     label: "Power Dynamic",
     node_type: "power_dynamic",
-    name: "Positional Power",
-    confidence: 0.88,
-    properties: { domain: "positional", magnitude: 0.6, direction: "Maya over Alex", centrality: 0.4 },
+    name: "Maya: Positional Power",
+    confidence: 0.92,
+    properties: { domain: "positional", magnitude: 0.75, direction: "Maya over Alex", centrality: 0.42 },
+  },
+  {
+    id: "power_maya_expert",
+    label: "Power Dynamic",
+    node_type: "power_dynamic",
+    name: "Maya: Expert Power",
+    confidence: 0.9,
+    properties: { domain: "expert", magnitude: 0.8, direction: "Maya over Alex", centrality: 0.4 },
+  },
+
+  /* ---- 1 Location ---- */
+  {
+    id: "location_hq",
+    label: "Location",
+    node_type: "location",
+    name: "Northwind HQ",
+    confidence: 0.95,
+    properties: { location_type: "building", city: "San Francisco", centrality: 0.22 },
+  },
+
+  /* ---- 1 Evidence ---- */
+  {
+    id: "evidence_pr847",
+    label: "Evidence",
+    node_type: "evidence",
+    name: "GitHub PR #847",
+    confidence: 0.95,
+    properties: { evidence_type: "digital_record", reliability: 0.95, centrality: 0.28 },
+  },
+
+  /* ---- 1 Role ---- */
+  {
+    id: "role_mediator",
+    label: "Role",
+    node_type: "role",
+    name: "Jordan as Mediator",
+    confidence: 0.9,
+    properties: { role_type: "mediator", assigned_to: "Jordan Reyes", centrality: 0.3 },
   },
 ];
 
 const FALLBACK_LINKS: GraphLink[] = [
+  /* ---- PARTY_TO (4) ---- */
   { id: "e1", source: "actor_alex", target: "conflict_code_review", edge_type: "PARTY_TO", weight: 0.9, confidence: 0.95 },
   { id: "e2", source: "actor_maya", target: "conflict_code_review", edge_type: "PARTY_TO", weight: 0.9, confidence: 0.95 },
   { id: "e3", source: "actor_jordan", target: "conflict_code_review", edge_type: "PARTY_TO", weight: 0.7, confidence: 0.9 },
-  { id: "e4", source: "event_code_review_incident", target: "event_formal_complaint", edge_type: "CAUSED", weight: 0.85, confidence: 0.95 },
-  { id: "e5", source: "event_formal_complaint", target: "event_mediation_session", edge_type: "CAUSED", weight: 0.8, confidence: 0.9 },
-  { id: "e6", source: "issue_communication_style", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.85, confidence: 0.9 },
-  { id: "e7", source: "issue_professional_respect", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.9, confidence: 0.92 },
-  { id: "e8", source: "actor_alex", target: "process_hr_mediation", edge_type: "PARTICIPATES_IN", weight: 0.7, confidence: 0.88 },
-  { id: "e9", source: "actor_maya", target: "process_hr_mediation", edge_type: "PARTICIPATES_IN", weight: 0.7, confidence: 0.88 },
-  { id: "e10", source: "actor_jordan", target: "process_hr_mediation", edge_type: "PARTICIPATES_IN", weight: 0.8, confidence: 0.9 },
-  { id: "e11", source: "conflict_code_review", target: "process_hr_mediation", edge_type: "RESOLVED_THROUGH", weight: 0.75, confidence: 0.85 },
-  { id: "e12", source: "actor_maya", target: "actor_alex", edge_type: "HAS_POWER_OVER", weight: 0.6, confidence: 0.88 },
-  { id: "e13", source: "actor_alex", target: "interest_dignity", edge_type: "HAS_INTEREST", weight: 0.85, confidence: 0.85 },
-  { id: "e14", source: "actor_alex", target: "interest_code_quality", edge_type: "HAS_INTEREST", weight: 0.8, confidence: 0.88 },
-  { id: "e15", source: "actor_maya", target: "interest_team_velocity", edge_type: "HAS_INTEREST", weight: 0.8, confidence: 0.85 },
-  { id: "e16", source: "actor_maya", target: "event_code_review_incident", edge_type: "PERFORMED", weight: 0.9, confidence: 0.92 },
-  { id: "e17", source: "event_code_review_incident", target: "actor_alex", edge_type: "TARGETED", weight: 0.85, confidence: 0.9 },
-  { id: "e18", source: "norm_code_of_conduct", target: "conflict_code_review", edge_type: "GOVERNS", weight: 0.7, confidence: 0.9 },
-  { id: "e19", source: "actor_alex", target: "emotional_alex_humiliation", edge_type: "EXPERIENCES", weight: 0.75, confidence: 0.82 },
-  { id: "e20", source: "actor_alex", target: "trust_breakdown", edge_type: "HAS_TRUST_STATE", weight: 0.8, confidence: 0.85 },
-  { id: "e21", source: "actor_maya", target: "trust_breakdown", edge_type: "HAS_TRUST_STATE", weight: 0.8, confidence: 0.85 },
-  { id: "e22", source: "power_seniority", target: "actor_maya", edge_type: "HELD_BY", weight: 0.6, confidence: 0.88 },
-  { id: "e23", source: "emotional_alex_humiliation", target: "event_formal_complaint", edge_type: "MOTIVATED", weight: 0.7, confidence: 0.8 },
+  { id: "e4", source: "actor_northwind", target: "conflict_code_review", edge_type: "PARTY_TO", weight: 0.5, confidence: 0.85 },
+
+  /* ---- PARTICIPATES_IN (3) ---- */
+  { id: "e5", source: "actor_maya", target: "event_code_review_incident", edge_type: "PARTICIPATES_IN", weight: 0.9, confidence: 0.92 },
+  { id: "e6", source: "actor_alex", target: "event_code_review_incident", edge_type: "PARTICIPATES_IN", weight: 0.85, confidence: 0.92 },
+  { id: "e7", source: "actor_jordan", target: "event_mediation_session", edge_type: "PARTICIPATES_IN", weight: 0.8, confidence: 0.9 },
+
+  /* ---- HAS_INTEREST (4) ---- */
+  { id: "e8", source: "actor_alex", target: "interest_alex_safety", edge_type: "HAS_INTEREST", weight: 0.9, confidence: 0.9 },
+  { id: "e9", source: "actor_alex", target: "interest_alex_growth", edge_type: "HAS_INTEREST", weight: 0.8, confidence: 0.88 },
+  { id: "e10", source: "actor_maya", target: "interest_maya_standards", edge_type: "HAS_INTEREST", weight: 0.85, confidence: 0.9 },
+  { id: "e11", source: "actor_maya", target: "interest_maya_authority", edge_type: "HAS_INTEREST", weight: 0.8, confidence: 0.88 },
+
+  /* ---- PART_OF: events & issues -> conflict (9) ---- */
+  { id: "e12", source: "event_first_tension", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.7, confidence: 0.88 },
+  { id: "e13", source: "event_alex_avoids", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.65, confidence: 0.85 },
+  { id: "e14", source: "event_code_review_incident", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.9, confidence: 0.95 },
+  { id: "e15", source: "event_formal_complaint", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.85, confidence: 0.92 },
+  { id: "e16", source: "event_team_splits", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.75, confidence: 0.88 },
+  { id: "e17", source: "event_mediation_session", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.8, confidence: 0.9 },
+  { id: "e18", source: "issue_communication_style", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.85, confidence: 0.92 },
+  { id: "e19", source: "issue_professional_respect", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.9, confidence: 0.94 },
+  { id: "e20", source: "issue_power_imbalance", target: "conflict_code_review", edge_type: "PART_OF", weight: 0.75, confidence: 0.88 },
+
+  /* ---- CAUSED: causal chain (5) ---- */
+  { id: "e21", source: "event_first_tension", target: "event_alex_avoids", edge_type: "CAUSED", weight: 0.75, confidence: 0.85 },
+  { id: "e22", source: "event_alex_avoids", target: "event_code_review_incident", edge_type: "CAUSED", weight: 0.8, confidence: 0.88 },
+  { id: "e23", source: "event_code_review_incident", target: "event_formal_complaint", edge_type: "CAUSED", weight: 0.88, confidence: 0.92 },
+  { id: "e24", source: "event_formal_complaint", target: "event_team_splits", edge_type: "CAUSED", weight: 0.78, confidence: 0.88 },
+  { id: "e25", source: "event_team_splits", target: "event_mediation_session", edge_type: "CAUSED", weight: 0.72, confidence: 0.85 },
+
+  /* ---- AT_LOCATION (1) ---- */
+  { id: "e26", source: "event_code_review_incident", target: "location_hq", edge_type: "AT_LOCATION", weight: 0.6, confidence: 0.95 },
+
+  /* ---- ALLIED_WITH (2) ---- */
+  { id: "e27", source: "actor_alex", target: "actor_kai", edge_type: "ALLIED_WITH", weight: 0.7, confidence: 0.82 },
+  { id: "e28", source: "actor_maya", target: "actor_elena", edge_type: "ALLIED_WITH", weight: 0.65, confidence: 0.8 },
+
+  /* ---- OPPOSED_TO (1) ---- */
+  { id: "e29", source: "actor_alex", target: "actor_maya", edge_type: "OPPOSED_TO", weight: 0.8, confidence: 0.88 },
+
+  /* ---- HAS_POWER_OVER (2) ---- */
+  { id: "e30", source: "actor_maya", target: "actor_alex", edge_type: "HAS_POWER_OVER", weight: 0.75, confidence: 0.92 },
+  { id: "e31", source: "actor_maya", target: "actor_alex", edge_type: "HAS_POWER_OVER", weight: 0.8, confidence: 0.9 },
+
+  /* ---- MEMBER_OF (6) ---- */
+  { id: "e32", source: "actor_alex", target: "actor_northwind", edge_type: "MEMBER_OF", weight: 0.5, confidence: 0.95 },
+  { id: "e33", source: "actor_maya", target: "actor_northwind", edge_type: "MEMBER_OF", weight: 0.5, confidence: 0.95 },
+  { id: "e34", source: "actor_jordan", target: "actor_northwind", edge_type: "MEMBER_OF", weight: 0.5, confidence: 0.92 },
+  { id: "e35", source: "actor_kai", target: "actor_northwind", edge_type: "MEMBER_OF", weight: 0.5, confidence: 0.88 },
+  { id: "e36", source: "actor_elena", target: "actor_northwind", edge_type: "MEMBER_OF", weight: 0.5, confidence: 0.88 },
+  { id: "e37", source: "actor_priya", target: "actor_northwind", edge_type: "MEMBER_OF", weight: 0.5, confidence: 0.85 },
+
+  /* ---- GOVERNED_BY (2) ---- */
+  { id: "e38", source: "conflict_code_review", target: "norm_handbook", edge_type: "GOVERNED_BY", weight: 0.7, confidence: 0.92 },
+  { id: "e39", source: "conflict_code_review", target: "norm_feha", edge_type: "GOVERNED_BY", weight: 0.6, confidence: 0.88 },
+
+  /* ---- RESOLVED_THROUGH (1) ---- */
+  { id: "e40", source: "conflict_code_review", target: "process_hr_mediation", edge_type: "RESOLVED_THROUGH", weight: 0.75, confidence: 0.88 },
+
+  /* ---- PRODUCES (1) ---- */
+  { id: "e41", source: "process_hr_mediation", target: "outcome_agreement", edge_type: "PRODUCES", weight: 0.65, confidence: 0.78 },
+
+  /* ---- EXPERIENCES (3) ---- */
+  { id: "e42", source: "actor_alex", target: "emotion_alex_fear", edge_type: "EXPERIENCES", weight: 0.85, confidence: 0.88 },
+  { id: "e43", source: "actor_alex", target: "emotion_alex_shame", edge_type: "EXPERIENCES", weight: 0.8, confidence: 0.85 },
+  { id: "e44", source: "actor_maya", target: "emotion_maya_anger", edge_type: "EXPERIENCES", weight: 0.7, confidence: 0.82 },
+
+  /* ---- TRUSTS (2) ---- */
+  { id: "e45", source: "actor_alex", target: "trust_alex_maya", edge_type: "TRUSTS", weight: 0.4, confidence: 0.88 },
+  { id: "e46", source: "actor_alex", target: "trust_alex_jordan", edge_type: "TRUSTS", weight: 0.7, confidence: 0.85 },
+
+  /* ---- PROMOTES (2) ---- */
+  { id: "e47", source: "actor_alex", target: "narrative_alex_bullying", edge_type: "PROMOTES", weight: 0.8, confidence: 0.85 },
+  { id: "e48", source: "actor_maya", target: "narrative_maya_standards", edge_type: "PROMOTES", weight: 0.75, confidence: 0.85 },
+
+  /* ---- ABOUT (2) ---- */
+  { id: "e49", source: "narrative_alex_bullying", target: "conflict_code_review", edge_type: "ABOUT", weight: 0.8, confidence: 0.85 },
+  { id: "e50", source: "narrative_maya_standards", target: "conflict_code_review", edge_type: "ABOUT", weight: 0.75, confidence: 0.85 },
+
+  /* ---- EVIDENCED_BY (1) ---- */
+  { id: "e51", source: "event_first_tension", target: "evidence_pr847", edge_type: "EVIDENCED_BY", weight: 0.8, confidence: 0.92 },
+
+  /* ---- VIOLATES (1) ---- */
+  { id: "e52", source: "event_code_review_incident", target: "norm_handbook", edge_type: "VIOLATES", weight: 0.72, confidence: 0.88 },
+
+  /* ---- WITHIN (1) ---- */
+  { id: "e53", source: "location_hq", target: "actor_northwind", edge_type: "WITHIN", weight: 0.5, confidence: 0.95 },
 ];
 
 const FALLBACK_GRAPH: GraphData = {
