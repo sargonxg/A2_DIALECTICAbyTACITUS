@@ -134,21 +134,24 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-4xl px-6 pb-20 pt-28 text-center">
           <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-800/50 px-4 py-1.5 text-xs font-medium tracking-wide text-teal-400 uppercase">
             <CircuitBoard className="h-3.5 w-3.5" />
-            The deterministic intelligence layer
+            The context &amp; data layer for{" "}
+            <a href="https://tacitus.me" target="_blank" rel="noopener noreferrer" className="underline decoration-teal-500/40 hover:decoration-teal-400 transition-colors">TACITUS</a>
           </p>
 
           <h1 className="text-4xl font-bold text-white sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight">
-            The deterministic intelligence{" "}
+            The trust graph{" "}
             <br className="hidden sm:block" />
-            layer for conflict
+            for conflict intelligence
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-400 leading-relaxed">
-            DIALECTICA structures any conflict &mdash; workplace friction,
-            commercial disputes, geopolitical crises &mdash; into a computable
-            knowledge graph grounded in 15 peer-reviewed theoretical frameworks.{" "}
+            DIALECTICA is the context, foundation, and data layer for{" "}
+            <a href="https://tacitus.me" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:text-teal-300 transition-colors font-medium">TACITUS</a>
+            . It structures any conflict &mdash; workplace friction,
+            commercial disputes, geopolitical crises &mdash; into a deterministic
+            knowledge graph grounded in 15 peer-reviewed frameworks.{" "}
             <span className="text-zinc-300 font-medium">
-              We give LLMs the context layer they&apos;re missing.
+              Other apps build on top. DIALECTICA is the foundation they reason over.
             </span>
           </p>
 
@@ -243,6 +246,88 @@ export default function HomePage() {
                 </span>{" "}
                 by probabilistic ones.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/*  TACITUS ECOSYSTEM — Platform Positioning                 */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      <section className="border-t border-zinc-800">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="rounded-xl border border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-zinc-900/50 p-8 md:p-12">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/10">
+                    <Layers className="h-5 w-5 text-teal-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-teal-400">
+                      TACITUS Ecosystem
+                    </p>
+                    <h2 className="text-xl font-bold text-white">
+                      DIALECTICA is the trust graph
+                    </h2>
+                  </div>
+                </div>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  DIALECTICA is not a standalone tool &mdash; it&apos;s the{" "}
+                  <span className="text-white font-medium">context and data layer</span>{" "}
+                  for the entire{" "}
+                  <a href="https://tacitus.me" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:text-teal-300 transition-colors">TACITUS</a>{" "}
+                  platform. It extracts, structures, and validates conflict data into a
+                  deterministic knowledge graph. Other applications in the TACITUS ecosystem
+                  build on top of this foundation to deliver specialized capabilities.
+                </p>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Think of it like this: DIALECTICA is to conflict intelligence what a
+                  database is to an application. It provides the{" "}
+                  <span className="text-white font-medium">structured, queryable, deterministic truth</span>{" "}
+                  that every upstream tool &mdash; mediation assistants, risk dashboards,
+                  policy simulators, negotiation trainers &mdash; can reason over with confidence.
+                </p>
+              </div>
+              <div className="w-full md:w-80 shrink-0 space-y-3">
+                <div className="rounded-lg border border-zinc-700 bg-zinc-900/80 p-4 space-y-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    Architecture
+                  </p>
+                  {/* Stack diagram */}
+                  <div className="space-y-1.5">
+                    <div className="rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-center">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Apps</p>
+                      <p className="text-xs text-zinc-300">Mediation tools, risk dashboards, negotiation aids, policy simulators</p>
+                    </div>
+                    <div className="flex justify-center">
+                      <ChevronRight className="h-4 w-4 text-zinc-600 rotate-90" />
+                    </div>
+                    <div className="rounded-md border border-teal-500/30 bg-teal-500/5 px-3 py-2 text-center">
+                      <p className="text-[10px] text-teal-400 uppercase tracking-wider font-bold">DIALECTICA</p>
+                      <p className="text-xs text-teal-300/80">Trust graph &middot; Context layer &middot; Deterministic foundation</p>
+                    </div>
+                    <div className="flex justify-center">
+                      <ChevronRight className="h-4 w-4 text-zinc-600 rotate-90" />
+                    </div>
+                    <div className="rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-center">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Data Sources</p>
+                      <p className="text-xs text-zinc-300">Documents, transcripts, reports, news, HR complaints, legal filings</p>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-zinc-800">
+                    <a
+                      href="https://tacitus.me"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-xs text-teal-400 hover:text-teal-300 transition-colors"
+                    >
+                      Learn more at tacitus.me
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

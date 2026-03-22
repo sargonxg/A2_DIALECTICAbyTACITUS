@@ -939,12 +939,14 @@ export default function DemoPage() {
           </h1>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
             Paste any conflict narrative below &mdash; or try one of our annotated examples
-            to see what structured conflict intelligence looks like.
+            to see what the{" "}
+            <a href="https://tacitus.me" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-teal-300 transition-colors">TACITUS</a>
+            {" "}trust graph extracts and computes.
           </p>
           <div className="flex items-center justify-center gap-2 text-sm text-text-secondary/70">
             <Zap size={14} className="text-accent" />
             <span>
-              DIALECTICA doesn&apos;t just summarize &mdash; it extracts, structures, and reasons.
+              DIALECTICA is the context &amp; data layer &mdash; the deterministic foundation that other TACITUS apps reason over.
             </span>
           </div>
         </div>
