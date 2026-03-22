@@ -1,6 +1,7 @@
 """
 Developers Router — API key management and usage endpoints.
 """
+
 from __future__ import annotations
 
 import secrets
@@ -60,11 +61,7 @@ async def list_api_keys(
     tenant_id: str = Depends(get_current_tenant),
 ) -> list[ApiKeyResponse]:
     """List API keys for the current tenant."""
-    return [
-        ApiKeyResponse(**k)
-        for k in _api_keys.values()
-        if k["tenant_id"] == tenant_id
-    ]
+    return [ApiKeyResponse(**k) for k in _api_keys.values() if k["tenant_id"] == tenant_id]
 
 
 @router.delete("/keys/{key_id}", status_code=204)

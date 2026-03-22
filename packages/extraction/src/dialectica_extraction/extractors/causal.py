@@ -1,10 +1,11 @@
 """
 Causal Chain Detection — Identify causal relationships between events.
 """
+
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # Causal signal phrases
 CAUSAL_SIGNALS = [
@@ -47,13 +48,15 @@ def detect_causal_signals(text: str) -> list[CausalSignal]:
         else:
             strength = 0.7
 
-        signals.append(CausalSignal(
-            text=text[max(0, match.start() - 50):match.end() + 50],
-            signal_phrase=match.group(),
-            start=match.start(),
-            end=match.end(),
-            strength=strength,
-        ))
+        signals.append(
+            CausalSignal(
+                text=text[max(0, match.start() - 50) : match.end() + 50],
+                signal_phrase=match.group(),
+                start=match.start(),
+                end=match.end(),
+                strength=strength,
+            )
+        )
     return signals
 
 

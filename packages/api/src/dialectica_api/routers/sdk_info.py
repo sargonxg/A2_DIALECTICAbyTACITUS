@@ -5,6 +5,7 @@ Returns API metadata including ontology version, supported node/edge types,
 theory frameworks, and endpoint paths. Used by Compass, PRAXIS, Wind Tunnel,
 and ARGUS to dynamically discover DIALECTICA capabilities.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -52,6 +53,7 @@ ENDPOINT_CATALOGUE: dict[str, str] = {
 
 # ── Response model ──────────────────────────────────────────────────────────
 
+
 class SDKInfoResponse(BaseModel):
     api_version: str
     ontology_version: str
@@ -63,6 +65,7 @@ class SDKInfoResponse(BaseModel):
 
 
 # ── Endpoint ────────────────────────────────────────────────────────────────
+
 
 @router.get("/info", response_model=SDKInfoResponse)
 async def get_sdk_info() -> SDKInfoResponse:

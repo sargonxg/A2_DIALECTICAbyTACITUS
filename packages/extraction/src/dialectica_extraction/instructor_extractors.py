@@ -4,6 +4,7 @@ Instructor Extractors — Pydantic-validated structured extraction using Instruc
 Replaces raw Gemini API calls with Instructor for automatic validation,
 retry on schema errors, and provider-agnostic model access via LiteLLM.
 """
+
 from __future__ import annotations
 
 import logging
@@ -12,11 +13,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from dialectica_ontology.primitives import ConflictNode, Actor, Conflict, Event
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from dialectica_ontology.tiers import OntologyTier, TIER_NODES, TIER_EDGES
-
 from dialectica_extraction.prompts.system import build_system_prompt
+from dialectica_ontology.tiers import TIER_EDGES, TIER_NODES, OntologyTier
 
 logger = logging.getLogger(__name__)
 
@@ -76,11 +74,10 @@ def _get_instructor_client() -> Any:
         import litellm
 
         return instructor.from_litellm(litellm.completion)
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
-            "instructor and litellm packages required. "
-            "Install with: pip install instructor litellm"
-        )
+            "instructor and litellm packages required. Install with: pip install instructor litellm"
+        ) from err
 
 
 def extract_conflict_entities(
@@ -105,7 +102,9 @@ def extract_conflict_entities(
     model_id = model or DEFAULT_MODEL
 
     system_prompt = build_system_prompt(tier)
-    available_types = [t.__name__ if not isinstance(t, str) else t for t in TIER_NODES.get(tier, [])]
+    available_types = [
+        t.__name__ if not isinstance(t, str) else t for t in TIER_NODES.get(tier, [])
+    ]
 
     user_prompt = (
         f"Extract all conflict-relevant entities from the following text.\n"

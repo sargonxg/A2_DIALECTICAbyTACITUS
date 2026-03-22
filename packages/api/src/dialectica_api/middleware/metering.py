@@ -4,9 +4,10 @@ Usage Metering Middleware — Track API usage for billing and analytics.
 Captures: graph queries, LLM tokens, documents ingested, nodes created.
 Writes to Redis Stream for buffering, aggregates every 5 minutes.
 """
+
 from __future__ import annotations
 
-import json
+import contextlib
 import logging
 import os
 import time
@@ -25,9 +26,7 @@ METERING_STREAM = "dialectica:metering"
 class MeteringMiddleware(BaseHTTPMiddleware):
     """Async metering middleware — records usage metrics per request."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         start = time.time()
         response = await call_next(request)
         latency_ms = (time.time() - start) * 1000
@@ -54,10 +53,8 @@ class MeteringMiddleware(BaseHTTPMiddleware):
             }
 
             # Non-blocking write to Redis Stream
-            try:
+            with contextlib.suppress(Exception):
                 _write_metric(metric)
-            except Exception:
-                pass  # Never block request on metering failure
 
         return response
 
@@ -86,6 +83,7 @@ def _write_metric(metric: dict[str, Any]) -> None:
     """Write metric to Redis Stream (non-blocking)."""
     try:
         import redis
+
         r = redis.from_url(REDIS_URL, socket_timeout=1)
         r.xadd(METERING_STREAM, metric, maxlen=100000)
     except Exception:

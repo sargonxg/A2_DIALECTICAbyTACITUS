@@ -7,6 +7,7 @@ Enforces domain-specific rules that go beyond schema validation:
 - Glasl stages must be consistent with conflict status
 - Resolution processes must link to a conflict
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -38,7 +39,7 @@ def validate_symbolic(
     since extraction from text may be incomplete.
     """
     result = SymbolicValidationResult()
-    node_map = {n.id: n for n in nodes}
+    {n.id: n for n in nodes}
 
     conflicts = [n for n in nodes if n.label == "Conflict"]
     actors = [n for n in nodes if n.label == "Actor"]
@@ -76,7 +77,7 @@ def validate_symbolic(
 
     # Rule: Process should link to a Conflict via RESOLVED_THROUGH
     resolved_edges = edges_by_type.get("RESOLVED_THROUGH", [])
-    resolved_conflict_ids = {e.source_id for e in resolved_edges}
+    {e.source_id for e in resolved_edges}
     for process in processes:
         linked = any(e.target_id == process.id for e in resolved_edges)
         if not linked:

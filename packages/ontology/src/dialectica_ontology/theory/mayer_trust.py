@@ -4,6 +4,7 @@ Mayer Trust Theory Framework — DIALECTICA implementation.
 Mayer, Davis, and Schoorman's integrative model of organisational trust.
 Trust = f(Ability, Benevolence, Integrity) moderated by Trustor's Propensity.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -118,15 +119,21 @@ class MayerTrustFramework(TheoryFramework):
         components = {
             "ability": {
                 "score": ability,
-                "assessment": "strong" if ability > 0.6 else ("moderate" if ability > 0.3 else "weak"),
+                "assessment": "strong"
+                if ability > 0.6
+                else ("moderate" if ability > 0.3 else "weak"),
             },
             "benevolence": {
                 "score": benevolence,
-                "assessment": "strong" if benevolence > 0.6 else ("moderate" if benevolence > 0.3 else "weak"),
+                "assessment": "strong"
+                if benevolence > 0.6
+                else ("moderate" if benevolence > 0.3 else "weak"),
             },
             "integrity": {
                 "score": integrity,
-                "assessment": "strong" if integrity > 0.6 else ("moderate" if integrity > 0.3 else "weak"),
+                "assessment": "strong"
+                if integrity > 0.6
+                else ("moderate" if integrity > 0.3 else "weak"),
             },
         }
 
@@ -170,7 +177,7 @@ class MayerTrustFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="How competent do you believe the other party is in the relevant area (1-10)?",
+                question="How competent do you believe the other party is in the relevant area (1-10)?",  # noqa: E501
                 framework=self.name,
                 purpose="Assess ability component of trust",
                 response_type="scale",

@@ -4,15 +4,15 @@ Graph Reader — Read-optimized query builders for DIALECTICA graph database.
 Provides subgraph assembly, timeline queries, and filtered reads
 that work with both Spanner and Neo4j backends via the GraphClient interface.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
 
-from dialectica_ontology.primitives import ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship
-
 from dialectica_graph.interface import GraphClient
 from dialectica_graph.models import SubgraphResult
+from dialectica_ontology.primitives import ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship
 
 
 async def get_subgraph_for_conflict(
@@ -92,8 +92,7 @@ async def get_narrative_landscape(
 
     narrative_ids = {n.id for n in narratives}
     relevant_edges = [
-        e for e in all_edges
-        if e.source_id in narrative_ids or e.target_id in narrative_ids
+        e for e in all_edges if e.source_id in narrative_ids or e.target_id in narrative_ids
     ]
     connected_ids = set()
     for e in relevant_edges:

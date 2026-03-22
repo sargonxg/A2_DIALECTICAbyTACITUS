@@ -5,6 +5,7 @@ John Winslade and Gerald Monk's narrative mediation approach.
 Conflicts are understood as shaped by dominant narratives; resolution
 involves identifying and developing alternative/counter narratives.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -15,16 +16,16 @@ from dialectica_ontology.theory.base import (
 NARRATIVE_TYPES: dict[str, dict[str, str]] = {
     "dominant": {
         "description": "The prevailing story that shapes how the conflict is understood.",
-        "characteristics": "Widely accepted, self-reinforcing, often simplistic, resistant to change.",
+        "characteristics": "Widely accepted, self-reinforcing, often simplistic, resistant to change.",  # noqa: E501
         "indicators": "mainstream,accepted,prevailing,official,established",
     },
     "alternative": {
-        "description": "A different story that challenges the dominant narrative without directly opposing it.",
+        "description": "A different story that challenges the dominant narrative without directly opposing it.",  # noqa: E501
         "characteristics": "Offers different perspective, may coexist with dominant narrative.",
         "indicators": "different_perspective,reframe,new_angle,alternative_view",
     },
     "counter": {
-        "description": "A narrative that directly opposes and seeks to replace the dominant narrative.",
+        "description": "A narrative that directly opposes and seeks to replace the dominant narrative.",  # noqa: E501
         "characteristics": "Explicitly challenges power structures, confrontational.",
         "indicators": "opposition,challenge,resist,counter,protest,reject",
     },
@@ -111,7 +112,9 @@ class WinsladeMonkFramework(TheoryFramework):
         if not classified["dominant"]:
             gaps.append("No dominant narrative identified — clarify the prevailing story.")
         if not classified["alternative"] and not classified["counter"]:
-            gaps.append("No alternative or counter narratives detected — explore different perspectives.")
+            gaps.append(
+                "No alternative or counter narratives detected — explore different perspectives."
+            )
         if not classified["subjugated"]:
             gaps.append("No subjugated narratives identified — seek out marginalised voices.")
 
@@ -189,7 +192,7 @@ class WinsladeMonkFramework(TheoryFramework):
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="Are there voices or perspectives that have been silenced or marginalised?",
+                question="Are there voices or perspectives that have been silenced or marginalised?",  # noqa: E501
                 framework=self.name,
                 purpose="Identify subjugated narratives",
                 response_type="open",

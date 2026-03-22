@@ -5,10 +5,11 @@ This separate graph captures conflict resolution theory itself:
 theorists, publications, concepts, methodologies, principles, and patterns.
 It is shared across all tenants as the universal theory scaffold.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 

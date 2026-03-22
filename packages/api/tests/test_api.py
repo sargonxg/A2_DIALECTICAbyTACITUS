@@ -7,13 +7,12 @@ extraction, graph, reasoning, theory, admin, developers.
 Uses httpx.AsyncClient with ASGITransport against the real FastAPI app,
 with a MockGraphClient injected via dependency overrides.
 """
+
 from __future__ import annotations
 
 import io
-from typing import Any
 
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient
 
 # Constants matching conftest.py fixtures
@@ -31,6 +30,7 @@ pytestmark = pytest.mark.asyncio
 # Helper to get the first workspace ID from a seeded_client
 # ============================================================================
 
+
 async def _get_workspace_id(client: AsyncClient, headers: dict[str, str]) -> str:
     """Return the first workspace ID from the list endpoint."""
     resp = await client.get("/v1/workspaces", headers=headers)
@@ -42,6 +42,7 @@ async def _get_workspace_id(client: AsyncClient, headers: dict[str, str]) -> str
 # ============================================================================
 # 1. HEALTH ROUTER
 # ============================================================================
+
 
 class TestHealth:
     """Tests for GET /health and GET /health/dependencies."""
@@ -61,9 +62,7 @@ class TestHealth:
         resp = await client.get("/health")
         assert resp.status_code == 200
 
-    async def test_health_ready(
-        self, client: AsyncClient, admin_headers: dict[str, str]
-    ) -> None:
+    async def test_health_ready(self, client: AsyncClient, admin_headers: dict[str, str]) -> None:
         resp = await client.get("/health/ready", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
@@ -74,6 +73,7 @@ class TestHealth:
 # ============================================================================
 # 2. WORKSPACES ROUTER
 # ============================================================================
+
 
 class TestWorkspaces:
     """Tests for /v1/workspaces CRUD."""
@@ -122,9 +122,7 @@ class TestWorkspaces:
         assert "WS-1" in names
         assert "WS-2" in names
 
-    async def test_get_workspace(
-        self, client: AsyncClient, admin_headers: dict[str, str]
-    ) -> None:
+    async def test_get_workspace(self, client: AsyncClient, admin_headers: dict[str, str]) -> None:
         create_resp = await client.post(
             "/v1/workspaces",
             json={"name": "GetMe"},
@@ -186,6 +184,7 @@ class TestWorkspaces:
 # 3. AUTH MIDDLEWARE
 # ============================================================================
 
+
 class TestAuth:
     """Tests for authentication middleware behavior."""
 
@@ -194,9 +193,7 @@ class TestAuth:
         assert resp.status_code == 401
 
     async def test_invalid_api_key_returns_401(self, client: AsyncClient) -> None:
-        resp = await client.get(
-            "/v1/workspaces", headers={"X-API-Key": "bad-key"}
-        )
+        resp = await client.get("/v1/workspaces", headers={"X-API-Key": "bad-key"})
         assert resp.status_code == 401
 
     async def test_tenant_key_authenticates(self, client: AsyncClient) -> None:
@@ -221,6 +218,7 @@ class TestAuth:
 # 4. ENTITIES ROUTER
 # ============================================================================
 
+
 class TestEntities:
     """Tests for /v1/workspaces/{id}/entities."""
 
@@ -228,9 +226,7 @@ class TestEntities:
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/entities", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/entities", headers=admin_headers)
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)
@@ -312,6 +308,7 @@ class TestEntities:
 # 5. RELATIONSHIPS ROUTER
 # ============================================================================
 
+
 class TestRelationships:
     """Tests for /v1/workspaces/{id}/relationships."""
 
@@ -356,6 +353,7 @@ class TestRelationships:
 # ============================================================================
 # 6. EXTRACTION ROUTER
 # ============================================================================
+
 
 class TestExtraction:
     """Tests for /v1/workspaces/{id}/extract and /extractions."""
@@ -403,9 +401,7 @@ class TestExtraction:
             json={"text": "Conflict text here."},
             headers=admin_headers,
         )
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/extractions", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/extractions", headers=admin_headers)
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)
@@ -441,6 +437,7 @@ class TestExtraction:
 # 7. GRAPH ROUTER
 # ============================================================================
 
+
 class TestGraph:
     """Tests for /v1/workspaces/{id}/graph endpoints."""
 
@@ -448,9 +445,7 @@ class TestGraph:
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/graph", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/graph", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert "nodes" in body
@@ -462,9 +457,7 @@ class TestGraph:
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/graph/stats", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/graph/stats", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["workspace_id"] == ws_id
@@ -548,9 +541,7 @@ class TestGraph:
         self, seeded_client: AsyncClient, tenant_headers: dict[str, str]
     ) -> None:
         """Non-admin tenant should get 403 on raw query."""
-        ws_id = await _get_workspace_id(
-            seeded_client, {"X-API-Key": ADMIN_KEY}
-        )
+        ws_id = await _get_workspace_id(seeded_client, {"X-API-Key": ADMIN_KEY})
         resp = await seeded_client.post(
             f"/v1/workspaces/{ws_id}/graph/query",
             json={"query": "MATCH (n) RETURN n"},
@@ -573,6 +564,7 @@ class TestGraph:
 # ============================================================================
 # 8. REASONING ROUTER
 # ============================================================================
+
 
 class TestReasoning:
     """Tests for /v1/workspaces/{id}/analyze and analysis endpoints.
@@ -598,9 +590,7 @@ class TestReasoning:
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/escalation", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/escalation", headers=admin_headers)
         # This will likely return 500 (ImportError from dialectica_reasoning)
         # or 503 if graph client is somehow None. Either way, check it doesn't crash.
         assert resp.status_code in (200, 500, 503)
@@ -609,60 +599,49 @@ class TestReasoning:
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/ripeness", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/ripeness", headers=admin_headers)
         assert resp.status_code in (200, 500, 503)
 
     async def test_power_endpoint(
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/power", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/power", headers=admin_headers)
         assert resp.status_code in (200, 500, 503)
 
     async def test_trust_endpoint(
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/trust", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/trust", headers=admin_headers)
         assert resp.status_code in (200, 500, 503)
 
     async def test_causation_endpoint(
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/causation", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/causation", headers=admin_headers)
         assert resp.status_code in (200, 500, 503)
 
     async def test_quality_endpoint(
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/quality", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/quality", headers=admin_headers)
         assert resp.status_code in (200, 500, 503)
 
     async def test_network_endpoint(
         self, seeded_client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/network", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/network", headers=admin_headers)
         assert resp.status_code in (200, 500, 503)
 
 
 # ============================================================================
 # 9. THEORY ROUTER
 # ============================================================================
+
 
 class TestTheory:
     """Tests for /v1/theory/frameworks and workspace theory endpoints."""
@@ -689,9 +668,7 @@ class TestTheory:
     ) -> None:
         """When the reasoning module import fails, expect 500."""
         ws_id = await _get_workspace_id(seeded_client, admin_headers)
-        resp = await seeded_client.get(
-            f"/v1/workspaces/{ws_id}/theory", headers=admin_headers
-        )
+        resp = await seeded_client.get(f"/v1/workspaces/{ws_id}/theory", headers=admin_headers)
         # Will fail with ImportError from dialectica_reasoning.agents.theorist
         assert resp.status_code in (200, 500, 503)
 
@@ -709,6 +686,7 @@ class TestTheory:
 # ============================================================================
 # 10. ADMIN ROUTER
 # ============================================================================
+
 
 class TestAdmin:
     """Tests for /v1/admin endpoints (admin only)."""
@@ -761,12 +739,11 @@ class TestAdmin:
 # 11. DEVELOPERS ROUTER
 # ============================================================================
 
+
 class TestDevelopers:
     """Tests for /v1/developers/keys and /v1/developers/usage."""
 
-    async def test_create_api_key(
-        self, client: AsyncClient, admin_headers: dict[str, str]
-    ) -> None:
+    async def test_create_api_key(self, client: AsyncClient, admin_headers: dict[str, str]) -> None:
         resp = await client.post(
             "/v1/developers/keys",
             json={"name": "test-key", "rate_limit_per_min": 50},
@@ -779,9 +756,7 @@ class TestDevelopers:
         assert body["api_key"].startswith("tenant-")
         assert "key_id" in body
 
-    async def test_list_api_keys(
-        self, client: AsyncClient, admin_headers: dict[str, str]
-    ) -> None:
+    async def test_list_api_keys(self, client: AsyncClient, admin_headers: dict[str, str]) -> None:
         # Create a key first
         await client.post(
             "/v1/developers/keys",
@@ -796,18 +771,14 @@ class TestDevelopers:
         names = {k["name"] for k in data}
         assert "list-test-key" in names
 
-    async def test_delete_api_key(
-        self, client: AsyncClient, admin_headers: dict[str, str]
-    ) -> None:
+    async def test_delete_api_key(self, client: AsyncClient, admin_headers: dict[str, str]) -> None:
         create_resp = await client.post(
             "/v1/developers/keys",
             json={"name": "to-delete"},
             headers=admin_headers,
         )
         key_id = create_resp.json()["key_id"]
-        resp = await client.delete(
-            f"/v1/developers/keys/{key_id}", headers=admin_headers
-        )
+        resp = await client.delete(f"/v1/developers/keys/{key_id}", headers=admin_headers)
         assert resp.status_code == 204
         # Verify it's gone
         list_resp = await client.get("/v1/developers/keys", headers=admin_headers)
@@ -817,9 +788,7 @@ class TestDevelopers:
     async def test_delete_api_key_not_found(
         self, client: AsyncClient, admin_headers: dict[str, str]
     ) -> None:
-        resp = await client.delete(
-            "/v1/developers/keys/no-such-key", headers=admin_headers
-        )
+        resp = await client.delete("/v1/developers/keys/no-such-key", headers=admin_headers)
         assert resp.status_code == 404
 
     async def test_get_developer_usage(
@@ -835,6 +804,7 @@ class TestDevelopers:
 # ============================================================================
 # 12. WORKSPACE TENANT ISOLATION
 # ============================================================================
+
 
 class TestTenantIsolation:
     """Tests verifying multi-tenant isolation."""
@@ -855,9 +825,7 @@ class TestTenantIsolation:
         resp = await client.get(f"/v1/workspaces/{ws_id}", headers=other_headers)
         assert resp.status_code == 403
 
-    async def test_tenant_can_only_see_own_workspaces(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_tenant_can_only_see_own_workspaces(self, client: AsyncClient) -> None:
         # Create workspace as tenant-alpha
         alpha_headers = {"X-API-Key": TENANT_ALPHA_KEY}
         await client.post(
@@ -911,6 +879,7 @@ class TestTenantIsolation:
 # ============================================================================
 # 13. EDGE CASES AND ERROR HANDLING
 # ============================================================================
+
 
 class TestEdgeCases:
     """Miscellaneous edge case and error handling tests."""

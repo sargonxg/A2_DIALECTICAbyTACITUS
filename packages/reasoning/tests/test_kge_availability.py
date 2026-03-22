@@ -4,10 +4,11 @@ Tests for KGE module availability and graceful degradation.
 When torch/pykeen are not installed, KGE_AVAILABLE should be False
 and all exported names should be None stubs.
 """
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -23,7 +24,7 @@ def test_kge_imports_without_torch():
     """If torch is not installed, KGE_AVAILABLE should be False
     and the exported stubs (KGETrainer, KGEConfig, etc.) should be None.
     If torch IS installed, KGE_AVAILABLE is True and they are real classes."""
-    from dialectica_reasoning.kge import KGETrainer, KGEConfig
+    from dialectica_reasoning.kge import KGEConfig, KGETrainer
 
     if not KGE_AVAILABLE:
         assert KGETrainer is None

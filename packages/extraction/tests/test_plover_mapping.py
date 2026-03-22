@@ -1,26 +1,25 @@
 """Tests for PLOVER → ACO mapping and entity resolver."""
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from dialectica_ontology.enums import EventType, QuadClass
+from dialectica_extraction.connectors.entity_resolver import EntityResolver
 from dialectica_ontology.compatibility.plover import (
     PloverEventType,
-    plover_to_dialectica,
     dialectica_to_plover,
     plover_quadclass,
-    event_type_quadclass,
     plover_severity,
+    plover_to_dialectica,
     plover_to_primitives,
 )
+from dialectica_ontology.enums import EventType, QuadClass
 from dialectica_ontology.primitives import Actor, Event
-from dialectica_extraction.connectors.entity_resolver import EntityResolver
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  PLOVER TYPE MAPPING
@@ -184,10 +183,15 @@ class TestEntityResolver:
 
     def test_deduplicate_events(self):
         from datetime import datetime
+
         resolver = EntityResolver()
 
-        e1 = Event(event_type="protest", severity=0.5, occurred_at=datetime(2024, 1, 1), confidence=0.9)
-        e2 = Event(event_type="protest", severity=0.6, occurred_at=datetime(2024, 1, 1), confidence=0.7)
+        e1 = Event(
+            event_type="protest", severity=0.5, occurred_at=datetime(2024, 1, 1), confidence=0.9
+        )
+        e2 = Event(
+            event_type="protest", severity=0.6, occurred_at=datetime(2024, 1, 1), confidence=0.7
+        )
         e3 = Event(event_type="assault", severity=0.8, occurred_at=datetime(2024, 1, 1))
 
         result = resolver.deduplicate_events([e1, e2, e3])

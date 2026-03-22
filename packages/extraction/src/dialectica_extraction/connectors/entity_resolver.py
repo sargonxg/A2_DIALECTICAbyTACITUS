@@ -7,13 +7,13 @@ Resolves entities across ACLED, GDELT, and UCDP using:
   3. Levenshtein fuzzy match (threshold=0.85)
   4. Cross-source dedup: (date ± 1 day) + (location ± 25km) + (actor overlap > 0.5)
 """
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 
-from dialectica_ontology.primitives import ConflictNode, Actor, Event
+from dialectica_ontology.primitives import Actor, Event
 
 logger = logging.getLogger(__name__)
 
@@ -82,9 +82,7 @@ class EntityResolver:
         self.register_actor(actor)
         return actor
 
-    def deduplicate_events(
-        self, events: list[Event]
-    ) -> list[Event]:
+    def deduplicate_events(self, events: list[Event]) -> list[Event]:
         """Cross-source event deduplication.
 
         Events are considered duplicates if:
@@ -110,7 +108,8 @@ class EntityResolver:
         if len(events) != len(unique):
             logger.info(
                 "Deduplication: %d events -> %d unique",
-                len(events), len(unique),
+                len(events),
+                len(unique),
             )
 
         return unique

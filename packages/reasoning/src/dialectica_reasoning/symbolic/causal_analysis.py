@@ -3,6 +3,7 @@ Causal Analysis — Pearl's causal hierarchy for conflict event chains.
 
 Implements: association, intervention, and counterfactual reasoning.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -136,13 +137,15 @@ class CausalAnalyzer:
             has_cycle = any(n in cycle_nodes for n in chain_ids)
             ev = event_data.get(root)
             desc = getattr(ev, "description", root) if ev else root
-            chains.append(CausalChain(
-                root_event_id=root,
-                chain=chain_ids,
-                depth=depth,
-                has_cycle=has_cycle,
-                description=f"Chain from '{desc}' ({depth} steps)",
-            ))
+            chains.append(
+                CausalChain(
+                    root_event_id=root,
+                    chain=chain_ids,
+                    depth=depth,
+                    has_cycle=has_cycle,
+                    description=f"Chain from '{desc}' ({depth} steps)",
+                )
+            )
 
         return sorted(chains, key=lambda c: c.depth, reverse=True)
 
@@ -160,12 +163,14 @@ class CausalAnalyzer:
             ev = event_data.get(root)
             desc = getattr(ev, "description", root) if ev else root
             confidence = min(1.0, len(downstream) * 0.1 + 0.2)
-            root_causes.append(RootCause(
-                event_id=root,
-                event_description=desc,
-                downstream_count=len(downstream) - 1,
-                confidence=round(confidence, 3),
-            ))
+            root_causes.append(
+                RootCause(
+                    event_id=root,
+                    event_description=desc,
+                    downstream_count=len(downstream) - 1,
+                    confidence=round(confidence, 3),
+                )
+            )
         return sorted(root_causes, key=lambda r: r.downstream_count, reverse=True)
 
     async def counterfactual_analysis(

@@ -4,6 +4,7 @@ Kriesberg Theory Framework — DIALECTICA implementation.
 Louis Kriesberg's conflict lifecycle model with 7 phases from
 latent conflict through post-conflict transformation.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -58,8 +59,13 @@ PHASES: dict[str, dict[str, str]] = {
 }
 
 _PHASE_ORDER = [
-    "latent", "emergence", "escalation", "stalemate",
-    "de_escalation", "settlement", "post_conflict",
+    "latent",
+    "emergence",
+    "escalation",
+    "stalemate",
+    "de_escalation",
+    "settlement",
+    "post_conflict",
 ]
 
 
@@ -182,13 +188,13 @@ class KriesbergFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="How long has this conflict been ongoing, and how has it changed over time?",
+                question="How long has this conflict been ongoing, and how has it changed over time?",  # noqa: E501
                 framework=self.name,
                 purpose="Determine lifecycle phase and trajectory",
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="Are the parties currently engaged in any form of negotiation or dialogue?",
+                question="Are the parties currently engaged in any form of negotiation or dialogue?",  # noqa: E501
                 framework=self.name,
                 purpose="Detect de-escalation or settlement phase",
                 response_type="boolean",

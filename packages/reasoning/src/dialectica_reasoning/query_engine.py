@@ -3,27 +3,28 @@ Query Engine — Natural language → graph operations → LLM synthesis.
 
 Orchestrates the full DIALECTICA reasoning pipeline with SSE streaming support.
 """
+
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import AsyncIterator
 
 from dialectica_graph import GraphClient
-from dialectica_reasoning.graphrag.retriever import ConflictGraphRAGRetriever, RetrievalResult
 from dialectica_reasoning.graphrag.context_builder import ConflictContextBuilder
+from dialectica_reasoning.graphrag.retriever import ConflictGraphRAGRetriever, RetrievalResult
+from dialectica_reasoning.symbolic.causal_analysis import CausalAnalyzer
 from dialectica_reasoning.symbolic.constraint_engine import ConflictGrammarEngine
 from dialectica_reasoning.symbolic.escalation import EscalationDetector
+from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
+from dialectica_reasoning.symbolic.power_analysis import PowerMapper
 from dialectica_reasoning.symbolic.ripeness import RipenessScorer
 from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer
-from dialectica_reasoning.symbolic.power_analysis import PowerMapper
-from dialectica_reasoning.symbolic.causal_analysis import CausalAnalyzer
-from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
-
 
 # ---------------------------------------------------------------------------
 # Response models
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class Citation:
@@ -58,6 +59,7 @@ class AnalysisResponse:
 # ---------------------------------------------------------------------------
 # Query Engine
 # ---------------------------------------------------------------------------
+
 
 class ConflictQueryEngine:
     """
@@ -109,11 +111,13 @@ class ConflictQueryEngine:
                 top_k=top_k,
                 hops=hops,
             )
-            trace.append(ReasoningStep(
-                step="retrieval",
-                status="complete",
-                result_summary=f"Retrieved {len(retrieval.nodes)} nodes via {retrieval.retrieval_method}",
-            ))
+            trace.append(
+                ReasoningStep(
+                    step="retrieval",
+                    status="complete",
+                    result_summary=f"Retrieved {len(retrieval.nodes)} nodes via {retrieval.retrieval_method}",  # noqa: E501
+                )
+            )
         except Exception as exc:
             trace.append(ReasoningStep(step="retrieval", status="error", result_summary=str(exc)))
             response.reasoning_trace = trace
@@ -122,11 +126,13 @@ class ConflictQueryEngine:
 
         # Step 2: Build context
         context = self._context_builder.build_context(retrieval, mode=mode)
-        trace.append(ReasoningStep(
-            step="context_build",
-            status="complete",
-            result_summary=f"Context built ({len(context)} chars, mode={mode})",
-        ))
+        trace.append(
+            ReasoningStep(
+                step="context_build",
+                status="complete",
+                result_summary=f"Context built ({len(context)} chars, mode={mode})",
+            )
+        )
 
         # Step 3: Symbolic analysis (always run, mode-specific focus)
         symbolic_summary_parts: list[str] = []
@@ -139,11 +145,13 @@ class ConflictQueryEngine:
                 symbolic_summary_parts.append(
                     f"Glasl stage: {glasl.stage} (confidence: {glasl.confidence:.2f})"
                 )
-                trace.append(ReasoningStep(
-                    step="escalation_analysis",
-                    status="complete",
-                    result_summary=f"Stage={glasl.stage}, confidence={glasl.confidence}",
-                ))
+                trace.append(
+                    ReasoningStep(
+                        step="escalation_analysis",
+                        status="complete",
+                        result_summary=f"Stage={glasl.stage}, confidence={glasl.confidence}",
+                    )
+                )
             except Exception:
                 pass
 
@@ -156,11 +164,13 @@ class ConflictQueryEngine:
                     f"Ripeness: MHS={ripe.mhs_score:.2f}, MEO={ripe.meo_score:.2f}, "
                     f"overall={ripe.overall_score:.2f}, is_ripe={ripe.is_ripe}"
                 )
-                trace.append(ReasoningStep(
-                    step="ripeness_analysis",
-                    status="complete",
-                    result_summary=f"Ripeness={ripe.overall_score:.2f}, ripe={ripe.is_ripe}",
-                ))
+                trace.append(
+                    ReasoningStep(
+                        step="ripeness_analysis",
+                        status="complete",
+                        result_summary=f"Ripeness={ripe.overall_score:.2f}, ripe={ripe.is_ripe}",
+                    )
+                )
             except Exception:
                 pass
 
@@ -171,11 +181,13 @@ class ConflictQueryEngine:
             if patterns:
                 top_patterns = [f"{p.pattern_name}({p.confidence:.2f})" for p in patterns[:3]]
                 symbolic_summary_parts.append(f"Patterns: {', '.join(top_patterns)}")
-            trace.append(ReasoningStep(
-                step="pattern_matching",
-                status="complete",
-                result_summary=f"{len(patterns)} patterns detected",
-            ))
+            trace.append(
+                ReasoningStep(
+                    step="pattern_matching",
+                    status="complete",
+                    result_summary=f"{len(patterns)} patterns detected",
+                )
+            )
         except Exception:
             pass
 
@@ -184,18 +196,17 @@ class ConflictQueryEngine:
         # Step 4: Symbolic constraint check
         try:
             rule_report = await self._engine.evaluate_all_rules(workspace_id)
-            critical_findings = [
-                f for f in rule_report.findings
-                if f.severity == "CRITICAL"
-            ]
-            trace.append(ReasoningStep(
-                step="symbolic_rules",
-                status="complete",
-                result_summary=(
-                    f"Score={rule_report.summary_score:.2f}, "
-                    f"{len(critical_findings)} critical findings"
-                ),
-            ))
+            critical_findings = [f for f in rule_report.findings if f.severity == "CRITICAL"]
+            trace.append(
+                ReasoningStep(
+                    step="symbolic_rules",
+                    status="complete",
+                    result_summary=(
+                        f"Score={rule_report.summary_score:.2f}, "
+                        f"{len(critical_findings)} critical findings"
+                    ),
+                )
+            )
         except Exception:
             rule_report = None
 
@@ -204,25 +215,31 @@ class ConflictQueryEngine:
             try:
                 prompt = self._build_synthesis_prompt(query, context, symbolic_summary, mode)
                 answer = await self._call_gemini(prompt)
-                trace.append(ReasoningStep(
-                    step="synthesis",
-                    status="complete",
-                    result_summary="LLM synthesis complete",
-                ))
+                trace.append(
+                    ReasoningStep(
+                        step="synthesis",
+                        status="complete",
+                        result_summary="LLM synthesis complete",
+                    )
+                )
             except Exception as exc:
                 answer = self._fallback_answer(query, retrieval, symbolic_summary)
-                trace.append(ReasoningStep(
-                    step="synthesis",
-                    status="fallback",
-                    result_summary=f"LLM unavailable: {exc}",
-                ))
+                trace.append(
+                    ReasoningStep(
+                        step="synthesis",
+                        status="fallback",
+                        result_summary=f"LLM unavailable: {exc}",
+                    )
+                )
         else:
             answer = self._fallback_answer(query, retrieval, symbolic_summary)
-            trace.append(ReasoningStep(
-                step="synthesis",
-                status="no_llm",
-                result_summary="No LLM configured — returning symbolic summary",
-            ))
+            trace.append(
+                ReasoningStep(
+                    step="synthesis",
+                    status="no_llm",
+                    result_summary="No LLM configured — returning symbolic summary",
+                )
+            )
 
         # Step 6: Citations
         citations = [
@@ -252,23 +269,27 @@ class ConflictQueryEngine:
 
         yield json.dumps({"step": "retrieval", "status": "started"})
         retrieval = await self._retriever.retrieve(query, workspace_id)
-        yield json.dumps({
-            "step": "retrieval",
-            "status": "complete",
-            "nodes_found": len(retrieval.nodes),
-        })
+        yield json.dumps(
+            {
+                "step": "retrieval",
+                "status": "complete",
+                "nodes_found": len(retrieval.nodes),
+            }
+        )
 
         yield json.dumps({"step": "symbolic", "status": "started"})
         glasl = await self._escalation.compute_glasl_stage(workspace_id)
         ripe = await self._ripeness.compute_ripeness(workspace_id)
         patterns = await self._patterns.detect_all(workspace_id)
-        yield json.dumps({
-            "step": "symbolic",
-            "status": "complete",
-            "glasl_stage": str(glasl.stage),
-            "ripeness": ripe.overall_score,
-            "patterns": [p.pattern_name for p in patterns if p.confidence > 0.4],
-        })
+        yield json.dumps(
+            {
+                "step": "symbolic",
+                "status": "complete",
+                "glasl_stage": str(glasl.stage),
+                "ripeness": ripe.overall_score,
+                "patterns": [p.pattern_name for p in patterns if p.confidence > 0.4],
+            }
+        )
 
         yield json.dumps({"step": "synthesis", "status": "started"})
         context = self._context_builder.build_context(retrieval, mode=mode)
@@ -287,17 +308,23 @@ class ConflictQueryEngine:
             answer = self._fallback_answer(query, retrieval, symbolic_summary)
 
         citations = [
-            {"node_id": n.id, "node_name": getattr(n, "name", n.id), "score": retrieval.scores.get(n.id, 0)}
+            {
+                "node_id": n.id,
+                "node_name": getattr(n, "name", n.id),
+                "score": retrieval.scores.get(n.id, 0),
+            }
             for n in retrieval.nodes[:10]
         ]
-        yield json.dumps({
-            "step": "complete",
-            "answer": answer,
-            "citations": citations,
-            "escalation_stage": getattr(glasl.stage, "stage_number", None),
-            "ripeness_score": ripe.overall_score,
-            "patterns_detected": [p.pattern_name for p in patterns if p.confidence > 0.4],
-        })
+        yield json.dumps(
+            {
+                "step": "complete",
+                "answer": answer,
+                "citations": citations,
+                "escalation_stage": getattr(glasl.stage, "stage_number", None),
+                "ripeness_score": ripe.overall_score,
+                "patterns_detected": [p.pattern_name for p in patterns if p.confidence > 0.4],
+            }
+        )
 
     def _build_synthesis_prompt(
         self,

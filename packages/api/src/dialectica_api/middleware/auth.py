@@ -4,12 +4,13 @@ Auth Middleware — API key authentication for DIALECTICA API.
 Supports multiple API keys with permission levels (admin, standard, readonly).
 Keys loaded from API_KEYS_JSON env var or ADMIN_API_KEY for backward compat.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Request, Response
@@ -18,7 +19,15 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 logger = logging.getLogger("dialectica.auth")
 
 # Public paths that don't require authentication
-_PUBLIC_PATHS = {"/health", "/health/", "/docs", "/openapi.json", "/redoc", "/metrics", "/v1/waitlist"}
+_PUBLIC_PATHS = {
+    "/health",
+    "/health/",
+    "/docs",
+    "/openapi.json",
+    "/redoc",
+    "/metrics",
+    "/v1/waitlist",
+}
 
 # Permission levels (ordered from least to most privileged)
 PERMISSION_LEVELS = ("readonly", "standard", "admin")
@@ -41,7 +50,9 @@ class APIKeyEntry:
     ) -> None:
         self.key = key
         if level not in PERMISSION_LEVELS:
-            raise ValueError(f"Invalid permission level: {level!r}. Must be one of {PERMISSION_LEVELS}")
+            raise ValueError(
+                f"Invalid permission level: {level!r}. Must be one of {PERMISSION_LEVELS}"
+            )
         self.level = level
         self.tenant_id = tenant_id
         self.expires_at = expires_at
@@ -53,8 +64,8 @@ class APIKeyEntry:
         try:
             expiry = datetime.fromisoformat(self.expires_at)
             if expiry.tzinfo is None:
-                expiry = expiry.replace(tzinfo=timezone.utc)
-            return datetime.now(timezone.utc) > expiry
+                expiry = expiry.replace(tzinfo=UTC)
+            return datetime.now(UTC) > expiry
         except (ValueError, TypeError):
             return True  # Malformed date treated as expired
 
@@ -100,9 +111,7 @@ def load_api_keys() -> dict[str, APIKeyEntry]:
     # Backward compatibility: ADMIN_API_KEY
     admin_key = os.getenv("ADMIN_API_KEY", "").strip()
     if admin_key and admin_key not in keys:
-        keys[admin_key] = APIKeyEntry(
-            key=admin_key, level="admin", tenant_id="admin"
-        )
+        keys[admin_key] = APIKeyEntry(key=admin_key, level="admin", tenant_id="admin")
 
     return keys
 
@@ -145,9 +154,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             self._keys = load_api_keys()
         return self._keys
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         from fastapi.responses import JSONResponse
 
         # Skip auth for public paths

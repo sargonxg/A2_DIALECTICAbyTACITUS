@@ -1,17 +1,17 @@
 """
 Schema Validation — Pydantic validation wrapper for extracted entities.
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 from pydantic import ValidationError
 
 from dialectica_ontology.primitives import NODE_TYPES, ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType, validate_relationship
-from dialectica_ontology.tiers import OntologyTier, TIER_NODES, TIER_EDGES
+from dialectica_ontology.relationships import ConflictRelationship, validate_relationship
+from dialectica_ontology.tiers import TIER_EDGES, TIER_NODES, OntologyTier
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def validate_raw_nodes(
         except ValidationError as e:
             result.invalid_entities.append(raw)
             for err in e.errors():
-                loc = ".".join(str(l) for l in err["loc"])
+                loc = ".".join(str(part) for part in err["loc"])
                 result.errors.append(f"{label}.{loc}: {err['msg']}")
 
     return result

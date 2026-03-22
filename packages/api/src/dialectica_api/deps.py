@@ -4,6 +4,7 @@ Dependency Injection — FastAPI dependency functions for DIALECTICA API.
 Provides cached singletons for graph client and query engine,
 plus request-scoped tenant/admin guards.
 """
+
 from __future__ import annotations
 
 import functools
@@ -11,7 +12,8 @@ from typing import Any
 
 from fastapi import Depends, HTTPException, Request, status
 
-from dialectica_api.config import Settings, get_settings as _get_settings
+from dialectica_api.config import Settings
+from dialectica_api.config import get_settings as _get_settings
 
 
 @functools.lru_cache(maxsize=1)
@@ -23,7 +25,7 @@ def get_settings() -> Settings:
 _graph_client_instance: Any | None = None
 
 
-def get_graph_client(settings: Settings = Depends(get_settings)) -> Any:
+def get_graph_client(settings: Settings = Depends(get_settings)) -> Any:  # noqa: B008
     """Create or return cached GraphClient based on config.
 
     Returns the client or None if the graph package is unavailable.
@@ -63,7 +65,7 @@ def get_graph_client(settings: Settings = Depends(get_settings)) -> Any:
 
 
 def get_query_engine(
-    graph_client: Any = Depends(get_graph_client),
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> Any:
     """Create a ConflictQueryEngine with the graph client.
 

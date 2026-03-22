@@ -3,17 +3,18 @@ Tests for dialectica_reasoning — Escalation, ripeness, trust, power, causal, p
 
 Uses mock graph clients to avoid requiring a live database.
 """
+
 from __future__ import annotations
 
-import pytest
 from dataclasses import dataclass, field
 from typing import Any
-from unittest.mock import AsyncMock
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Mock graph client
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class MockEdge:
@@ -61,7 +62,9 @@ class MockGraphClient:
         self._nodes = nodes or []
         self._edges = edges or []
 
-    async def get_nodes(self, workspace_id: str, label: str = None, limit: int = 100, offset: int = 0):
+    async def get_nodes(
+        self, workspace_id: str, label: str = None, limit: int = 100, offset: int = 0
+    ):
         if label:
             return [n for n in self._nodes if getattr(n, "label", "") == label]
         return self._nodes
@@ -73,6 +76,7 @@ class MockGraphClient:
 
     async def traverse(self, start_id: str, workspace_id: str, hops: int = 2, edge_types=None):
         from types import SimpleNamespace
+
         return SimpleNamespace(nodes=self._nodes, edges=self._edges)
 
     async def vector_search(self, query_text: str, workspace_id: str, top_k: int = 10, **kwargs):
@@ -80,6 +84,7 @@ class MockGraphClient:
 
     async def get_workspace_stats(self, workspace_id: str):
         from types import SimpleNamespace
+
         return SimpleNamespace(total_nodes=len(self._nodes), total_edges=len(self._edges))
 
 
@@ -87,9 +92,11 @@ class MockGraphClient:
 # Test: Escalation
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_escalation_empty_graph():
     from dialectica_reasoning.symbolic.escalation import EscalationDetector
+
     gc = MockGraphClient()
     detector = EscalationDetector(gc)
     assessment = await detector.compute_glasl_stage("test")
@@ -100,6 +107,7 @@ async def test_escalation_empty_graph():
 @pytest.mark.asyncio
 async def test_escalation_with_conflict():
     from dialectica_reasoning.symbolic.escalation import EscalationDetector
+
     conflict = MockConflict(id="c1", label="Conflict", name="Test Conflict")
     conflict.glasl_stage = 6
     gc = MockGraphClient(nodes=[conflict])
@@ -111,8 +119,10 @@ async def test_escalation_with_conflict():
 
 @pytest.mark.asyncio
 async def test_escalation_signals():
-    from dialectica_reasoning.symbolic.escalation import EscalationDetector
     from datetime import datetime
+
+    from dialectica_reasoning.symbolic.escalation import EscalationDetector
+
     event = MockEvent(id="e1", label="Event", name="Threat")
     event.severity = 0.8
     event.occurred_at = datetime.utcnow()
@@ -126,9 +136,11 @@ async def test_escalation_signals():
 # Test: Ripeness
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_ripeness_empty():
     from dialectica_reasoning.symbolic.ripeness import RipenessScorer
+
     gc = MockGraphClient()
     scorer = RipenessScorer(gc)
     result = await scorer.compute_ripeness("test")
@@ -139,6 +151,7 @@ async def test_ripeness_empty():
 @pytest.mark.asyncio
 async def test_ripeness_with_data():
     from dialectica_reasoning.symbolic.ripeness import RipenessScorer
+
     conflict = MockConflict(id="c1", label="Conflict", name="Test")
     conflict.status = "dormant"
     event = MockEvent(id="e1", label="Event", name="Incident")
@@ -154,9 +167,11 @@ async def test_ripeness_with_data():
 # Test: Trust Analysis
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_trust_matrix_empty():
     from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer
+
     gc = MockGraphClient()
     analyzer = TrustAnalyzer(gc)
     matrix = await analyzer.compute_trust_matrix("test")
@@ -167,6 +182,7 @@ async def test_trust_matrix_empty():
 @pytest.mark.asyncio
 async def test_trust_matrix_with_nodes():
     from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer
+
     ts = MockTrustState(id="ts1", label="TrustState", name="Trust A→B")
     gc = MockGraphClient(nodes=[ts])
     analyzer = TrustAnalyzer(gc)
@@ -180,9 +196,11 @@ async def test_trust_matrix_with_nodes():
 # Test: Power Analysis
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_power_map_empty():
     from dialectica_reasoning.symbolic.power_analysis import PowerMapper
+
     gc = MockGraphClient()
     mapper = PowerMapper(gc)
     pm = await mapper.compute_power_map("test")
@@ -193,9 +211,12 @@ async def test_power_map_empty():
 @pytest.mark.asyncio
 async def test_power_asymmetries():
     from dialectica_reasoning.symbolic.power_analysis import PowerMapper
+
     edge = MockEdge(
-        id="e1", type="HAS_POWER_OVER",
-        source_id="usa", target_id="iran",
+        id="e1",
+        type="HAS_POWER_OVER",
+        source_id="usa",
+        target_id="iran",
         properties={"domain": "coercive", "magnitude": 0.9},
     )
     gc = MockGraphClient(edges=[edge])
@@ -208,9 +229,11 @@ async def test_power_asymmetries():
 # Test: Causal Analysis
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_causal_empty():
     from dialectica_reasoning.symbolic.causal_analysis import CausalAnalyzer
+
     gc = MockGraphClient()
     analyzer = CausalAnalyzer(gc)
     chains = await analyzer.extract_causal_chains("test")
@@ -220,6 +243,7 @@ async def test_causal_empty():
 @pytest.mark.asyncio
 async def test_causal_with_chain():
     from dialectica_reasoning.symbolic.causal_analysis import CausalAnalyzer
+
     e1 = MockEdge(id="edge1", type="CAUSED", source_id="ev1", target_id="ev2")
     e2 = MockEdge(id="edge2", type="CAUSED", source_id="ev2", target_id="ev3")
     n1 = MockEvent(id="ev1", label="Event", name="Root")
@@ -236,9 +260,11 @@ async def test_causal_with_chain():
 # Test: Pattern Matching
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_pattern_matching_empty():
     from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
+
     gc = MockGraphClient()
     matcher = PatternMatcher(gc)
     matches = await matcher.detect_all("test")
@@ -248,6 +274,7 @@ async def test_pattern_matching_empty():
 @pytest.mark.asyncio
 async def test_escalation_spiral_detection():
     from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
+
     ev1 = MockEvent(id="ev1", label="Event", name="Threat A->B")
     ev1.event_type = "threaten"
     ev1.performer_id = "actor_a"
@@ -279,9 +306,11 @@ async def test_escalation_spiral_detection():
 # Test: Inference
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_inference_empty():
     from dialectica_reasoning.symbolic.inference import SymbolicInference
+
     gc = MockGraphClient()
     inferrer = SymbolicInference(gc)
     result = await inferrer.forward_chain("test")
@@ -293,9 +322,11 @@ async def test_inference_empty():
 # Test: GraphRAG
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_retriever_empty():
     from dialectica_reasoning.graphrag.retriever import ConflictGraphRAGRetriever
+
     gc = MockGraphClient()
     retriever = ConflictGraphRAGRetriever(gc)
     result = await retriever.retrieve("What happened?", "test")
@@ -305,8 +336,9 @@ async def test_retriever_empty():
 
 @pytest.mark.asyncio
 async def test_context_builder():
-    from dialectica_reasoning.graphrag.retriever import RetrievalResult
     from dialectica_reasoning.graphrag.context_builder import ConflictContextBuilder
+    from dialectica_reasoning.graphrag.retriever import RetrievalResult
+
     result = RetrievalResult(query="test query", workspace_id="test")
     builder = ConflictContextBuilder()
     context = builder.build_context(result)
@@ -318,9 +350,11 @@ async def test_context_builder():
 # Test: Query Engine
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_query_engine_no_llm():
     from dialectica_reasoning.query_engine import ConflictQueryEngine
+
     gc = MockGraphClient()
     engine = ConflictQueryEngine(gc)
     response = await engine.analyze("What is the escalation level?", "test")
@@ -332,9 +366,11 @@ async def test_query_engine_no_llm():
 # Test: Hallucination Detector
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_hallucination_detector():
     from dialectica_reasoning.hallucination_detector import HallucinationDetector
+
     actor = MockNode(id="a1", label="Actor", name="Iran")
     gc = MockGraphClient(nodes=[actor])
     detector = HallucinationDetector(gc)
@@ -344,7 +380,11 @@ async def test_hallucination_detector():
 
 @pytest.mark.asyncio
 async def test_hallucination_report():
-    from dialectica_reasoning.hallucination_detector import HallucinationDetector, HallucinationReport
+    from dialectica_reasoning.hallucination_detector import (
+        HallucinationDetector,
+        HallucinationReport,
+    )
+
     gc = MockGraphClient()
     detector = HallucinationDetector(gc)
     report = await detector.detect("Iran is powerful.", "test")
@@ -356,9 +396,11 @@ async def test_hallucination_report():
 # Test: Graph Quality
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_graph_quality_empty():
     from dialectica_reasoning.graph_quality import GraphQualityAnalyzer
+
     gc = MockGraphClient()
     analyzer = GraphQualityAnalyzer(gc)
     dashboard = await analyzer.generate_quality_dashboard("test")

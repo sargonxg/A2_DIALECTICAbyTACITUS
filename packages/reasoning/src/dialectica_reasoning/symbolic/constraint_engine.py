@@ -5,6 +5,7 @@ Runs structural, escalation, ripeness, trust, power, and causal rules
 against the workspace graph and produces a RuleEvaluationReport with
 findings, summary score, and categorised results.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,28 +14,21 @@ from enum import StrEnum
 from dialectica_graph import GraphClient
 from dialectica_ontology.enums import (
     ConflictStatus,
-    GlaslStage,
-    PrimaryEmotion,
     ViolenceType,
 )
 from dialectica_ontology.primitives import (
-    Actor,
     Conflict,
-    Event,
-    Process,
     TrustState,
 )
 from dialectica_ontology.relationships import (
-    ConflictRelationship,
     EdgeType,
-    EDGE_SCHEMA,
     validate_relationship,
 )
-
 
 # ---------------------------------------------------------------------------
 # Result data classes
 # ---------------------------------------------------------------------------
+
 
 class Severity(StrEnum):
     INFO = "INFO"
@@ -85,6 +79,7 @@ class RuleEvaluationReport:
 # Engine
 # ---------------------------------------------------------------------------
 
+
 class ConflictGrammarEngine:
     """Evaluates deterministic symbolic rules over a workspace graph."""
 
@@ -117,13 +112,15 @@ class ConflictGrammarEngine:
         for edge in edges:
             errors = validate_relationship(edge)
             for err in errors:
-                findings.append(Finding(
-                    rule_name="structural_consistency",
-                    severity=Severity.WARNING,
-                    description=err,
-                    evidence_ids=[edge.id],
-                    recommendation="Review and correct edge source/target labels.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="structural_consistency",
+                        severity=Severity.WARNING,
+                        description=err,
+                        evidence_ids=[edge.id],
+                        recommendation="Review and correct edge source/target labels.",
+                    )
+                )
 
         # Every conflict should have at least one PARTY_TO edge
         conflicts = await self._gc.get_nodes(workspace_id, label="Conflict")
@@ -132,13 +129,15 @@ class ConflictGrammarEngine:
 
         for c in conflicts:
             if c.id not in conflict_ids_with_parties:
-                findings.append(Finding(
-                    rule_name="structural_consistency",
-                    severity=Severity.WARNING,
-                    description=f"Conflict '{getattr(c, 'name', c.id)}' has no PARTY_TO edges — no actors linked.",
-                    evidence_ids=[c.id],
-                    recommendation="Add at least two actors as parties to this conflict.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="structural_consistency",
+                        severity=Severity.WARNING,
+                        description=f"Conflict '{getattr(c, 'name', c.id)}' has no PARTY_TO edges — no actors linked.",  # noqa: E501
+                        evidence_ids=[c.id],
+                        recommendation="Add at least two actors as parties to this conflict.",
+                    )
+                )
 
         # Events should have at least one PART_OF edge to a conflict
         events = await self._gc.get_nodes(workspace_id, label="Event")
@@ -146,13 +145,15 @@ class ConflictGrammarEngine:
         event_ids_in_conflict = {e.source_id for e in part_of_edges}
         for ev in events:
             if ev.id not in event_ids_in_conflict:
-                findings.append(Finding(
-                    rule_name="structural_consistency",
-                    severity=Severity.INFO,
-                    description=f"Event '{ev.id}' is not linked to any conflict via PART_OF.",
-                    evidence_ids=[ev.id],
-                    recommendation="Link event to its parent conflict.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="structural_consistency",
+                        severity=Severity.INFO,
+                        description=f"Event '{ev.id}' is not linked to any conflict via PART_OF.",
+                        evidence_ids=[ev.id],
+                        recommendation="Link event to its parent conflict.",
+                    )
+                )
 
         return findings
 
@@ -167,26 +168,30 @@ class ConflictGrammarEngine:
             stage = getattr(c, "glasl_stage", None)
             if stage is not None and stage >= 7:
                 sev = Severity.CRITICAL if stage >= 8 else Severity.WARNING
-                findings.append(Finding(
-                    rule_name="escalation",
-                    severity=sev,
-                    description=(
-                        f"Conflict '{getattr(c, 'name', c.id)}' at Glasl stage {stage} "
-                        f"(lose-lose territory). Immediate intervention required."
-                    ),
-                    evidence_ids=[c.id],
-                    recommendation="Consider power intervention or arbitration.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="escalation",
+                        severity=sev,
+                        description=(
+                            f"Conflict '{getattr(c, 'name', c.id)}' at Glasl stage {stage} "
+                            f"(lose-lose territory). Immediate intervention required."
+                        ),
+                        evidence_ids=[c.id],
+                        recommendation="Consider power intervention or arbitration.",
+                    )
+                )
 
             violence = getattr(c, "violence_type", None)
             if violence == ViolenceType.DIRECT:
-                findings.append(Finding(
-                    rule_name="escalation",
-                    severity=Severity.CRITICAL,
-                    description=f"Conflict '{getattr(c, 'name', c.id)}' involves direct violence.",
-                    evidence_ids=[c.id],
-                    recommendation="Prioritise safety and de-escalation measures.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="escalation",
+                        severity=Severity.CRITICAL,
+                        description=f"Conflict '{getattr(c, 'name', c.id)}' involves direct violence.",  # noqa: E501
+                        evidence_ids=[c.id],
+                        recommendation="Prioritise safety and de-escalation measures.",
+                    )
+                )
 
         return findings
 
@@ -206,30 +211,39 @@ class ConflictGrammarEngine:
             c: Conflict = node  # type: ignore[assignment]
             status = getattr(c, "status", None)
 
-            if status in (ConflictStatus.DORMANT, ConflictStatus.LATENT):
-                if c.id not in resolved_through_sources:
-                    findings.append(Finding(
+            if (  # noqa: E501
+                status in (ConflictStatus.DORMANT, ConflictStatus.LATENT)
+                and c.id not in resolved_through_sources
+            ):
+                findings.append(
+                    Finding(
                         rule_name="ripeness",
                         severity=Severity.INFO,
                         description=(
                             f"Conflict '{getattr(c, 'name', c.id)}' is {status} "
-                            "with no resolution process — potential mutually hurting stalemate."
+                            "with no resolution process "
+                            "-- potential mutually hurting stalemate."
                         ),
                         evidence_ids=[c.id],
-                        recommendation="Assess if a mutually enticing opportunity can be presented.",
-                    ))
+                        recommendation=(
+                            "Assess if a mutually enticing opportunity can be presented."
+                        ),
+                    )
+                )
 
             if status == ConflictStatus.ACTIVE and c.id not in resolved_through_sources:
-                findings.append(Finding(
-                    rule_name="ripeness",
-                    severity=Severity.WARNING,
-                    description=(
-                        f"Active conflict '{getattr(c, 'name', c.id)}' has no "
-                        "RESOLVED_THROUGH process linked."
-                    ),
-                    evidence_ids=[c.id],
-                    recommendation="Initiate a suitable resolution process.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="ripeness",
+                        severity=Severity.WARNING,
+                        description=(
+                            f"Active conflict '{getattr(c, 'name', c.id)}' has no "
+                            "RESOLVED_THROUGH process linked."
+                        ),
+                        evidence_ids=[c.id],
+                        recommendation="Initiate a suitable resolution process.",
+                    )
+                )
 
         return findings
 
@@ -243,20 +257,28 @@ class ConflictGrammarEngine:
             ts: TrustState = node  # type: ignore[assignment]
             overall = getattr(ts, "overall_trust", None)
             if overall is not None and overall < 0.2:
-                findings.append(Finding(
-                    rule_name="trust",
-                    severity=Severity.WARNING,
-                    description=f"Very low trust detected (overall_trust={overall:.2f}).",
-                    evidence_ids=[ts.id],
-                    recommendation="Prioritise trust-building measures before substantive negotiation.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="trust",
+                        severity=Severity.WARNING,
+                        description=f"Very low trust detected (overall_trust={overall:.2f}).",
+                        evidence_ids=[ts.id],
+                        recommendation="Prioritise trust-building measures before substantive negotiation.",  # noqa: E501
+                    )
+                )
 
             ability = getattr(ts, "perceived_ability", None)
             benevolence = getattr(ts, "perceived_benevolence", None)
             integrity = getattr(ts, "perceived_integrity", None)
-            if ability is not None and benevolence is not None and integrity is not None:
-                if integrity < 0.15 and benevolence < 0.15:
-                    findings.append(Finding(
+            if (
+                ability is not None
+                and benevolence is not None
+                and integrity is not None
+                and integrity < 0.15
+                and benevolence < 0.15
+            ):
+                findings.append(
+                    Finding(
                         rule_name="trust",
                         severity=Severity.CRITICAL,
                         description=(
@@ -265,7 +287,8 @@ class ConflictGrammarEngine:
                         ),
                         evidence_ids=[ts.id],
                         recommendation="Address perceived bad faith before proceeding.",
-                    ))
+                    )
+                )
 
         return findings
 
@@ -285,30 +308,34 @@ class ConflictGrammarEngine:
         for edge in edges:
             magnitude = edge.properties.get("magnitude", edge.weight)
             if magnitude > 0.8:
-                findings.append(Finding(
-                    rule_name="power",
-                    severity=Severity.INFO,
-                    description=(
-                        f"Strong power asymmetry detected (magnitude={magnitude:.2f}) "
-                        f"between {edge.source_id} and {edge.target_id}."
-                    ),
-                    evidence_ids=[edge.id],
-                    recommendation="Consider power-balancing interventions.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="power",
+                        severity=Severity.INFO,
+                        description=(
+                            f"Strong power asymmetry detected (magnitude={magnitude:.2f}) "
+                            f"between {edge.source_id} and {edge.target_id}."
+                        ),
+                        evidence_ids=[edge.id],
+                        recommendation="Consider power-balancing interventions.",
+                    )
+                )
 
             # Check for opposed actors both wielding coercive power
             domain = edge.properties.get("domain", "")
             if domain == "coercive" and (edge.target_id, edge.source_id) in opposed_pairs:
-                findings.append(Finding(
-                    rule_name="power",
-                    severity=Severity.WARNING,
-                    description=(
-                        "Opposing actors both possess coercive power — "
-                        "potential security dilemma."
-                    ),
-                    evidence_ids=[edge.id, edge.source_id, edge.target_id],
-                    recommendation="Monitor for arms-race dynamics; introduce confidence-building measures.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="power",
+                        severity=Severity.WARNING,
+                        description=(
+                            "Opposing actors both possess coercive power — "
+                            "potential security dilemma."
+                        ),
+                        evidence_ids=[edge.id, edge.source_id, edge.target_id],
+                        recommendation="Monitor for arms-race dynamics; introduce confidence-building measures.",  # noqa: E501
+                    )
+                )
 
         return findings
 
@@ -346,15 +373,17 @@ class ConflictGrammarEngine:
         for root in roots:
             depth = _chain_depth(root)
             if depth >= 4:
-                findings.append(Finding(
-                    rule_name="causal",
-                    severity=Severity.WARNING,
-                    description=(
-                        f"Long causal chain detected (depth={depth}) originating from event {root}."
-                    ),
-                    evidence_ids=[root],
-                    recommendation="Investigate root cause to break the causal chain.",
-                ))
+                findings.append(
+                    Finding(
+                        rule_name="causal",
+                        severity=Severity.WARNING,
+                        description=(
+                            f"Long causal chain detected (depth={depth}) originating from event {root}."  # noqa: E501
+                        ),
+                        evidence_ids=[root],
+                        recommendation="Investigate root cause to break the causal chain.",
+                    )
+                )
 
         # Detect cycles (feedback loops)
         all_nodes = set(outgoing.keys()) | set(incoming.keys())
@@ -374,15 +403,16 @@ class ConflictGrammarEngine:
             return False
 
         for n in all_nodes:
-            if n not in visited_global:
-                if _has_cycle(n):
-                    findings.append(Finding(
+            if n not in visited_global and _has_cycle(n):
+                findings.append(
+                    Finding(
                         rule_name="causal",
                         severity=Severity.WARNING,
                         description="Causal feedback loop detected in event chain.",
                         evidence_ids=[n],
-                        recommendation="Identify and interrupt feedback loops to prevent escalation.",
-                    ))
-                    break  # report once
+                        recommendation="Identify and interrupt feedback loops to prevent escalation.",  # noqa: E501
+                    )
+                )
+                break  # report once
 
         return findings

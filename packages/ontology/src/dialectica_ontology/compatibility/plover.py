@@ -5,17 +5,19 @@ PLOVER (Political Language Ontology for Verifiable Event Records) defines
 16 top-level event types and a QuadClass classification. This module maps
 PLOVER types to ACO primitives, including severity and mode nuances.
 """
+
 from __future__ import annotations
 
 from enum import StrEnum
 
 from dialectica_ontology.enums import EventType, QuadClass
 
-
 # ─── PLOVER 16 Event Types ──────────────────────────────────────────────────
+
 
 class PloverEventType(StrEnum):
     """The 16 PLOVER top-level event types."""
+
     AGREE = "AGREE"
     AID = "AID"
     ARREST = "ARREST"
@@ -130,6 +132,7 @@ _DEFAULT_SEVERITY: dict[str, float] = {
 
 
 # ─── Public API ──────────────────────────────────────────────────────────────
+
 
 def plover_to_dialectica(plover_code: str) -> EventType:
     """Convert a PLOVER event code to a DIALECTICA EventType.

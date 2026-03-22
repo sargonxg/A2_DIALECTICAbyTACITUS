@@ -4,13 +4,11 @@ GraphClient Interface — Abstract base class for all graph database backends.
 Defines the contract that SpannerGraphClient and Neo4jGraphClient must implement.
 All methods are async. All operations are scoped by workspace_id + tenant_id.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-
-from dialectica_ontology.primitives import ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship
 
 from dialectica_graph.models import (
     ActorNetworkResult,
@@ -19,6 +17,8 @@ from dialectica_graph.models import (
     SubgraphResult,
     WorkspaceStats,
 )
+from dialectica_ontology.primitives import ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship
 
 
 class GraphClient(ABC):
@@ -38,23 +38,17 @@ class GraphClient(ABC):
     # ── Node CRUD ──────────────────────────────────────────────────────────
 
     @abstractmethod
-    async def upsert_node(
-        self, node: ConflictNode, workspace_id: str, tenant_id: str
-    ) -> str:
+    async def upsert_node(self, node: ConflictNode, workspace_id: str, tenant_id: str) -> str:
         """Insert or update a node. Returns the node ID."""
         ...
 
     @abstractmethod
-    async def delete_node(
-        self, node_id: str, workspace_id: str, hard: bool = False
-    ) -> bool:
+    async def delete_node(self, node_id: str, workspace_id: str, hard: bool = False) -> bool:
         """Soft-delete (set deleted_at) or hard-delete a node. Returns success."""
         ...
 
     @abstractmethod
-    async def get_node(
-        self, node_id: str, workspace_id: str
-    ) -> ConflictNode | None:
+    async def get_node(self, node_id: str, workspace_id: str) -> ConflictNode | None:
         """Retrieve a single node by ID within a workspace."""
         ...
 
@@ -116,9 +110,7 @@ class GraphClient(ABC):
     # ── Raw Query ──────────────────────────────────────────────────────────
 
     @abstractmethod
-    async def execute_query(
-        self, query: str, params: dict | None = None
-    ) -> list[dict]:
+    async def execute_query(self, query: str, params: dict | None = None) -> list[dict]:
         """Execute a raw GQL (Spanner) or Cypher (Neo4j) query."""
         ...
 
@@ -130,9 +122,7 @@ class GraphClient(ABC):
         ...
 
     @abstractmethod
-    async def get_actor_network(
-        self, actor_id: str, workspace_id: str
-    ) -> ActorNetworkResult:
+    async def get_actor_network(self, actor_id: str, workspace_id: str) -> ActorNetworkResult:
         """Get an actor's alliance/opposition network with centrality scores."""
         ...
 
@@ -147,9 +137,7 @@ class GraphClient(ABC):
         ...
 
     @abstractmethod
-    async def get_escalation_trajectory(
-        self, workspace_id: str
-    ) -> EscalationResult:
+    async def get_escalation_trajectory(self, workspace_id: str) -> EscalationResult:
         """Compute Glasl escalation trajectory for a workspace's conflicts."""
         ...
 

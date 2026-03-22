@@ -5,13 +5,13 @@ Detects communities in the workspace graph using leidenalg at 3 resolutions
 (gamma=0.8, 1.5, 3.0) and generates natural language summaries.
 Community summaries can be stored in Qdrant for global query support.
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
 
 from dialectica_graph import GraphClient
-from dialectica_ontology.primitives import ConflictNode
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ RESOLUTIONS = [0.8, 1.5, 3.0]
 @dataclass
 class CommunitySummary:
     """Human-readable summary of a detected graph community."""
+
     community_id: int
     resolution: float = 1.0
     actor_names: list[str] = field(default_factory=list)
@@ -78,7 +79,8 @@ class GraphCommunityDetector:
             for comm_id, member_ids in communities.items():
                 actor_names = [
                     getattr(actor_by_id[aid], "name", aid)
-                    for aid in member_ids if aid in actor_by_id
+                    for aid in member_ids
+                    if aid in actor_by_id
                 ]
 
                 # Find issues linked to community members
@@ -91,29 +93,28 @@ class GraphCommunityDetector:
                                 related_issues[issue.id] = related_issues.get(issue.id, 0) + 1
 
                 dominant_issues = [
-                    getattr(iss, "name", iss.id)
-                    for iss in issues if iss.id in related_issues
+                    getattr(iss, "name", iss.id) for iss in issues if iss.id in related_issues
                 ][:3]
 
                 key_actor = actor_names[0] if actor_names else None
-                summary_text = (
-                    f"Community {comm_id} (γ={gamma}) contains {len(member_ids)} actors"
-                )
+                summary_text = f"Community {comm_id} (γ={gamma}) contains {len(member_ids)} actors"
                 if actor_names:
                     summary_text += f" including {', '.join(actor_names[:3])}"
                 if dominant_issues:
                     summary_text += f". Key issues: {', '.join(dominant_issues)}"
 
-                all_summaries.append(CommunitySummary(
-                    community_id=comm_id,
-                    resolution=gamma,
-                    actor_names=actor_names,
-                    dominant_issues=dominant_issues,
-                    summary=summary_text,
-                    actor_count=len(member_ids),
-                    key_actor=key_actor,
-                    member_ids=member_ids,
-                ))
+                all_summaries.append(
+                    CommunitySummary(
+                        community_id=comm_id,
+                        resolution=gamma,
+                        actor_names=actor_names,
+                        dominant_issues=dominant_issues,
+                        summary=summary_text,
+                        actor_count=len(member_ids),
+                        key_actor=key_actor,
+                        member_ids=member_ids,
+                    )
+                )
 
         return all_summaries
 

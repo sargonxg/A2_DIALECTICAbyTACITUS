@@ -5,9 +5,10 @@ Enables theory-grounded analysis by matching workspace conflict patterns
 against the shared theory graph, finding applicable frameworks, similar
 conflicts, and theory-informed guidance.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -156,12 +157,10 @@ class CrossGraphQuerier:
         "What does Glasl say about conflicts at stage 5?"
     """
 
-    def __init__(self, graph_client: Any = None):
+    def __init__(self, graph_client: Any = None) -> None:
         self._graph = graph_client
 
-    async def find_applicable_theories(
-        self, workspace_id: str
-    ) -> list[TheoryMatch]:
+    async def find_applicable_theories(self, workspace_id: str) -> list[TheoryMatch]:
         """Match workspace patterns against theory frameworks."""
         matches: list[TheoryMatch] = []
 
@@ -171,30 +170,25 @@ class CrossGraphQuerier:
         for fw_id, fw_sig in FRAMEWORK_SIGNATURES.items():
             score = self._compute_relevance(features, fw_sig["indicators"])
             if score > 0.3:
-                matching = [
-                    ind for ind in fw_sig["indicators"]
-                    if features.get(ind, 0) > 0
-                ]
-                matches.append(TheoryMatch(
-                    framework_id=fw_id,
-                    framework_name=fw_sig["name"],
-                    relevance_score=score,
-                    matching_patterns=matching,
-                    guidance=fw_sig["applicable_when"],
-                ))
+                matching = [ind for ind in fw_sig["indicators"] if features.get(ind, 0) > 0]
+                matches.append(
+                    TheoryMatch(
+                        framework_id=fw_id,
+                        framework_name=fw_sig["name"],
+                        relevance_score=score,
+                        matching_patterns=matching,
+                        guidance=fw_sig["applicable_when"],
+                    )
+                )
 
         return sorted(matches, key=lambda m: m.relevance_score, reverse=True)
 
-    async def find_similar_conflicts(
-        self, workspace_id: str
-    ) -> list[SimilarConflict]:
+    async def find_similar_conflicts(self, workspace_id: str) -> list[SimilarConflict]:
         """Find structurally similar workspaces."""
         # Compute structural signature and compare
         return []
 
-    async def get_theory_guidance(
-        self, framework_id: str, workspace_id: str
-    ) -> TheoryGuidance:
+    async def get_theory_guidance(self, framework_id: str, workspace_id: str) -> TheoryGuidance:
         """Get theory-specific guidance for a workspace."""
         fw = FRAMEWORK_SIGNATURES.get(framework_id)
         if not fw:
@@ -209,9 +203,7 @@ class CrossGraphQuerier:
             intervention_strategies=[],
         )
 
-    async def explain_with_theory(
-        self, query: str, workspace_id: str
-    ) -> TheoryExplanation:
+    async def explain_with_theory(self, query: str, workspace_id: str) -> TheoryExplanation:
         """Generate a theory-grounded explanation for a query."""
         theories = await self.find_applicable_theories(workspace_id)
         lenses = [
@@ -229,9 +221,7 @@ class CrossGraphQuerier:
             confidence=theories[0].relevance_score if theories else 0.0,
         )
 
-    async def _get_workspace_features(
-        self, workspace_id: str
-    ) -> dict[str, float]:
+    async def _get_workspace_features(self, workspace_id: str) -> dict[str, float]:
         """Extract structural features from a workspace graph."""
         # Default features — in production, query the actual graph
         return {
@@ -245,9 +235,7 @@ class CrossGraphQuerier:
             "conflict_modes": 0.5,
         }
 
-    def _compute_relevance(
-        self, features: dict[str, float], indicators: list[str]
-    ) -> float:
+    def _compute_relevance(self, features: dict[str, float], indicators: list[str]) -> float:
         """Compute relevance score of a framework given workspace features."""
         if not indicators:
             return 0.0

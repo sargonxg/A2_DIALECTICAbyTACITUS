@@ -1,6 +1,7 @@
 """
 Forecaster Agent — Escalation prediction and scenario generation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,7 +9,7 @@ from datetime import datetime
 
 from dialectica_graph import GraphClient
 from dialectica_reasoning.symbolic.escalation import EscalationDetector, Forecast
-from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher, PatternMatch
+from dialectica_reasoning.symbolic.pattern_matching import PatternMatch, PatternMatcher
 
 
 @dataclass
@@ -57,7 +58,10 @@ class ForecasterAgent:
                     name="External Intervention",
                     probability=0.25,
                     description="Third-party actor intervenes to de-escalate.",
-                    trigger_conditions=["International pressure mounts", "Economic costs become prohibitive"],
+                    trigger_conditions=[
+                        "International pressure mounts",
+                        "Economic costs become prohibitive",
+                    ],
                     intervention_window="60-90 days",
                 ),
                 Scenario(

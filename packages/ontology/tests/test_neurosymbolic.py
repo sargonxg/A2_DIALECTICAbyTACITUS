@@ -15,7 +15,6 @@ from dialectica_ontology.neurosymbolic import (
     SymbolicLayer,
 )
 
-
 # ─── SymbolicComponent ────────────────────────────────────────────────────────
 
 

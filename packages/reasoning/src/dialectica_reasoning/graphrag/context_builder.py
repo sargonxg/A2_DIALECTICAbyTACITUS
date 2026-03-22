@@ -5,17 +5,26 @@ Structures retrieved entities and relationships into structured markdown section
 with citation markers [source:node_id] for provenance tracking.
 Respects context window budget (default 30K chars).
 """
+
 from __future__ import annotations
 
 from dialectica_reasoning.graphrag.retriever import RetrievalResult
-
 
 _SECTION_MODES = {
     "escalation": ["CONFLICT_STATE", "EVENTS", "ACTORS", "POWER", "CAUSAL_CHAINS"],
     "ripeness": ["CONFLICT_STATE", "PROCESSES", "TRUST", "ACTORS", "ISSUES"],
     "trust": ["TRUST", "ACTORS", "EVENTS", "POWER"],
     "power": ["POWER", "ACTORS", "ISSUES", "EVENTS"],
-    "general": ["ACTORS", "CONFLICT_STATE", "ISSUES", "EVENTS", "NARRATIVES", "POWER", "TRUST", "CAUSAL_CHAINS"],
+    "general": [
+        "ACTORS",
+        "CONFLICT_STATE",
+        "ISSUES",
+        "EVENTS",
+        "NARRATIVES",
+        "POWER",
+        "TRUST",
+        "CAUSAL_CHAINS",
+    ],
 }
 
 DEFAULT_BUDGET = 30_000
@@ -137,7 +146,14 @@ class ConflictContextBuilder:
         lines = ["## CONFLICT STATE"]
         for c in conflicts[:3]:
             lines.append(f"### {self._name(c)} {self._cite(c)}")
-            for attr in ["glasl_stage", "kriesberg_phase", "status", "violence_type", "scale", "domain"]:
+            for attr in [
+                "glasl_stage",
+                "kriesberg_phase",
+                "status",
+                "violence_type",
+                "scale",
+                "domain",
+            ]:
                 val = getattr(c, attr, None)
                 if val is not None:
                     lines.append(f"- {attr}: {val}")
@@ -152,14 +168,18 @@ class ConflictContextBuilder:
         lines = ["## ISSUES & INTERESTS"]
         for issue in issues[:10]:
             incompatibility = getattr(issue, "incompatibility", "")
-            lines.append(f"- **Issue**: {self._name(issue)} ({incompatibility}) {self._cite(issue)}")
+            lines.append(
+                f"- **Issue**: {self._name(issue)} ({incompatibility}) {self._cite(issue)}"
+            )
             desc = getattr(issue, "description", "")
             if desc:
                 lines.append(f"  {desc[:150]}")
         if interests:
             lines.append("\n**Interests:**")
             for interest in interests[:10]:
-                lines.append(f"- {self._name(interest)} ({getattr(interest, 'interest_type', '')}) {self._cite(interest)}")
+                lines.append(
+                    f"- {self._name(interest)} ({getattr(interest, 'interest_type', '')}) {self._cite(interest)}"  # noqa: E501
+                )
         return "\n".join(lines)
 
     def _fmt_events(self, events: list, edges: list) -> str:
@@ -202,7 +222,9 @@ class ConflictContextBuilder:
             props = getattr(e, "properties", {}) or {}
             domain = props.get("domain", "")
             magnitude = props.get("magnitude", getattr(e, "weight", 0) or 0)
-            lines.append(f"- {e.source_id} HAS_POWER_OVER {e.target_id} [{domain}] (magnitude: {magnitude:.2f})")
+            lines.append(
+                f"- {e.source_id} HAS_POWER_OVER {e.target_id} [{domain}] (magnitude: {magnitude:.2f})"  # noqa: E501
+            )
         return "\n".join(lines)
 
     def _fmt_trust(self, trust_nodes: list, edges: list) -> str:

@@ -1,4 +1,5 @@
 """KGE hyperparameters."""
+
 from dataclasses import dataclass
 
 

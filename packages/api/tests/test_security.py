@@ -2,6 +2,7 @@
 Security-focused tests — authentication, authorization, injection prevention,
 CORS, security headers.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,12 +18,19 @@ STANDARD_KEY = "test-standard-key-sec"
 READONLY_KEY = "test-readonly-key-sec"
 EXPIRED_KEY = "test-expired-key-sec"
 
-_KEYS_JSON = json.dumps([
-    {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
-    {"key": STANDARD_KEY, "level": "standard", "tenant_id": "tenant-1"},
-    {"key": READONLY_KEY, "level": "readonly", "tenant_id": "tenant-2"},
-    {"key": EXPIRED_KEY, "level": "standard", "tenant_id": "tenant-3", "expires_at": "2020-01-01T00:00:00Z"},
-])
+_KEYS_JSON = json.dumps(
+    [
+        {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
+        {"key": STANDARD_KEY, "level": "standard", "tenant_id": "tenant-1"},
+        {"key": READONLY_KEY, "level": "readonly", "tenant_id": "tenant-2"},
+        {
+            "key": EXPIRED_KEY,
+            "level": "standard",
+            "tenant_id": "tenant-3",
+            "expires_at": "2020-01-01T00:00:00Z",
+        },
+    ]
+)
 
 _ENV = {
     "ADMIN_API_KEY": ADMIN_KEY,
@@ -36,8 +44,10 @@ _ENV = {
 
 def _make_app():
     import dialectica_api.middleware.rate_limit as rl_mod
+
     rl_mod._backend = None
     from dialectica_api.main import create_app
+
     return create_app()
 
 
@@ -46,6 +56,7 @@ async def client():
     with patch.dict(os.environ, _ENV, clear=False):
         app = _make_app()
         from dialectica_api.deps import get_graph_client
+
         app.dependency_overrides[get_graph_client] = lambda: None
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as ac:

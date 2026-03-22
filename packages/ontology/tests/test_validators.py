@@ -2,18 +2,16 @@
 
 from datetime import datetime
 
-from dialectica_ontology.primitives import Actor, Conflict, Event
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 from dialectica_ontology.enums import (
     ActorType,
     ConflictDomain,
     ConflictScale,
     ConflictStatus,
-    EventType,
 )
+from dialectica_ontology.primitives import Actor, Conflict
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 from dialectica_ontology.tiers import OntologyTier
 from dialectica_ontology.validators import (
-    validate_relationship_types,
     validate_subgraph,
     validate_temporal_consistency,
     validate_tier_compliance,
@@ -98,8 +96,8 @@ def test_validate_tier_compliance_essential():
 
 
 def test_validate_tier_compliance_violation():
+    from dialectica_ontology.enums import EmotionIntensity, PrimaryEmotion
     from dialectica_ontology.primitives import EmotionalState
-    from dialectica_ontology.enums import PrimaryEmotion, EmotionIntensity
 
     es = EmotionalState(
         primary_emotion=PrimaryEmotion.ANGER,

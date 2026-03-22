@@ -7,10 +7,10 @@ Used for data import/export and interoperability with existing conflict database
 ACLED (Armed Conflict Location & Event Data) uses 6 top-level event types,
 each with sub-event types, plus an actor type taxonomy.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.enums import ActorType, EventType
-
 
 # ─── ACLED event type + sub-type -> DIALECTICA EventType ─────────────────────
 
@@ -93,6 +93,7 @@ _DIALECTICA_ACTOR_TO_ACLED: dict[ActorType, list[str]] = {
 
 
 # ─── Public API ──────────────────────────────────────────────────────────────
+
 
 def acled_to_dialectica(acled_event_type: str, acled_sub_type: str) -> EventType:
     """Convert an ACLED event type and sub-type to a DIALECTICA EventType.

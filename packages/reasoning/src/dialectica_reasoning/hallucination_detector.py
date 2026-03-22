@@ -8,6 +8,7 @@ When the OAG engine generates a response:
   4. Compute overall hallucination rate
   5. Flag responses above threshold
 """
+
 from __future__ import annotations
 
 import re
@@ -83,7 +84,7 @@ class HallucinationDetector:
         patterns = [
             r"(\b[A-Z][A-Za-z\s]+)\s+is\s+([a-z][^.!?]+)",
             r"(\b[A-Z][A-Za-z\s]+)\s+has\s+([a-z][^.!?]+)",
-            r"(\b[A-Z][A-Za-z\s]+)\s+(attacked|threatened|supported|cooperated with|allied with|opposed)\s+([A-Z][A-Za-z\s]+)",
+            r"(\b[A-Z][A-Za-z\s]+)\s+(attacked|threatened|supported|cooperated with|allied with|opposed)\s+([A-Z][A-Za-z\s]+)",  # noqa: E501
         ]
 
         seen: set[tuple[str, str, str]] = set()
@@ -103,24 +104,28 @@ class HallucinationDetector:
                 key = (subject.lower(), predicate.lower(), obj.lower())
                 if key not in seen:
                     seen.add(key)
-                    claims.append(AtomicClaim(
-                        subject=subject,
-                        predicate=predicate,
-                        obj=obj,
-                        raw_text=match.group(0),
-                    ))
+                    claims.append(
+                        AtomicClaim(
+                            subject=subject,
+                            predicate=predicate,
+                            obj=obj,
+                            raw_text=match.group(0),
+                        )
+                    )
 
         # Fallback: extract capitalized entity pairs
         if not claims:
-            entities = re.findall(r'\b([A-Z][A-Za-z\s]{2,})\b', response_text)
+            entities = re.findall(r"\b([A-Z][A-Za-z\s]{2,})\b", response_text)
             entities = list(dict.fromkeys(e.strip() for e in entities))[:10]
             for entity in entities[:5]:
-                claims.append(AtomicClaim(
-                    subject=entity,
-                    predicate="mentioned_in_context",
-                    obj="conflict_graph",
-                    raw_text=entity,
-                ))
+                claims.append(
+                    AtomicClaim(
+                        subject=entity,
+                        predicate="mentioned_in_context",
+                        obj="conflict_graph",
+                        raw_text=entity,
+                    )
+                )
 
         return claims[:20]  # Cap at 20 claims
 
@@ -154,11 +159,13 @@ class HallucinationDetector:
                     subject_ids.extend(ids)
 
             if not subject_ids:
-                verifications.append(ClaimVerification(
-                    claim=claim,
-                    status=ClaimStatus.UNSUPPORTED,
-                    explanation=f"Subject '{claim.subject}' not found in workspace graph.",
-                ))
+                verifications.append(
+                    ClaimVerification(
+                        claim=claim,
+                        status=ClaimStatus.UNSUPPORTED,
+                        explanation=f"Subject '{claim.subject}' not found in workspace graph.",
+                    )
+                )
                 continue
 
             # Check if object exists
@@ -169,12 +176,14 @@ class HallucinationDetector:
 
             if claim.predicate in ("is", "mentioned_in_context", "has"):
                 # For existence claims, subject existing is sufficient
-                verifications.append(ClaimVerification(
-                    claim=claim,
-                    status=ClaimStatus.SUPPORTED,
-                    evidence_ids=subject_ids[:3],
-                    explanation=f"Subject '{claim.subject}' exists in graph.",
-                ))
+                verifications.append(
+                    ClaimVerification(
+                        claim=claim,
+                        status=ClaimStatus.SUPPORTED,
+                        evidence_ids=subject_ids[:3],
+                        explanation=f"Subject '{claim.subject}' exists in graph.",
+                    )
+                )
             elif obj_ids:
                 # Check if edge exists between subject and object
                 edge_found = any(
@@ -184,24 +193,30 @@ class HallucinationDetector:
                     for p in [claim.predicate.lower(), claim.predicate.upper()]
                 )
                 if edge_found:
-                    verifications.append(ClaimVerification(
-                        claim=claim,
-                        status=ClaimStatus.SUPPORTED,
-                        evidence_ids=subject_ids[:2] + obj_ids[:2],
-                        explanation="Relationship found in graph.",
-                    ))
+                    verifications.append(
+                        ClaimVerification(
+                            claim=claim,
+                            status=ClaimStatus.SUPPORTED,
+                            evidence_ids=subject_ids[:2] + obj_ids[:2],
+                            explanation="Relationship found in graph.",
+                        )
+                    )
                 else:
-                    verifications.append(ClaimVerification(
+                    verifications.append(
+                        ClaimVerification(
+                            claim=claim,
+                            status=ClaimStatus.UNSUPPORTED,
+                            explanation=f"Relationship '{claim.predicate}' between '{claim.subject}' and '{claim.obj}' not found.",  # noqa: E501
+                        )
+                    )
+            else:
+                verifications.append(
+                    ClaimVerification(
                         claim=claim,
                         status=ClaimStatus.UNSUPPORTED,
-                        explanation=f"Relationship '{claim.predicate}' between '{claim.subject}' and '{claim.obj}' not found.",
-                    ))
-            else:
-                verifications.append(ClaimVerification(
-                    claim=claim,
-                    status=ClaimStatus.UNSUPPORTED,
-                    explanation=f"Object '{claim.obj}' not found in workspace graph.",
-                ))
+                        explanation=f"Object '{claim.obj}' not found in workspace graph.",
+                    )
+                )
 
         return verifications
 
@@ -229,7 +244,7 @@ class HallucinationDetector:
         ]
         if flagged:
             summary_parts.append(
-                f"⚠️ Response flagged: hallucination rate {rate:.1%} exceeds threshold {threshold:.1%}."
+                f"⚠️ Response flagged: hallucination rate {rate:.1%} exceeds threshold {threshold:.1%}."  # noqa: E501
             )
 
         return HallucinationReport(

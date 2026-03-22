@@ -8,6 +8,7 @@ F1 scores per node type, per edge type, and overall.
 Corpora: jcpoa, romeo_juliet, crime_punishment, war_peace, custom
 Tiers: essential (nodes only), standard (nodes + edges), full (nodes + edges + properties)
 """
+
 from __future__ import annotations
 
 import json
@@ -19,14 +20,15 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class MetricScore:
     """Precision / Recall / F1 for a category."""
+
     precision: float = 0.0
     recall: float = 0.0
     f1: float = 0.0
@@ -38,6 +40,7 @@ class MetricScore:
 @dataclass
 class BenchmarkMetrics:
     """Aggregated benchmark evaluation results."""
+
     overall: MetricScore = field(default_factory=MetricScore)
     by_node_type: dict[str, MetricScore] = field(default_factory=dict)
     by_edge_type: dict[str, MetricScore] = field(default_factory=dict)
@@ -50,6 +53,7 @@ class BenchmarkMetrics:
 @dataclass
 class BenchmarkResult:
     """Full benchmark run result."""
+
     benchmark_id: str = ""
     corpus_id: str = ""
     tier: str = "standard"
@@ -77,6 +81,7 @@ VALID_CORPUS_IDS = {"jcpoa", "romeo_juliet", "crime_punishment", "war_peace", "c
 # ---------------------------------------------------------------------------
 # Similarity helpers
 # ---------------------------------------------------------------------------
+
 
 def _name_similarity(a: str, b: str) -> float:
     """Fuzzy string similarity ratio between two names."""
@@ -108,6 +113,7 @@ def _score_from_counts(tp: int, fp: int, fn: int) -> MetricScore:
 # BenchmarkRunner
 # ---------------------------------------------------------------------------
 
+
 class BenchmarkRunner:
     """Orchestrates benchmark evaluation of the DIALECTICA extraction pipeline.
 
@@ -122,8 +128,7 @@ class BenchmarkRunner:
         """Load gold-standard annotation from data/seed/benchmarks/."""
         if corpus_id not in _CORPUS_FILES:
             raise ValueError(
-                f"Unknown corpus_id '{corpus_id}'. "
-                f"Valid options: {sorted(_CORPUS_FILES.keys())}"
+                f"Unknown corpus_id '{corpus_id}'. Valid options: {sorted(_CORPUS_FILES.keys())}"
             )
         path = _BENCHMARKS_DIR / _CORPUS_FILES[corpus_id]
         if not path.exists():
@@ -155,9 +160,7 @@ class BenchmarkRunner:
         # Load gold standard
         if corpus_id == "custom":
             if not custom_text or not custom_gold:
-                raise ValueError(
-                    "corpus_id='custom' requires custom_text and custom_gold."
-                )
+                raise ValueError("corpus_id='custom' requires custom_text and custom_gold.")
             gold = custom_gold
             source_text = custom_text
         else:
@@ -168,9 +171,7 @@ class BenchmarkRunner:
         gold_edges: list[dict[str, Any]] = gold.get("gold_edges", [])
 
         # Run extraction pipeline (stubbed — returns simulated results)
-        extracted_nodes, extracted_edges = await self._run_extraction(
-            source_text, tier, model
-        )
+        extracted_nodes, extracted_edges = await self._run_extraction(source_text, tier, model)
 
         # Compare
         node_metrics = self.compare_nodes(gold_nodes, extracted_nodes)
@@ -451,8 +452,7 @@ class BenchmarkRunner:
         tp = 0
         for gs, gt in gold_connected:
             for es, et in ext_connected:
-                if (self._edge_endpoint_matches(es, gs) and
-                        self._edge_endpoint_matches(et, gt)):
+                if self._edge_endpoint_matches(es, gs) and self._edge_endpoint_matches(et, gt):
                     tp += 1
                     break
 

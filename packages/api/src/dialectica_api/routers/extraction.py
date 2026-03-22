@@ -4,6 +4,7 @@ Extraction Router — Text and document extraction endpoints.
 POST /v1/extract publishes to Pub/Sub for async processing.
 GET /v1/extract/{job_id}/status checks job state in Redis.
 """
+
 from __future__ import annotations
 
 import json
@@ -16,7 +17,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from dialectica_api.deps import get_graph_client, get_current_tenant
+from dialectica_api.deps import get_current_tenant, get_graph_client
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ def _publish_to_pubsub(message: dict[str, Any]) -> bool:
     """Publish a message to the extraction Pub/Sub topic."""
     try:
         from google.cloud import pubsub_v1
+
         publisher = pubsub_v1.PublisherClient()
         topic_path = publisher.topic_path(GCP_PROJECT_ID, PUBSUB_TOPIC)
         data = json.dumps(message).encode("utf-8")
@@ -77,8 +79,8 @@ def _get_job(job_id: str) -> dict[str, Any] | None:
 async def extract_text(
     workspace_id: str,
     body: ExtractRequest,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> ExtractionJob:
     """Extract conflict entities from text — queues for async processing."""
     job_id = str(uuid.uuid4())[:8]
@@ -142,10 +144,10 @@ async def extract_text(
 @router.post("/extract/document", response_model=ExtractionJob, status_code=202)
 async def extract_document(
     workspace_id: str,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     tier: str = "standard",
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> ExtractionJob:
     """Extract conflict entities from an uploaded document."""
     content = await file.read()
@@ -180,21 +182,17 @@ async def extract_document(
 @router.get("/extractions", response_model=list[ExtractionJob])
 async def list_jobs(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
 ) -> list[ExtractionJob]:
     """List extraction jobs for a workspace."""
-    return [
-        ExtractionJob(**j)
-        for j in _jobs.values()
-        if j["workspace_id"] == workspace_id
-    ]
+    return [ExtractionJob(**j) for j in _jobs.values() if j["workspace_id"] == workspace_id]
 
 
 @router.get("/extractions/{job_id}", response_model=ExtractionJob)
 async def get_job(
     workspace_id: str,
     job_id: str,
-    tenant_id: str = Depends(get_current_tenant),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
 ) -> ExtractionJob:
     """Get status of an extraction job."""
     job = _get_job(job_id)

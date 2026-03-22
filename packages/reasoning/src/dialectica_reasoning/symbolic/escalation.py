@@ -5,6 +5,7 @@ Maps workspace graph data (emotional states, event frequency, violence types,
 coalition formation) to Glasl's 9-stage escalation model and produces
 forward-looking trajectory forecasts.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -24,10 +25,10 @@ from dialectica_ontology.primitives import (
 )
 from dialectica_ontology.relationships import EdgeType
 
-
 # ---------------------------------------------------------------------------
 # Result data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class GlaslAssessment:
@@ -80,8 +81,12 @@ _TOXIC_EMOTIONS: set[str] = {
 }
 
 _CONFLICT_EVENT_TYPES: set[str] = {
-    "threaten", "protest", "exhibit_force_posture",
-    "reduce_relations", "coerce", "assault",
+    "threaten",
+    "protest",
+    "exhibit_force_posture",
+    "reduce_relations",
+    "coerce",
+    "assault",
 }
 
 _GLASL_ORDERED: list[GlaslStage] = list(GlaslStage)
@@ -90,6 +95,7 @@ _GLASL_ORDERED: list[GlaslStage] = list(GlaslStage)
 # ---------------------------------------------------------------------------
 # Detector
 # ---------------------------------------------------------------------------
+
 
 class EscalationDetector:
     """Computes Glasl stage, detects escalation signals, and forecasts trajectory."""
@@ -206,29 +212,33 @@ class EscalationDetector:
 
         high_severity = [e for e in recent_events if getattr(e, "severity", 0) >= 0.7]
         if high_severity:
-            signals.append(Signal(
-                signal_type="high_severity_events",
-                description=f"{len(high_severity)} high-severity events in the last {window_days} days.",
-                severity=0.8,
-                timestamp=max(getattr(e, "occurred_at", cutoff) for e in high_severity),
-                evidence_ids=[e.id for e in high_severity],
-            ))
+            signals.append(
+                Signal(
+                    signal_type="high_severity_events",
+                    description=f"{len(high_severity)} high-severity events in the last {window_days} days.",  # noqa: E501
+                    severity=0.8,
+                    timestamp=max(getattr(e, "occurred_at", cutoff) for e in high_severity),
+                    evidence_ids=[e.id for e in high_severity],
+                )
+            )
 
         # Increasing event frequency (compare first half vs second half of window)
         mid = cutoff + timedelta(days=window_days // 2)
         first_half = [e for e in recent_events if getattr(e, "occurred_at", cutoff) < mid]
         second_half = [e for e in recent_events if getattr(e, "occurred_at", cutoff) >= mid]
         if len(first_half) > 0 and len(second_half) > len(first_half) * 1.5:
-            signals.append(Signal(
-                signal_type="accelerating_event_frequency",
-                description=(
-                    f"Event frequency accelerating: {len(first_half)} events in first half "
-                    f"vs {len(second_half)} in second half of window."
-                ),
-                severity=0.6,
-                timestamp=datetime.utcnow(),
-                evidence_ids=[e.id for e in second_half[:5]],
-            ))
+            signals.append(
+                Signal(
+                    signal_type="accelerating_event_frequency",
+                    description=(
+                        f"Event frequency accelerating: {len(first_half)} events in first half "
+                        f"vs {len(second_half)} in second half of window."
+                    ),
+                    severity=0.6,
+                    timestamp=datetime.utcnow(),
+                    evidence_ids=[e.id for e in second_half[:5]],
+                )
+            )
 
         # Toxic emotional escalation
         recent_toxic = []
@@ -240,25 +250,29 @@ class EscalationDetector:
                 if pe in _TOXIC_EMOTIONS:
                     recent_toxic.append(es)
         if len(recent_toxic) >= 3:
-            signals.append(Signal(
-                signal_type="emotional_toxicity",
-                description=f"{len(recent_toxic)} toxic emotional states recorded recently.",
-                severity=0.7,
-                timestamp=datetime.utcnow(),
-                evidence_ids=[es.id for es in recent_toxic[:5]],
-            ))
+            signals.append(
+                Signal(
+                    signal_type="emotional_toxicity",
+                    description=f"{len(recent_toxic)} toxic emotional states recorded recently.",
+                    severity=0.7,
+                    timestamp=datetime.utcnow(),
+                    evidence_ids=[es.id for es in recent_toxic[:5]],
+                )
+            )
 
         # Coalition formation signals
         allied = [e for e in edges if e.type == EdgeType.ALLIED_WITH]
         opposed = [e for e in edges if e.type == EdgeType.OPPOSED_TO]
         if len(allied) >= 2 and len(opposed) >= 1:
-            signals.append(Signal(
-                signal_type="coalition_polarisation",
-                description="Multiple alliances with opposition detected — coalition formation underway.",
-                severity=0.6,
-                timestamp=datetime.utcnow(),
-                evidence_ids=[e.id for e in allied[:3]] + [e.id for e in opposed[:2]],
-            ))
+            signals.append(
+                Signal(
+                    signal_type="coalition_polarisation",
+                    description="Multiple alliances with opposition detected — coalition formation underway.",  # noqa: E501
+                    severity=0.6,
+                    timestamp=datetime.utcnow(),
+                    evidence_ids=[e.id for e in allied[:3]] + [e.id for e in opposed[:2]],
+                )
+            )
 
         return signals
 
@@ -292,11 +306,13 @@ class EscalationDetector:
             predicted = current_stage_num + velocity * month_offset
             clamped = max(1, min(9, round(predicted)))
             conf = max(0.1, assessment.confidence - 0.15 * month_offset)
-            trajectory.append(TrajectoryPoint(
-                timestamp=now + timedelta(days=30 * month_offset),
-                predicted_stage=clamped,
-                confidence=round(conf, 3),
-            ))
+            trajectory.append(
+                TrajectoryPoint(
+                    timestamp=now + timedelta(days=30 * month_offset),
+                    predicted_stage=clamped,
+                    confidence=round(conf, 3),
+                )
+            )
 
         return Forecast(
             trajectory=trajectory,

@@ -1,10 +1,9 @@
 """Tests for metering middleware and API key management."""
+
 from __future__ import annotations
 
-import pytest
-
 from dialectica_api.middleware.metering import _classify_operation
-from dialectica_api.routers.api_keys import _generate_key, VALID_SCOPES
+from dialectica_api.routers.api_keys import VALID_SCOPES, _generate_key
 
 
 class TestMeteringClassification:

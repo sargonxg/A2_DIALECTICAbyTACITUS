@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from dialectica_ontology.theory.base import TheoryFramework
 
-
 BASIC_NEEDS: dict[str, dict[str, str]] = {
     "security": {
         "description": "Physical safety and predictability of environment",

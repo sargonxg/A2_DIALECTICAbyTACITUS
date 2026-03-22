@@ -11,6 +11,7 @@ Uses:
 Multi-tenant: All Cypher queries include {tenant_id: $tid} property filter.
 Supports both Neo4j Aura and self-hosted FalkorDB (Cypher-compatible).
 """
+
 from __future__ import annotations
 
 import json
@@ -19,9 +20,6 @@ from datetime import datetime
 from typing import Any
 
 from neo4j import AsyncGraphDatabase, AsyncSession
-
-from dialectica_ontology.primitives import NODE_TYPES, ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 from dialectica_graph.interface import GraphClient
 from dialectica_graph.models import (
@@ -32,6 +30,8 @@ from dialectica_graph.models import (
     SubgraphResult,
     WorkspaceStats,
 )
+from dialectica_ontology.primitives import NODE_TYPES, ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 logger = logging.getLogger(__name__)
 
@@ -160,9 +160,7 @@ class Neo4jGraphClient(GraphClient):
 
     # ── Node CRUD ──────────────────────────────────────────────────────────
 
-    async def upsert_node(
-        self, node: ConflictNode, workspace_id: str, tenant_id: str
-    ) -> str:
+    async def upsert_node(self, node: ConflictNode, workspace_id: str, tenant_id: str) -> str:
         props = _node_to_props(node, workspace_id, tenant_id)
         label = node.label or "ConflictNode"
         cypher = (
@@ -181,14 +179,11 @@ class Neo4jGraphClient(GraphClient):
             await session.run(cypher, params)
         return node.id
 
-    async def delete_node(
-        self, node_id: str, workspace_id: str, hard: bool = False
-    ) -> bool:
+    async def delete_node(self, node_id: str, workspace_id: str, hard: bool = False) -> bool:
         async with self._session() as session:
             if hard:
                 await session.run(
-                    "MATCH (n:ConflictNode {id: $nid, workspace_id: $ws}) "
-                    "DETACH DELETE n",
+                    "MATCH (n:ConflictNode {id: $nid, workspace_id: $ws}) DETACH DELETE n",
                     {"nid": node_id, "ws": workspace_id},
                 )
             else:
@@ -199,9 +194,7 @@ class Neo4jGraphClient(GraphClient):
                 )
         return True
 
-    async def get_node(
-        self, node_id: str, workspace_id: str
-    ) -> ConflictNode | None:
+    async def get_node(self, node_id: str, workspace_id: str) -> ConflictNode | None:
         cypher = (
             "MATCH (n:ConflictNode {id: $nid, workspace_id: $ws}) "
             "WHERE n.deleted_at IS NULL "
@@ -347,7 +340,7 @@ class Neo4jGraphClient(GraphClient):
             "WHERE node.workspace_id = $ws AND node.deleted_at IS NULL "
         )
         if label:
-            cypher += f"AND node.label = $lbl "
+            cypher += "AND node.label = $lbl "
         cypher += "RETURN properties(node) AS props, score ORDER BY score DESC"
 
         params: dict[str, Any] = {"k": top_k, "emb": embedding, "ws": workspace_id}
@@ -369,9 +362,7 @@ class Neo4jGraphClient(GraphClient):
 
     # ── Raw Query ──────────────────────────────────────────────────────────
 
-    async def execute_query(
-        self, query: str, params: dict | None = None
-    ) -> list[dict]:
+    async def execute_query(self, query: str, params: dict | None = None) -> list[dict]:
         async with self._session() as session:
             result = await session.run(query, params or {})
             return await result.data()
@@ -405,9 +396,7 @@ class Neo4jGraphClient(GraphClient):
         stats.compute_density()
         return stats
 
-    async def get_actor_network(
-        self, actor_id: str, workspace_id: str
-    ) -> ActorNetworkResult:
+    async def get_actor_network(self, actor_id: str, workspace_id: str) -> ActorNetworkResult:
         actor = await self.get_node(actor_id, workspace_id)
         if actor is None:
             raise ValueError(f"Actor {actor_id} not found")
@@ -440,8 +429,7 @@ class Neo4jGraphClient(GraphClient):
 
         # Degree centrality
         degree_cypher = (
-            "MATCH (a:Actor {id: $aid, workspace_id: $ws})-[r]-() "
-            "RETURN count(r) AS degree"
+            "MATCH (a:Actor {id: $aid, workspace_id: $ws})-[r]-() RETURN count(r) AS degree"
         )
         total_cypher = (
             "MATCH (n:Actor {workspace_id: $ws}) "
@@ -465,10 +453,7 @@ class Neo4jGraphClient(GraphClient):
         start: datetime | None = None,
         end: datetime | None = None,
     ) -> list[ConflictNode]:
-        cypher = (
-            "MATCH (n:Event {workspace_id: $ws}) "
-            "WHERE n.deleted_at IS NULL "
-        )
+        cypher = "MATCH (n:Event {workspace_id: $ws}) WHERE n.deleted_at IS NULL "
         params: dict[str, Any] = {"ws": workspace_id}
 
         if start:
@@ -486,9 +471,7 @@ class Neo4jGraphClient(GraphClient):
 
         return [_record_to_node(r["props"]) for r in records]
 
-    async def get_escalation_trajectory(
-        self, workspace_id: str
-    ) -> EscalationResult:
+    async def get_escalation_trajectory(self, workspace_id: str) -> EscalationResult:
         cypher = (
             "MATCH (n:Conflict {workspace_id: $ws}) "
             "WHERE n.deleted_at IS NULL AND n.glasl_stage IS NOT NULL "
@@ -501,12 +484,15 @@ class Neo4jGraphClient(GraphClient):
         trajectory: list[EscalationTrajectoryPoint] = []
         for rec in records:
             props = rec["props"]
-            trajectory.append(EscalationTrajectoryPoint(
-                timestamp=datetime.fromisoformat(props["created_at"])
-                if isinstance(props.get("created_at"), str) else datetime.utcnow(),
-                glasl_stage=int(props["glasl_stage"]),
-                evidence=props.get("name", props.get("id", "")),
-            ))
+            trajectory.append(
+                EscalationTrajectoryPoint(
+                    timestamp=datetime.fromisoformat(props["created_at"])
+                    if isinstance(props.get("created_at"), str)
+                    else datetime.utcnow(),
+                    glasl_stage=int(props["glasl_stage"]),
+                    evidence=props.get("name", props.get("id", "")),
+                )
+            )
 
         esc = EscalationResult(trajectory=trajectory)
         if trajectory:
@@ -515,7 +501,9 @@ class Neo4jGraphClient(GraphClient):
                 delta = trajectory[-1].glasl_stage - trajectory[0].glasl_stage
                 dt = (trajectory[-1].timestamp - trajectory[0].timestamp).days / 30.0
                 esc.velocity = delta / dt if dt > 0 else 0.0
-                esc.direction = "escalating" if delta > 0 else ("de-escalating" if delta < 0 else "stable")
+                esc.direction = (
+                    "escalating" if delta > 0 else ("de-escalating" if delta < 0 else "stable")
+                )
 
         return esc
 

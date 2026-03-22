@@ -6,12 +6,13 @@ Health Router — Liveness, readiness, and deep health check endpoints.
 /health/ready — Readiness probe (200 when graph connected, 503 otherwise)
 /health/deep  — Deep check including Vertex AI, Pub/Sub, GCS
 """
+
 from __future__ import annotations
 
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Response
@@ -67,8 +68,8 @@ class DeepHealthResponse(BaseModel):
 @router.get("/health", response_model=HealthResponse, include_in_schema=True)
 async def health_check(
     response: Response,
-    settings: Any = Depends(get_settings),
-    graph_client: Any = Depends(get_graph_client),
+    settings: Any = Depends(get_settings),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> HealthResponse:
     """Full health check with dependency status. Returns 503 if critical services down."""
     env = os.getenv("ENVIRONMENT", "development")
@@ -97,7 +98,7 @@ async def health_check(
         status=status,
         environment=env,
         graph_backend=settings.graph_backend,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         uptime_seconds=round(uptime, 1),
         checks=checks,
     )
@@ -112,8 +113,8 @@ async def liveness_check() -> LiveResponse:
 @router.get("/health/ready", response_model=ReadinessResponse)
 async def readiness_check(
     response: Response,
-    settings: Any = Depends(get_settings),
-    graph_client: Any = Depends(get_graph_client),
+    settings: Any = Depends(get_settings),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> ReadinessResponse:
     """Readiness check — 200 when Neo4j is connected, 503 otherwise."""
     checks: list[ServiceCheck] = []
@@ -135,8 +136,8 @@ async def readiness_check(
 
 @router.get("/health/deep", response_model=DeepHealthResponse)
 async def deep_health_check(
-    settings: Any = Depends(get_settings),
-    graph_client: Any = Depends(get_graph_client),
+    settings: Any = Depends(get_settings),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> DeepHealthResponse:
     """Deep health check — full system connectivity verification."""
     checks: list[ServiceCheck] = []
@@ -171,15 +172,19 @@ async def _check_graph(graph_client: Any, settings: Any) -> ServiceCheck:
             await graph_client.get_nodes("__health__", limit=1)
             latency = (time.time() - start) * 1000
             return ServiceCheck(
-                service=service_name, status="up",
-                latency_ms=round(latency, 1), details="connected",
+                service=service_name,
+                status="up",
+                latency_ms=round(latency, 1),
+                details="connected",
             )
         return ServiceCheck(service=service_name, status="unavailable", details="no client")
     except Exception as e:
         latency = (time.time() - start) * 1000
         return ServiceCheck(
-            service=service_name, status="down",
-            latency_ms=round(latency, 1), details=str(e)[:100],
+            service=service_name,
+            status="down",
+            latency_ms=round(latency, 1),
+            details=str(e)[:100],
         )
 
 
@@ -188,6 +193,7 @@ async def _check_redis() -> ServiceCheck:
     start = time.time()
     try:
         import redis
+
         url = os.getenv("REDIS_URL", "redis://localhost:6379")
         r = redis.from_url(url, socket_timeout=2)
         r.ping()
@@ -196,8 +202,10 @@ async def _check_redis() -> ServiceCheck:
     except Exception as e:
         latency = (time.time() - start) * 1000
         return ServiceCheck(
-            service="redis", status="down",
-            latency_ms=round(latency, 1), details=str(e)[:100],
+            service="redis",
+            status="down",
+            latency_ms=round(latency, 1),
+            details=str(e)[:100],
         )
 
 
@@ -205,14 +213,17 @@ async def _check_vertex_ai() -> ServiceCheck:
     start = time.time()
     try:
         import vertexai
+
         vertexai.init()
         latency = (time.time() - start) * 1000
         return ServiceCheck(service="vertex_ai", status="up", latency_ms=round(latency, 1))
     except Exception as e:
         latency = (time.time() - start) * 1000
         return ServiceCheck(
-            service="vertex_ai", status="down",
-            latency_ms=round(latency, 1), details=str(e)[:100],
+            service="vertex_ai",
+            status="down",
+            latency_ms=round(latency, 1),
+            details=str(e)[:100],
         )
 
 
@@ -220,6 +231,7 @@ async def _check_pubsub() -> ServiceCheck:
     start = time.time()
     try:
         from google.cloud import pubsub_v1
+
         project = os.getenv("GCP_PROJECT_ID", "")
         publisher = pubsub_v1.PublisherClient()
         topic_path = publisher.topic_path(project, "dialectica-extraction-requests")
@@ -229,8 +241,10 @@ async def _check_pubsub() -> ServiceCheck:
     except Exception as e:
         latency = (time.time() - start) * 1000
         return ServiceCheck(
-            service="pubsub", status="down",
-            latency_ms=round(latency, 1), details=str(e)[:100],
+            service="pubsub",
+            status="down",
+            latency_ms=round(latency, 1),
+            details=str(e)[:100],
         )
 
 
@@ -238,6 +252,7 @@ async def _check_gcs() -> ServiceCheck:
     start = time.time()
     try:
         from google.cloud import storage
+
         bucket_name = os.getenv("GCS_DOCUMENTS_BUCKET", "dialectica-documents")
         client = storage.Client()
         client.get_bucket(bucket_name)
@@ -246,6 +261,8 @@ async def _check_gcs() -> ServiceCheck:
     except Exception as e:
         latency = (time.time() - start) * 1000
         return ServiceCheck(
-            service="gcs", status="down",
-            latency_ms=round(latency, 1), details=str(e)[:100],
+            service="gcs",
+            status="down",
+            latency_ms=round(latency, 1),
+            details=str(e)[:100],
         )

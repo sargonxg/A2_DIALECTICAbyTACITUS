@@ -5,6 +5,7 @@ Friedrich Glasl's 9-stage model of conflict escalation.
 Each stage belongs to one of three levels (win-win, win-lose, lose-lose)
 and maps to appropriate intervention strategies.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -248,7 +249,7 @@ class GlaslFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="How would you describe the current intensity of the conflict on a scale of 1-10?",
+                question="How would you describe the current intensity of the conflict on a scale of 1-10?",  # noqa: E501
                 framework=self.name,
                 purpose="Estimate escalation stage",
                 response_type="scale",

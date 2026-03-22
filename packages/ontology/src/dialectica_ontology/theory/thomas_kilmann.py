@@ -5,6 +5,7 @@ Kenneth Thomas and Ralph Kilmann's Conflict Mode Instrument (TKI).
 Five conflict-handling modes mapped along two dimensions:
 assertiveness (concern for self) and cooperativeness (concern for other).
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -35,7 +36,7 @@ MODES: dict[str, dict[str, object]] = {
     "compromising": {
         "assertiveness": "medium",
         "cooperativeness": "medium",
-        "description": "Finding an expedient, mutually acceptable solution that partially satisfies both.",
+        "description": "Finding an expedient, mutually acceptable solution that partially satisfies both.",  # noqa: E501
         "when_appropriate": (
             "When goals are moderately important, when opponents with equal "
             "power are committed to mutually exclusive goals, or as a temporary settlement."
@@ -194,7 +195,7 @@ class ThomasKilmannFramework(TheoryFramework):
                 response_type="scale",
             ),
             DiagnosticQuestion(
-                question="How important is maintaining the relationship with the other party (1-10)?",
+                question="How important is maintaining the relationship with the other party (1-10)?",  # noqa: E501
                 framework=self.name,
                 purpose="Assess relationship importance for mode selection",
                 response_type="scale",

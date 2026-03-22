@@ -4,6 +4,7 @@ Plutchik Theory Framework — DIALECTICA implementation.
 Robert Plutchik's wheel of emotions: 8 primary emotions arranged in
 opposite pairs, with dyads formed by combining adjacent emotions.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -13,8 +14,14 @@ from dialectica_ontology.theory.base import (
 
 # 8 primary emotions in wheel order
 PRIMARY_EMOTIONS: list[str] = [
-    "joy", "trust", "fear", "surprise",
-    "sadness", "disgust", "anger", "anticipation",
+    "joy",
+    "trust",
+    "fear",
+    "surprise",
+    "sadness",
+    "disgust",
+    "anger",
+    "anticipation",
 ]
 
 # Opposite pairs
@@ -141,7 +148,7 @@ class PlutchikFramework(TheoryFramework):
         # Find dyads among present emotions
         detected_dyads = {}
         for i, e1 in enumerate(present):
-            for e2 in present[i + 1:]:
+            for e2 in present[i + 1 :]:
                 dyad = self.get_dyad(e1, e2)
                 if dyad:
                     detected_dyads[dyad] = (e1, e2)
@@ -201,7 +208,9 @@ class PlutchikFramework(TheoryFramework):
             )
 
         if not emotions:
-            recommendations.append("No emotional data provided. Explore the emotional dimensions of the conflict.")
+            recommendations.append(
+                "No emotional data provided. Explore the emotional dimensions of the conflict."
+            )
 
         return {
             "emotional_landscape": landscape,
@@ -221,7 +230,7 @@ class PlutchikFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="What primary emotions are each party experiencing (joy, trust, fear, surprise, sadness, disgust, anger, anticipation)?",
+                question="What primary emotions are each party experiencing (joy, trust, fear, surprise, sadness, disgust, anger, anticipation)?",  # noqa: E501
                 framework=self.name,
                 purpose="Map the emotional landscape",
                 response_type="open",

@@ -1,22 +1,24 @@
 """Tests for GraphRAG retriever, context builder, and community detector."""
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 from datetime import datetime
-from unittest.mock import MagicMock, AsyncMock
-from dataclasses import dataclass, field
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from dialectica_ontology.primitives import Actor, Conflict, Event
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from dialectica_reasoning.graphrag.retriever import ConflictGraphRAGRetriever, RetrievalResult, RRF_K
-from dialectica_reasoning.graphrag.context_builder import ConflictContextBuilder, DEFAULT_BUDGET
-from dialectica_reasoning.graphrag.community import GraphCommunityDetector, CommunitySummary
-
+from dialectica_reasoning.graphrag.community import CommunitySummary, GraphCommunityDetector
+from dialectica_reasoning.graphrag.context_builder import ConflictContextBuilder
+from dialectica_reasoning.graphrag.retriever import (
+    RRF_K,
+    ConflictGraphRAGRetriever,
+    RetrievalResult,
+)
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  RETRIEVER TESTS
@@ -27,24 +29,30 @@ class TestRetriever:
     @pytest.fixture
     def mock_graph(self):
         gc = MagicMock()
-        gc.get_nodes = AsyncMock(return_value=[
-            Actor(name="Iran", actor_type="state"),
-            Actor(name="USA", actor_type="state"),
-        ])
+        gc.get_nodes = AsyncMock(
+            return_value=[
+                Actor(name="Iran", actor_type="state"),
+                Actor(name="USA", actor_type="state"),
+            ]
+        )
         gc.get_node = AsyncMock(return_value=Actor(name="Iran", actor_type="state"))
-        gc.traverse = AsyncMock(return_value=MagicMock(
-            nodes=[Actor(name="IAEA", actor_type="organization")],
-            edges=[],
-        ))
+        gc.traverse = AsyncMock(
+            return_value=MagicMock(
+                nodes=[Actor(name="IAEA", actor_type="organization")],
+                edges=[],
+            )
+        )
         return gc
 
     @pytest.fixture
     def mock_vector_store(self):
         vs = MagicMock()
-        vs.search_semantic = AsyncMock(return_value=[
-            {"node_id": "n1", "score": 0.95, "payload": {}},
-            {"node_id": "n2", "score": 0.82, "payload": {}},
-        ])
+        vs.search_semantic = AsyncMock(
+            return_value=[
+                {"node_id": "n1", "score": 0.95, "payload": {}},
+                {"node_id": "n2", "score": 0.82, "payload": {}},
+            ]
+        )
         return vs
 
     @pytest.mark.asyncio
@@ -131,14 +139,16 @@ class TestCommunityDetector:
     @pytest.fixture
     def mock_graph(self):
         gc = MagicMock()
-        gc.get_nodes = AsyncMock(side_effect=lambda ws, label=None: {
-            "Actor": [
-                Actor(name="Iran", actor_type="state"),
-                Actor(name="USA", actor_type="state"),
-                Actor(name="IAEA", actor_type="organization"),
-            ],
-            "Issue": [],
-        }.get(label, []))
+        gc.get_nodes = AsyncMock(
+            side_effect=lambda ws, label=None: {
+                "Actor": [
+                    Actor(name="Iran", actor_type="state"),
+                    Actor(name="USA", actor_type="state"),
+                    Actor(name="IAEA", actor_type="organization"),
+                ],
+                "Issue": [],
+            }.get(label, [])
+        )
         gc.get_edges = AsyncMock(return_value=[])
         return gc
 

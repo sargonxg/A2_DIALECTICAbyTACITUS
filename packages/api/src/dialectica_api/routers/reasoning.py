@@ -1,16 +1,18 @@
 """
 Reasoning Router — Conflict analysis and symbolic reasoning endpoints.
 """
+
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from dialectica_api.deps import get_graph_client, get_query_engine, get_current_tenant
+from dialectica_api.deps import get_current_tenant, get_graph_client, get_query_engine
 
 router = APIRouter(prefix="/v1/workspaces/{workspace_id}", tags=["reasoning"])
 
@@ -38,8 +40,8 @@ class AnalysisResult(BaseModel):
 async def analyze_streaming(
     workspace_id: str,
     body: AnalyzeRequest,
-    tenant_id: str = Depends(get_current_tenant),
-    query_engine: Any = Depends(get_query_engine),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    query_engine: Any = Depends(get_query_engine),  # noqa: B008
 ) -> StreamingResponse:
     """
     Analyze a conflict workspace. Streams SSE events for each step.
@@ -50,6 +52,7 @@ async def analyze_streaming(
         # Return non-streaming fallback if engine unavailable
         async def error_stream() -> AsyncIterator[str]:
             yield f"data: {json.dumps({'step': 'error', 'detail': 'Query engine unavailable'})}\n\n"
+
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     async def event_stream() -> AsyncIterator[str]:
@@ -67,13 +70,14 @@ async def analyze_streaming(
 @router.get("/escalation")
 async def get_escalation(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get Glasl escalation assessment for the workspace."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.symbolic.escalation import EscalationDetector
+
     detector = EscalationDetector(graph_client)
     assessment = await detector.compute_glasl_stage(workspace_id)
     signals = await detector.detect_escalation_signals(workspace_id)
@@ -107,13 +111,14 @@ async def get_escalation(
 @router.get("/ripeness")
 async def get_ripeness(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get Zartman ripeness assessment."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.symbolic.ripeness import RipenessScorer
+
     scorer = RipenessScorer(graph_client)
     assessment = await scorer.compute_ripeness(workspace_id)
     return {
@@ -128,13 +133,14 @@ async def get_ripeness(
 @router.get("/power")
 async def get_power(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get French/Raven power map."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.symbolic.power_analysis import PowerMapper
+
     mapper = PowerMapper(graph_client)
     power_map = await mapper.compute_power_map(workspace_id)
     asymmetries = await mapper.detect_asymmetries(workspace_id)
@@ -166,13 +172,14 @@ async def get_power(
 @router.get("/trust")
 async def get_trust(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get Mayer/Davis/Schoorman trust matrix."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer
+
     analyzer = TrustAnalyzer(graph_client)
     matrix = await analyzer.compute_trust_matrix(workspace_id)
     changes = await analyzer.detect_trust_changes(workspace_id)
@@ -207,23 +214,33 @@ async def get_trust(
 @router.get("/causation")
 async def get_causation(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get causal chain analysis."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.symbolic.causal_analysis import CausalAnalyzer
+
     analyzer = CausalAnalyzer(graph_client)
     chains = await analyzer.extract_causal_chains(workspace_id)
     roots = await analyzer.identify_root_causes(workspace_id)
     return {
         "chains": [
-            {"root": c.root_event_id, "depth": c.depth, "has_cycle": c.has_cycle, "length": len(c.chain)}
+            {
+                "root": c.root_event_id,
+                "depth": c.depth,
+                "has_cycle": c.has_cycle,
+                "length": len(c.chain),
+            }
             for c in chains[:10]
         ],
         "root_causes": [
-            {"event_id": r.event_id, "description": r.event_description, "downstream": r.downstream_count}
+            {
+                "event_id": r.event_id,
+                "description": r.event_description,
+                "downstream": r.downstream_count,
+            }
             for r in roots[:10]
         ],
     }
@@ -232,13 +249,14 @@ async def get_causation(
 @router.get("/quality")
 async def get_quality(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get graph quality metrics (completeness, consistency, coverage)."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.graph_quality import GraphQualityAnalyzer
+
     analyzer = GraphQualityAnalyzer(graph_client)
     dashboard = await analyzer.generate_quality_dashboard(workspace_id)
     return {
@@ -247,17 +265,25 @@ async def get_quality(
         "completeness": {
             "score": dashboard.completeness.completeness_score if dashboard.completeness else 0,
             "tier": dashboard.completeness.tier_assessment if dashboard.completeness else "unknown",
-            "missing_node_types": dashboard.completeness.missing_node_types[:5] if dashboard.completeness else [],
-            "orphan_nodes": dashboard.completeness.orphan_node_count if dashboard.completeness else 0,
+            "missing_node_types": dashboard.completeness.missing_node_types[:5]
+            if dashboard.completeness
+            else [],
+            "orphan_nodes": dashboard.completeness.orphan_node_count
+            if dashboard.completeness
+            else 0,
         },
         "consistency": {
             "score": dashboard.consistency.consistency_score if dashboard.consistency else 0,
-            "edge_violations": dashboard.consistency.edge_schema_violations if dashboard.consistency else 0,
+            "edge_violations": dashboard.consistency.edge_schema_violations
+            if dashboard.consistency
+            else 0,
         },
         "coverage": {
             "score": dashboard.coverage.coverage_score if dashboard.coverage else 0,
             "avg_confidence": dashboard.coverage.avg_confidence if dashboard.coverage else 0,
-            "temporal_span_days": dashboard.coverage.temporal_span_days if dashboard.coverage else 0,
+            "temporal_span_days": dashboard.coverage.temporal_span_days
+            if dashboard.coverage
+            else 0,
         },
         "recommendations": dashboard.recommendations,
         "assessed_at": dashboard.assessed_at,
@@ -267,13 +293,14 @@ async def get_quality(
 @router.get("/network")
 async def get_network(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Get network topology metrics."""
     if graph_client is None:
         raise HTTPException(status_code=503, detail="Graph client unavailable.")
     from dialectica_reasoning.symbolic.network_metrics import NetworkAnalyzer
+
     analyzer = NetworkAnalyzer(graph_client)
     centrality = await analyzer.compute_centrality(workspace_id)
     communities = await analyzer.detect_communities(workspace_id)
@@ -281,7 +308,12 @@ async def get_network(
     brokers = await analyzer.identify_brokers(workspace_id)
     return {
         "centrality": [
-            {"actor_id": c.actor_id, "betweenness": c.betweenness, "closeness": c.closeness, "degree": c.degree}
+            {
+                "actor_id": c.actor_id,
+                "betweenness": c.betweenness,
+                "closeness": c.closeness,
+                "degree": c.degree,
+            }
             for c in centrality[:20]
         ],
         "communities": [
@@ -294,7 +326,11 @@ async def get_network(
             "num_communities": polarisation.num_communities,
         },
         "brokers": [
-            {"actor_id": b.actor_id, "betweenness": b.betweenness, "mediation_potential": b.mediation_potential}
+            {
+                "actor_id": b.actor_id,
+                "betweenness": b.betweenness,
+                "mediation_potential": b.mediation_potential,
+            }
             for b in brokers[:5]
         ],
     }

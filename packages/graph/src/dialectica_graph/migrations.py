@@ -6,6 +6,7 @@ Provides migration utilities for safe schema evolution:
 - Safe ALTER TABLE / CREATE INDEX operations
 - Rollback support (where possible with Spanner DDL)
 """
+
 from __future__ import annotations
 
 import logging
@@ -51,7 +52,7 @@ MIGRATIONS: list[Migration] = [
         version=3,
         name="add_nodes_name_index",
         up_ddl=[
-            "CREATE INDEX Idx_Nodes_Properties_Name ON Nodes (tenant_id, workspace_id, label) STORING (properties)",
+            "CREATE INDEX Idx_Nodes_Properties_Name ON Nodes (tenant_id, workspace_id, label) STORING (properties)",  # noqa: E501
         ],
         down_ddl=[
             "DROP INDEX Idx_Nodes_Properties_Name",
@@ -76,9 +77,7 @@ class MigrationRunner:
         """Get the latest applied migration version."""
         try:
             with self._database.snapshot() as snapshot:
-                result = snapshot.execute_sql(
-                    "SELECT MAX(version) FROM SchemaMigrations"
-                )
+                result = snapshot.execute_sql("SELECT MAX(version) FROM SchemaMigrations")
                 row = list(result)
                 if row and row[0][0] is not None:
                     return row[0][0]

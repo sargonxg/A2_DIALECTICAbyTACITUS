@@ -1,4 +1,5 @@
 """Convert graph database content to PyKEEN triples factory format."""
+
 from __future__ import annotations
 
 import logging
@@ -47,13 +48,13 @@ def triples_to_pykeen_factory(
         A pykeen.triples.TriplesFactory instance.
     """
     try:
-        from pykeen.triples import TriplesFactory
         import numpy as np
+        from pykeen.triples import TriplesFactory
 
         if not triples:
             raise ValueError("No triples to create factory from")
 
         mapped = np.array(triples, dtype=str)
         return TriplesFactory.from_labeled_triples(mapped)
-    except ImportError:
-        raise ImportError("PyKEEN not installed. Install with: pip install pykeen>=1.11")
+    except ImportError as err:
+        raise ImportError("PyKEEN not installed. Install with: pip install pykeen>=1.11") from err

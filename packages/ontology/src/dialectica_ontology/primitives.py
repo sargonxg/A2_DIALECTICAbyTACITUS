@@ -11,7 +11,7 @@ Theoretical basis: TACITUS Core Ontology v2.0 (see ontology.py)
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from ulid import ULID
@@ -20,21 +20,18 @@ from dialectica_ontology.enums import (
     ActorType,
     BatnaStrength,
     ConflictDomain,
-    ConflictMode,
     ConflictScale,
     ConflictStatus,
     Durability,
     EmotionIntensity,
     Enforceability,
-    EvidenceType,
     EventContext,
     EventMode,
     EventType,
+    EvidenceType,
     Formality,
-    QuadClass,
     FrameType,
     GlaslLevel,
-    GlaslStage,
     Incompatibility,
     Intensity,
     InterestType,
@@ -49,6 +46,7 @@ from dialectica_ontology.enums import (
     ProcessStage,
     ProcessStatus,
     ProcessType,
+    QuadClass,
     ResolutionApproach,
     RoleType,
     TrustBasis,
@@ -90,10 +88,12 @@ class ConflictNode(BaseModel):
 
 # ─── 1. ACTOR ───────────────────────────────────────────────────────────────
 
+
 class Actor(ConflictNode):
     """Any entity capable of agency in a conflict.
     Theoretical basis: CAMEO/ACLED actor coding + Fisher/Ury 'negotiator'
     """
+
     label: str = "Actor"
     name: str
     actor_type: ActorType
@@ -125,10 +125,12 @@ class Actor(ConflictNode):
 
 # ─── 2. CONFLICT ────────────────────────────────────────────────────────────
 
+
 class Conflict(ConflictNode):
     """A sustained pattern of friction between parties around an incompatibility.
     Theoretical basis: UCDP incompatibility + Galtung ABC + Glasl escalation + Kriesberg lifecycle
     """
+
     label: str = "Conflict"
     name: str
     scale: ConflictScale
@@ -158,10 +160,12 @@ class Conflict(ConflictNode):
 
 # ─── 3. EVENT ───────────────────────────────────────────────────────────────
 
+
 class Event(ConflictNode):
     """A discrete, time-bounded occurrence that alters a conflict's state.
     Theoretical basis: PLOVER event-mode-context + ACLED event taxonomy
     """
+
     label: str = "Event"
     event_type: EventType
     mode: EventMode | None = None
@@ -177,10 +181,12 @@ class Event(ConflictNode):
 
 # ─── 4. ISSUE ───────────────────────────────────────────────────────────────
 
+
 class Issue(ConflictNode):
     """The subject matter or incompatibility at stake.
     Theoretical basis: UCDP incompatibility + Fisher/Ury 'the problem'
     """
+
     label: str = "Issue"
     name: str
     issue_type: InterestType
@@ -191,10 +197,12 @@ class Issue(ConflictNode):
 
 # ─── 5. INTEREST ────────────────────────────────────────────────────────────
 
+
 class Interest(ConflictNode):
     """An underlying need, desire, concern, or fear. The WHY behind a position.
     Theoretical basis: Fisher/Ury 'Getting to Yes' + Rothman identity-based conflict
     """
+
     label: str = "Interest"
     description: str  # type: ignore[assignment]
     interest_type: InterestType
@@ -209,10 +217,12 @@ class Interest(ConflictNode):
 
 # ─── 6. NORM ────────────────────────────────────────────────────────────────
 
+
 class Norm(ConflictNode):
     """Any rule, standard, or shared expectation governing behavior.
     Theoretical basis: LKIF + CLO + Fisher/Ury 'objective criteria'
     """
+
     label: str = "Norm"
     name: str
     norm_type: NormType
@@ -225,10 +235,12 @@ class Norm(ConflictNode):
 
 # ─── 7. PROCESS ─────────────────────────────────────────────────────────────
 
+
 class Process(ConflictNode):
     """Any procedure or mechanism for addressing conflict.
     Theoretical basis: Ury/Brett/Goldberg + ADR taxonomy + Glasl intervention mapping
     """
+
     label: str = "Process"
     process_type: ProcessType
     resolution_approach: ResolutionApproach
@@ -244,10 +256,12 @@ class Process(ConflictNode):
 
 # ─── 8. OUTCOME ─────────────────────────────────────────────────────────────
 
+
 class Outcome(ConflictNode):
     """The result of a conflict resolution process or the conflict itself.
     Theoretical basis: Mnookin 'Beyond Winning' (value creation) + ADR outcomes
     """
+
     label: str = "Outcome"
     outcome_type: OutcomeType
     description: str | None = None  # type: ignore[assignment]
@@ -263,10 +277,12 @@ class Outcome(ConflictNode):
 
 # ─── 9. NARRATIVE ───────────────────────────────────────────────────────────
 
+
 class Narrative(ConflictNode):
     """A dominant story, account, or frame that shapes how a conflict is understood.
     Theoretical basis: Winslade & Monk + Sara Cobb + Dewulf framing + Lakoff
     """
+
     label: str = "Narrative"
     content: str
     narrative_type: NarrativeType
@@ -282,10 +298,12 @@ class Narrative(ConflictNode):
 
 # ─── 10. EMOTIONAL STATE ────────────────────────────────────────────────────
 
+
 class EmotionalState(ConflictNode):
     """An actor's emotional condition at a point in time.
     Theoretical basis: Plutchik wheel + Smith & Ellsworth appraisal theory
     """
+
     label: str = "EmotionalState"
     primary_emotion: PrimaryEmotion
     intensity: EmotionIntensity
@@ -299,10 +317,12 @@ class EmotionalState(ConflictNode):
 
 # ─── 11. TRUST STATE ────────────────────────────────────────────────────────
 
+
 class TrustState(ConflictNode):
     """Trust level between two actors. Mayer/Davis/Schoorman integrative model.
     trust = f(ability, benevolence, integrity)
     """
+
     label: str = "TrustState"
     perceived_ability: float = Field(ge=0.0, le=1.0)
     perceived_benevolence: float = Field(ge=0.0, le=1.0)
@@ -315,10 +335,12 @@ class TrustState(ConflictNode):
 
 # ─── 12. POWER DYNAMIC ──────────────────────────────────────────────────────
 
+
 class PowerDynamic(ConflictNode):
     """A measured power relationship between actors.
     Theoretical basis: French & Raven 5 bases of power + Ury/Brett/Goldberg
     """
+
     label: str = "PowerDynamic"
     power_domain: PowerDomain
     magnitude: float = Field(ge=0.0, le=1.0)
@@ -332,10 +354,12 @@ class PowerDynamic(ConflictNode):
 
 # ─── 13. LOCATION ───────────────────────────────────────────────────────────
 
+
 class Location(ConflictNode):
     """Geographic entity. Hierarchically structured via WITHIN edges.
     Theoretical basis: ACLED/UCDP spatial coding
     """
+
     label: str = "Location"
     name: str
     location_type: LocationType
@@ -354,10 +378,12 @@ class Location(ConflictNode):
 
 # ─── 14. EVIDENCE ───────────────────────────────────────────────────────────
 
+
 class Evidence(ConflictNode):
     """Supporting material for claims, events, or assertions.
     Theoretical basis: Legal evidence law + ACLED source methodology
     """
+
     label: str = "Evidence"
     evidence_type: EvidenceType
     description: str  # type: ignore[assignment]
@@ -369,10 +395,12 @@ class Evidence(ConflictNode):
 
 # ─── 15. ROLE ───────────────────────────────────────────────────────────────
 
+
 class Role(ConflictNode):
     """A contextual role played by an actor in a specific conflict or event.
     Theoretical basis: SEM (Simple Event Model) role reification
     """
+
     label: str = "Role"
     role_type: RoleType
     valid_from: datetime | None = None

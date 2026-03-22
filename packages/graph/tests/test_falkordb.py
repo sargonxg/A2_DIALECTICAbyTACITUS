@@ -2,21 +2,21 @@
 Tests for FalkorDBGraphClient — graph-per-tenant isolation, parameterized queries,
 temporal filtering, and node CRUD.
 """
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from dialectica_graph.falkordb_client import FalkorDBGraphClient, _graph_key
-from dialectica_ontology.primitives import Actor, Conflict, Event
+from dialectica_ontology.primitives import Actor
 from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  GRAPH KEY GENERATION
@@ -100,7 +100,7 @@ class TestQueryParameterization:
         mock_graph.query.assert_called_once()
         call_args = mock_graph.query.call_args
         query = call_args[0][0]
-        params = call_args[0][1]
+        call_args[0][1]
 
         # Query should use $id, $workspace_id, $props — not raw values
         assert "$id" in query
@@ -197,7 +197,7 @@ class TestTemporalFiltering:
 
         call_args = mock_graph.query.call_args
         query = call_args[0][0]
-        params = call_args[0][1]
+        call_args[0][1]
 
         assert "$start" not in query
         assert "$end" not in query
@@ -290,11 +290,14 @@ class TestFactory:
     def test_create_falkordb_client(self):
         from dialectica_graph import create_graph_client
 
-        with patch("dialectica_graph.falkordb_client.FalkorDBGraphClient.__init__", return_value=None):
+        with patch(
+            "dialectica_graph.falkordb_client.FalkorDBGraphClient.__init__", return_value=None
+        ):
             client = create_graph_client("falkordb", {"host": "redis.local", "port": 6380})
             assert isinstance(client, FalkorDBGraphClient)
 
     def test_unsupported_backend_raises(self):
         from dialectica_graph import create_graph_client
+
         with pytest.raises(ValueError, match="Unsupported graph backend"):
             create_graph_client("mongodb")

@@ -7,6 +7,7 @@ Pipeline:
   3. Temporal filter on Event nodes within optional [date_from, date_to] window
   4. RRF fusion: score(d) = Σ 1/(60 + rank_i(d)) across vector and graph results
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,6 +26,7 @@ RRF_K = 60  # Reciprocal Rank Fusion constant
 @dataclass
 class RetrievalResult:
     """Result of a hybrid retrieval operation."""
+
     query: str
     workspace_id: str
     nodes: list[ConflictNode] = field(default_factory=list)
@@ -125,7 +127,7 @@ class ConflictGraphRAGRetriever:
         graph_ranked: list[str] = []
         all_edges: dict[str, ConflictRelationship] = {}
 
-        seed_ids = vector_ranked[:min(5, len(vector_ranked))]
+        seed_ids = vector_ranked[: min(5, len(vector_ranked))]
         for seed_id in seed_ids:
             try:
                 subgraph = await self._gc.traverse(
@@ -150,9 +152,7 @@ class ConflictGraphRAGRetriever:
                 ts = getattr(node, "occurred_at", None) or getattr(node, "created_at", None)
                 if ts is None:
                     continue  # Keep nodes without timestamp
-                if date_from and ts < date_from:
-                    to_remove.append(nid)
-                elif date_to and ts > date_to:
+                if date_from and ts < date_from or date_to and ts > date_to:
                     to_remove.append(nid)
             for nid in to_remove:
                 all_nodes.pop(nid, None)
@@ -161,7 +161,8 @@ class ConflictGraphRAGRetriever:
         if node_types:
             type_set = set(node_types)
             all_nodes = {
-                nid: n for nid, n in all_nodes.items()
+                nid: n
+                for nid, n in all_nodes.items()
                 if getattr(n, "label", n.__class__.__name__) in type_set
             }
 

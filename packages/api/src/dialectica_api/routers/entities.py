@@ -1,6 +1,7 @@
 """
 Entities Router — CRUD for conflict graph nodes.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from dialectica_api.deps import get_graph_client, get_current_tenant
+from dialectica_api.deps import get_current_tenant, get_graph_client
 
 router = APIRouter(prefix="/v1/workspaces/{workspace_id}/entities", tags=["entities"])
 
@@ -34,8 +35,8 @@ async def list_entities(
     label: str | None = Query(None),
     limit: int = Query(50, le=500),
     offset: int = Query(0),
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> list[NodeResponse]:
     """List entities in a workspace with optional label filter."""
     if graph_client is None:
@@ -47,7 +48,8 @@ async def list_entities(
             label=getattr(n, "label", n.__class__.__name__),
             name=getattr(n, "name", n.id),
             properties={
-                k: v for k, v in (n.model_dump() if hasattr(n, "model_dump") else vars(n)).items()
+                k: v
+                for k, v in (n.model_dump() if hasattr(n, "model_dump") else vars(n)).items()
                 if k not in ("id", "label", "name", "tenant_id", "workspace_id")
             },
             confidence=float(getattr(n, "confidence", 1.0)),
@@ -60,8 +62,8 @@ async def list_entities(
 async def get_entity(
     workspace_id: str,
     entity_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> NodeResponse:
     """Get a single entity by ID."""
     if graph_client is None:
@@ -83,8 +85,8 @@ async def delete_entity(
     workspace_id: str,
     entity_id: str,
     hard: bool = Query(False),
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> None:
     """Delete an entity (soft delete by default)."""
     if graph_client is None:

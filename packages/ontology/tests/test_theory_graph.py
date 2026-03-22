@@ -1,20 +1,18 @@
 """Tests for dialectica_ontology.theory_graph — Theory knowledge graph node/edge types."""
 
-import pytest
 from datetime import datetime
 
 from dialectica_ontology.theory_graph import (
-    TheoryNode,
-    TheoryConcept,
-    Theorist,
-    Publication,
-    Methodology,
-    Principle,
-    Pattern,
     THEORY_EDGE_TYPES,
     THEORY_NODE_TYPES,
+    Methodology,
+    Pattern,
+    Principle,
+    Publication,
+    Theorist,
+    TheoryConcept,
+    TheoryNode,
 )
-
 
 # ─── TheoryNode (base) ────────────────────────────────────────────────────────
 
@@ -67,7 +65,10 @@ class TestTheoryConcept:
 
     def test_label_default(self):
         concept = TheoryConcept(
-            id="tc1", name="X", framework_id="f", description="d",
+            id="tc1",
+            name="X",
+            framework_id="f",
+            description="d",
         )
         assert concept.label == "TheoryConcept"
 
@@ -85,7 +86,10 @@ class TestTheoryConcept:
 
     def test_inherits_theory_node(self):
         concept = TheoryConcept(
-            id="tc1", name="X", framework_id="f", description="d",
+            id="tc1",
+            name="X",
+            framework_id="f",
+            description="d",
         )
         assert isinstance(concept, TheoryNode)
         assert isinstance(concept.created_at, datetime)
@@ -159,7 +163,10 @@ class TestPublication:
 
     def test_inherits_theory_node(self):
         pub = Publication(
-            id="pub1", title="T", year=2000, authors=["A"],
+            id="pub1",
+            title="T",
+            year=2000,
+            authors=["A"],
         )
         assert isinstance(pub, TheoryNode)
 
@@ -272,8 +279,13 @@ class TestTheoryEdgeTypes:
 
     def test_has_expected_keys(self):
         expected = {
-            "BUILDS_ON", "CONTRADICTS", "AUTHORED_BY",
-            "INTRODUCES", "APPLIES_VIA", "EXEMPLIFIES", "PRESCRIBES",
+            "BUILDS_ON",
+            "CONTRADICTS",
+            "AUTHORED_BY",
+            "INTRODUCES",
+            "APPLIES_VIA",
+            "EXEMPLIFIES",
+            "PRESCRIBES",
         }
         assert set(THEORY_EDGE_TYPES.keys()) == expected
 

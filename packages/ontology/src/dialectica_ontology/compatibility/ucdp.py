@@ -7,6 +7,7 @@ Used for data import/export and interoperability with existing conflict database
 UCDP (Uppsala Conflict Data Program) classifies armed conflicts by
 incompatibility type, intensity level, and conflict type.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.enums import (
@@ -15,7 +16,6 @@ from dialectica_ontology.enums import (
     Intensity,
     ViolenceType,
 )
-
 
 # ─── UCDP incompatibility type -> DIALECTICA Incompatibility ────────────────
 
@@ -39,10 +39,10 @@ _DIALECTICA_TO_UCDP_INCOMPATIBILITY: dict[Incompatibility, str] = {
 #   minor conflict: 25-999 battle-related deaths per calendar year
 #   war: 1000+ battle-related deaths per calendar year
 _UCDP_INTENSITY_THRESHOLDS: list[tuple[int, Intensity]] = [
-    (0, Intensity.LOW),          # Below UCDP threshold (< 25)
-    (25, Intensity.MODERATE),    # UCDP minor conflict
-    (100, Intensity.HIGH),       # Upper minor conflict
-    (1000, Intensity.SEVERE),    # UCDP war threshold
+    (0, Intensity.LOW),  # Below UCDP threshold (< 25)
+    (25, Intensity.MODERATE),  # UCDP minor conflict
+    (100, Intensity.HIGH),  # Upper minor conflict
+    (1000, Intensity.SEVERE),  # UCDP war threshold
     (10000, Intensity.EXTREME),  # Major war
 ]
 
@@ -73,6 +73,7 @@ _UCDP_CONFLICT_TYPE_LABELS: dict[int, str] = {
 
 
 # ─── Public API ──────────────────────────────────────────────────────────────
+
 
 def ucdp_to_dialectica_incompatibility(ucdp_type: str) -> Incompatibility:
     """Convert a UCDP incompatibility type to a DIALECTICA Incompatibility.
@@ -160,10 +161,7 @@ def ucdp_conflict_type_to_domain(type_of_violence: int) -> ConflictDomain:
         KeyError: If the code is not recognised.
     """
     if type_of_violence not in _UCDP_CONFLICT_TYPE_TO_DOMAIN:
-        raise KeyError(
-            f"Unknown UCDP type_of_violence: {type_of_violence!r}. "
-            f"Expected 1, 2, or 3."
-        )
+        raise KeyError(f"Unknown UCDP type_of_violence: {type_of_violence!r}. Expected 1, 2, or 3.")
     return _UCDP_CONFLICT_TYPE_TO_DOMAIN[type_of_violence]
 
 
@@ -180,10 +178,7 @@ def ucdp_conflict_type_to_violence(type_of_violence: int) -> ViolenceType:
         KeyError: If the code is not recognised.
     """
     if type_of_violence not in _UCDP_CONFLICT_TYPE_TO_VIOLENCE:
-        raise KeyError(
-            f"Unknown UCDP type_of_violence: {type_of_violence!r}. "
-            f"Expected 1, 2, or 3."
-        )
+        raise KeyError(f"Unknown UCDP type_of_violence: {type_of_violence!r}. Expected 1, 2, or 3.")
     return _UCDP_CONFLICT_TYPE_TO_VIOLENCE[type_of_violence]
 
 
@@ -200,8 +195,5 @@ def ucdp_conflict_type_label(type_of_violence: int) -> str:
         KeyError: If the code is not recognised.
     """
     if type_of_violence not in _UCDP_CONFLICT_TYPE_LABELS:
-        raise KeyError(
-            f"Unknown UCDP type_of_violence: {type_of_violence!r}. "
-            f"Expected 1, 2, or 3."
-        )
+        raise KeyError(f"Unknown UCDP type_of_violence: {type_of_violence!r}. Expected 1, 2, or 3.")
     return _UCDP_CONFLICT_TYPE_LABELS[type_of_violence]

@@ -19,8 +19,8 @@ Vector indexes: COSINE distance on embedding ARRAY<FLOAT32>(vector_length=768)
 
 Key design: tenant_id as PK prefix for row-level multi-tenant isolation.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 # ── Core Tables ────────────────────────────────────────────────────────────
 
@@ -136,22 +136,25 @@ CREATE TABLE SchemaMigrations (
 
 # ── Property Graph Definition ──────────────────────────────────────────────
 
-_PROPERTY_GRAPH = """\
-CREATE OR REPLACE PROPERTY GRAPH ConflictGraph
-  NODE TABLES (
-    Nodes
-      KEY (tenant_id, workspace_id, id)
-      DYNAMIC LABEL (label)
-      DYNAMIC PROPERTIES (properties)
-  )
-  EDGE TABLES (
-    Edges
-      KEY (tenant_id, workspace_id, id)
-      SOURCE KEY (tenant_id, workspace_id, source_id) REFERENCES Nodes (tenant_id, workspace_id, id)
-      DESTINATION KEY (tenant_id, workspace_id, target_id) REFERENCES Nodes (tenant_id, workspace_id, id)
-      DYNAMIC LABEL (type)
-      DYNAMIC PROPERTIES (properties)
-  )"""
+_PG_REFS = "REFERENCES Nodes (tenant_id, workspace_id, id)"
+
+_PROPERTY_GRAPH = (
+    "CREATE OR REPLACE PROPERTY GRAPH ConflictGraph\n"
+    "  NODE TABLES (\n"
+    "    Nodes\n"
+    "      KEY (tenant_id, workspace_id, id)\n"
+    "      DYNAMIC LABEL (label)\n"
+    "      DYNAMIC PROPERTIES (properties)\n"
+    "  )\n"
+    "  EDGE TABLES (\n"
+    "    Edges\n"
+    "      KEY (tenant_id, workspace_id, id)\n"
+    f"      SOURCE KEY (tenant_id, workspace_id, source_id) {_PG_REFS}\n"
+    f"      DESTINATION KEY (tenant_id, workspace_id, target_id) {_PG_REFS}\n"
+    "      DYNAMIC LABEL (type)\n"
+    "      DYNAMIC PROPERTIES (properties)\n"
+    "  )"
+)
 
 
 # ── Indexes ────────────────────────────────────────────────────────────────

@@ -14,28 +14,25 @@ for Pydantic-validated structured output via LiteLLM.
 Conditional edges: validate_schema -> repair if errors, skip if valid, abort if max retries.
 Interrupt: before write_to_graph when confidence < 0.5 or novel entity types detected.
 """
+
 from __future__ import annotations
 
-import json
 import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
-from dialectica_ontology.primitives import ConflictNode, NODE_TYPES
-from dialectica_ontology.relationships import ConflictRelationship
-from dialectica_ontology.tiers import OntologyTier, TIER_NODES
-
-from dialectica_extraction.gliner_ner import GLiNERPreFilter, PrefilterResult
-from dialectica_extraction.gemini import GeminiExtractor, GeminiExtractionResult
 from dialectica_extraction.embeddings import EmbeddingService
-from dialectica_extraction.validators.schema import validate_raw_nodes, validate_raw_edges
-from dialectica_extraction.validators.structural import validate_structural
-from dialectica_extraction.validators.temporal import validate_temporal
-from dialectica_extraction.validators.symbolic import validate_symbolic
-from dialectica_extraction.extractors.entity import enrich_actors, deduplicate_nodes
 from dialectica_extraction.extractors.coreference import find_coreferences, merge_coreferent_nodes
+from dialectica_extraction.extractors.entity import deduplicate_nodes, enrich_actors
 from dialectica_extraction.extractors.relationship import apply_relationship_scoring
+from dialectica_extraction.gemini import GeminiExtractor
+from dialectica_extraction.gliner_ner import GLiNERPreFilter
+from dialectica_extraction.validators.schema import validate_raw_edges, validate_raw_nodes
+from dialectica_extraction.validators.structural import validate_structural
+from dialectica_extraction.validators.symbolic import validate_symbolic
+from dialectica_extraction.validators.temporal import validate_temporal
+from dialectica_ontology.tiers import TIER_NODES, OntologyTier
 
 logger = logging.getLogger(__name__)
 
@@ -123,12 +120,14 @@ def chunk_document(state: ExtractionState) -> ExtractionState:
 
             chunk_text = text[pos:end].strip()
             if chunk_text:
-                chunks.append({
-                    "text": chunk_text,
-                    "index": idx,
-                    "start": pos,
-                    "end": end,
-                })
+                chunks.append(
+                    {
+                        "text": chunk_text,
+                        "index": idx,
+                        "start": pos,
+                        "end": end,
+                    }
+                )
                 idx += 1
 
             # Advance with overlap
@@ -213,11 +212,13 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
                 chunk = chunks[idx]
                 result = extractor.extract_entities(chunk["text"], tier)
                 if result.error:
-                    state["errors"].append({
-                        "step": "extract_entities",
-                        "message": result.error,
-                        "details": {"chunk_index": idx},
-                    })
+                    state["errors"].append(
+                        {
+                            "step": "extract_entities",
+                            "message": result.error,
+                            "details": {"chunk_index": idx},
+                        }
+                    )
                     continue
 
                 for entity in result.raw_nodes:
@@ -226,10 +227,12 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
                 all_raw_entities.extend(result.raw_nodes)
         except Exception as e2:
             logger.error("Entity extraction failed: %s", e2)
-            state["errors"].append({
-                "step": "extract_entities",
-                "message": str(e2),
-            })
+            state["errors"].append(
+                {
+                    "step": "extract_entities",
+                    "message": str(e2),
+                }
+            )
 
     state["raw_entities"] = all_raw_entities
     state["processing_time"]["extract_entities"] = time.time() - start
@@ -323,13 +326,17 @@ def extract_relationships(state: ExtractionState) -> ExtractionState:
         state["_edges"] = edge_validation.valid_edges
 
         if edge_validation.errors:
-            state["errors"].extend([
-                {"step": "extract_relationships", "message": err}
-                for err in edge_validation.errors
-            ])
+            state["errors"].extend(
+                [
+                    {"step": "extract_relationships", "message": err}
+                    for err in edge_validation.errors
+                ]
+            )
 
     except (ImportError, Exception) as e:
-        logger.warning("Instructor relationship extraction unavailable (%s), falling back to Gemini", e)
+        logger.warning(
+            "Instructor relationship extraction unavailable (%s), falling back to Gemini", e
+        )
 
         try:
             extractor = GeminiExtractor()
@@ -344,10 +351,12 @@ def extract_relationships(state: ExtractionState) -> ExtractionState:
             result = extractor.extract_relationships(entity_summaries, text, tier)
 
             if result.error:
-                state["errors"].append({
-                    "step": "extract_relationships",
-                    "message": result.error,
-                })
+                state["errors"].append(
+                    {
+                        "step": "extract_relationships",
+                        "message": result.error,
+                    }
+                )
                 state["validated_edges"] = []
                 state["_edges"] = []
             else:
@@ -357,14 +366,18 @@ def extract_relationships(state: ExtractionState) -> ExtractionState:
                 edge_validation = validate_raw_edges(
                     result.raw_edges, tier, node_ids=node_ids, workspace_id=ws, tenant_id=tid
                 )
-                state["validated_edges"] = [e.model_dump(mode="json") for e in edge_validation.valid_edges]
+                state["validated_edges"] = [
+                    e.model_dump(mode="json") for e in edge_validation.valid_edges
+                ]
                 state["_edges"] = edge_validation.valid_edges
 
                 if edge_validation.errors:
-                    state["errors"].extend([
-                        {"step": "extract_relationships", "message": err}
-                        for err in edge_validation.errors
-                    ])
+                    state["errors"].extend(
+                        [
+                            {"step": "extract_relationships", "message": err}
+                            for err in edge_validation.errors
+                        ]
+                    )
         except Exception as e2:
             logger.error("Relationship extraction failed: %s", e2)
             state["errors"].append({"step": "extract_relationships", "message": str(e2)})
@@ -422,10 +435,9 @@ def validate_structural_step(state: ExtractionState) -> ExtractionState:
     # Structural validation
     structural = validate_structural(nodes, edges)
     if structural.errors:
-        state["errors"].extend([
-            {"step": "validate_structural", "message": err}
-            for err in structural.errors
-        ])
+        state["errors"].extend(
+            [{"step": "validate_structural", "message": err} for err in structural.errors]
+        )
     if structural.warnings:
         for w in structural.warnings:
             logger.warning("Structural: %s", w)
@@ -433,10 +445,9 @@ def validate_structural_step(state: ExtractionState) -> ExtractionState:
     # Temporal validation
     temporal = validate_temporal(nodes, edges)
     if temporal.errors:
-        state["errors"].extend([
-            {"step": "validate_temporal", "message": err}
-            for err in temporal.errors
-        ])
+        state["errors"].extend(
+            [{"step": "validate_temporal", "message": err} for err in temporal.errors]
+        )
 
     # Symbolic validation
     symbolic = validate_symbolic(nodes, edges)
@@ -561,7 +572,7 @@ def should_interrupt(state: ExtractionState) -> str:
 # ── Graph Builder ──────────────────────────────────────────────────────────
 
 
-def build_pipeline():
+def build_pipeline() -> Any:
     """Build and return the LangGraph extraction pipeline.
 
     Returns a compiled StateGraph with:
@@ -570,7 +581,7 @@ def build_pipeline():
     - Checkpointing support for state persistence
     """
     try:
-        from langgraph.graph import StateGraph, END
+        from langgraph.graph import END, StateGraph
 
         graph = StateGraph(ExtractionState)
 

@@ -5,15 +5,13 @@ Provides graph-per-tenant isolation: each tenant gets a separate graph key
 (tacitus_graph_{tenant_id}). Uses parameterized Cypher queries throughout.
 Supports temporal queries via reference_time on Event nodes.
 """
+
 from __future__ import annotations
 
-import json
+import contextlib
 import logging
 from datetime import datetime
 from typing import Any
-
-from dialectica_ontology.primitives import ConflictNode, NODE_TYPES
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 from dialectica_graph.interface import GraphClient
 from dialectica_graph.models import (
@@ -24,6 +22,8 @@ from dialectica_graph.models import (
     SubgraphResult,
     WorkspaceStats,
 )
+from dialectica_ontology.primitives import NODE_TYPES, ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship
 
 logger = logging.getLogger(__name__)
 
@@ -66,12 +66,13 @@ class FalkorDBGraphClient(GraphClient):
         if self._db is None:
             try:
                 from falkordb import FalkorDB
+
                 self._db = FalkorDB(host=self._host, port=self._port)
-            except ImportError:
+            except ImportError as err:
                 raise ImportError(
                     "falkordb package not installed. "
                     "Install with: pip install 'dialectica-graph[falkordb]'"
-                )
+                ) from err
         return self._db
 
     def _get_graph(self, tenant_id: str | None = None) -> Any:
@@ -97,22 +98,16 @@ class FalkorDBGraphClient(GraphClient):
         # Create indexes for each node type
         for label in NODE_TYPES:
             label_name = type(label).__name__ if not isinstance(label, str) else label
-            try:
+            with contextlib.suppress(Exception):
                 graph.query(f"CREATE INDEX FOR (n:{label_name}) ON (n.id)")
-            except Exception:
-                pass  # Index may already exist
-            try:
+            with contextlib.suppress(Exception):
                 graph.query(f"CREATE INDEX FOR (n:{label_name}) ON (n.workspace_id)")
-            except Exception:
-                pass
 
         logger.info("FalkorDB schema initialized")
 
     # ── Node CRUD ──────────────────────────────────────────────────────────
 
-    async def upsert_node(
-        self, node: ConflictNode, workspace_id: str, tenant_id: str
-    ) -> str:
+    async def upsert_node(self, node: ConflictNode, workspace_id: str, tenant_id: str) -> str:
         graph = self._get_graph(tenant_id)
         label = type(node).__name__
         props = node.model_dump(mode="json", exclude_none=True)
@@ -125,38 +120,23 @@ class FalkorDBGraphClient(GraphClient):
             f"RETURN n.id"
         )
         params = {"id": node.id, "workspace_id": workspace_id, "props": props}
-        result = graph.query(query, params)
+        graph.query(query, params)
         logger.debug("Upserted node %s (%s) in workspace %s", node.id, label, workspace_id)
         return node.id
 
-    async def delete_node(
-        self, node_id: str, workspace_id: str, hard: bool = False
-    ) -> bool:
+    async def delete_node(self, node_id: str, workspace_id: str, hard: bool = False) -> bool:
         graph = self._get_graph()
         if hard:
-            query = (
-                "MATCH (n {id: $id, workspace_id: $ws}) "
-                "DETACH DELETE n"
-            )
+            query = "MATCH (n {id: $id, workspace_id: $ws}) DETACH DELETE n"
         else:
-            query = (
-                "MATCH (n {id: $id, workspace_id: $ws}) "
-                "SET n.deleted_at = $now "
-                "RETURN n.id"
-            )
+            query = "MATCH (n {id: $id, workspace_id: $ws}) SET n.deleted_at = $now RETURN n.id"
         params = {"id": node_id, "ws": workspace_id, "now": datetime.utcnow().isoformat()}
-        result = graph.query(query, params)
+        graph.query(query, params)
         return True
 
-    async def get_node(
-        self, node_id: str, workspace_id: str
-    ) -> ConflictNode | None:
+    async def get_node(self, node_id: str, workspace_id: str) -> ConflictNode | None:
         graph = self._get_graph()
-        query = (
-            "MATCH (n {id: $id, workspace_id: $ws}) "
-            "WHERE n.deleted_at IS NULL "
-            "RETURN n"
-        )
+        query = "MATCH (n {id: $id, workspace_id: $ws}) WHERE n.deleted_at IS NULL RETURN n"
         params = {"id": node_id, "ws": workspace_id}
         result = graph.query(query, params)
 
@@ -228,10 +208,7 @@ class FalkorDBGraphClient(GraphClient):
                 f"RETURN r"
             )
         else:
-            query = (
-                "MATCH (a {workspace_id: $ws})-[r]->(b {workspace_id: $ws}) "
-                "RETURN r"
-            )
+            query = "MATCH (a {workspace_id: $ws})-[r]->(b {workspace_id: $ws}) RETURN r"
         params = {"ws": workspace_id}
         result = graph.query(query, params)
         return [self._edge_from_result(row[0]) for row in result.result_set]
@@ -329,9 +306,7 @@ class FalkorDBGraphClient(GraphClient):
 
     # ── Raw Query ──────────────────────────────────────────────────────────
 
-    async def execute_query(
-        self, query: str, params: dict | None = None
-    ) -> list[dict]:
+    async def execute_query(self, query: str, params: dict | None = None) -> list[dict]:
         graph = self._get_graph()
         result = graph.query(query, params or {})
         rows: list[dict] = []
@@ -339,7 +314,7 @@ class FalkorDBGraphClient(GraphClient):
             headers = result.header if hasattr(result, "header") else []
             for row in result.result_set:
                 if headers:
-                    rows.append(dict(zip(headers, row)))
+                    rows.append(dict(zip(headers, row, strict=False)))
                 else:
                     rows.append({"result": row})
         return rows
@@ -351,10 +326,23 @@ class FalkorDBGraphClient(GraphClient):
         stats = WorkspaceStats()
 
         # Count nodes by label
-        for label_name in ["Actor", "Conflict", "Event", "Issue", "Interest",
-                           "Norm", "Process", "Outcome", "Narrative",
-                           "EmotionalState", "TrustState", "PowerDynamic",
-                           "Location", "Evidence", "Role"]:
+        for label_name in [
+            "Actor",
+            "Conflict",
+            "Event",
+            "Issue",
+            "Interest",
+            "Norm",
+            "Process",
+            "Outcome",
+            "Narrative",
+            "EmotionalState",
+            "TrustState",
+            "PowerDynamic",
+            "Location",
+            "Evidence",
+            "Role",
+        ]:
             query = (
                 f"MATCH (n:{label_name} {{workspace_id: $ws}}) "
                 f"WHERE n.deleted_at IS NULL "
@@ -380,9 +368,7 @@ class FalkorDBGraphClient(GraphClient):
         stats.compute_density()
         return stats
 
-    async def get_actor_network(
-        self, actor_id: str, workspace_id: str
-    ) -> ActorNetworkResult:
+    async def get_actor_network(self, actor_id: str, workspace_id: str) -> ActorNetworkResult:
         graph = self._get_graph()
 
         # Get the actor node
@@ -409,11 +395,7 @@ class FalkorDBGraphClient(GraphClient):
         opponents = [self._node_from_result(row[0]) for row in result.result_set]
 
         # Get all connections
-        query = (
-            "MATCH (a {id: $id, workspace_id: $ws})-[r]-(b) "
-            "WHERE b.deleted_at IS NULL "
-            "RETURN r"
-        )
+        query = "MATCH (a {id: $id, workspace_id: $ws})-[r]-(b) WHERE b.deleted_at IS NULL RETURN r"
         result = graph.query(query, {"id": actor_id, "ws": workspace_id})
         connections = [self._edge_from_result(row[0]) for row in result.result_set]
 
@@ -442,17 +424,11 @@ class FalkorDBGraphClient(GraphClient):
             params["end"] = end.isoformat()
 
         where = " AND ".join(conditions)
-        query = (
-            f"MATCH (e:Event) "
-            f"WHERE {where} "
-            f"RETURN e ORDER BY e.occurred_at ASC"
-        )
+        query = f"MATCH (e:Event) WHERE {where} RETURN e ORDER BY e.occurred_at ASC"
         result = graph.query(query, params)
         return [self._node_from_result(row[0]) for row in result.result_set if row[0]]
 
-    async def get_escalation_trajectory(
-        self, workspace_id: str
-    ) -> EscalationResult:
+    async def get_escalation_trajectory(self, workspace_id: str) -> EscalationResult:
         graph = self._get_graph()
 
         # Get conflicts with glasl stages over time
@@ -469,9 +445,9 @@ class FalkorDBGraphClient(GraphClient):
             stage = int(row[0]) if row[0] else 1
             ts = datetime.fromisoformat(row[1]) if row[1] else datetime.utcnow()
             evidence = str(row[2]) if row[2] else ""
-            trajectory.append(EscalationTrajectoryPoint(
-                timestamp=ts, glasl_stage=stage, evidence=evidence
-            ))
+            trajectory.append(
+                EscalationTrajectoryPoint(timestamp=ts, glasl_stage=stage, evidence=evidence)
+            )
 
         current_stage = trajectory[-1].glasl_stage if trajectory else None
         velocity = 0.0
@@ -481,7 +457,11 @@ class FalkorDBGraphClient(GraphClient):
             delta_time = (trajectory[-1].timestamp - trajectory[0].timestamp).days
             if delta_time > 0:
                 velocity = delta_stage / (delta_time / 30)  # stages per month
-                direction = "escalating" if velocity > 0 else ("de-escalating" if velocity < 0 else "stable")
+                direction = (
+                    "escalating"
+                    if velocity > 0
+                    else ("de-escalating" if velocity < 0 else "stable")
+                )
 
         return EscalationResult(
             trajectory=trajectory,
@@ -507,6 +487,7 @@ class FalkorDBGraphClient(GraphClient):
             "RETURN e ORDER BY e.occurred_at ASC"
         )
         from datetime import timedelta
+
         start_dt = reference_time - timedelta(days=window_days)
         end_dt = reference_time + timedelta(days=window_days)
         params = {
@@ -547,10 +528,8 @@ class FalkorDBGraphClient(GraphClient):
 
     async def close(self) -> None:
         if self._db is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._db.close()
-            except Exception:
-                pass
             self._db = None
 
     # ── Helpers ────────────────────────────────────────────────────────────
@@ -567,11 +546,14 @@ class FalkorDBGraphClient(GraphClient):
                 return None
 
             label = props.get("label") or (
-                node_data.labels[0] if hasattr(node_data, "labels") and node_data.labels else "Actor"
+                node_data.labels[0]
+                if hasattr(node_data, "labels") and node_data.labels
+                else "Actor"
             )
 
             # Find the right model class
             from dialectica_ontology.primitives import NODE_TYPES
+
             model_map = {type(m).__name__: type(m) for m in NODE_TYPES}
             model_cls = model_map.get(label)
             if model_cls:

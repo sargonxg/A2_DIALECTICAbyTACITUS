@@ -4,6 +4,7 @@ Unit tests for dialectica_extraction.gliner_ner — GLiNER pre-filter.
 Tests keyword fallback, entity density, priority chunk filtering, and the
 GLINER_AVAILABLE flag. No GLiNER model download required.
 """
+
 from __future__ import annotations
 
 import os
@@ -21,7 +22,6 @@ from dialectica_extraction.gliner_ner import (
     PrefilterEntity,
     PrefilterResult,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  KEYWORD FALLBACK — CONFLICT TERM DETECTION
@@ -51,9 +51,9 @@ class TestKeywordFallbackDetectsConflictTerms:
         assert "negotiation" in entities_text
 
     def test_government_and_rebel(self, prefilter):
-        results = prefilter.prefilter([
-            "The government responded to the rebel offensive with sanctions."
-        ])
+        results = prefilter.prefilter(
+            ["The government responded to the rebel offensive with sanctions."]
+        )
         entities_text = [e.text.lower() for e in results[0].entities]
         assert "government" in entities_text
         assert "rebel" in entities_text
@@ -93,7 +93,7 @@ class TestKeywordFallbackDetectsConflictTerms:
             assert entity.start >= 0
             assert entity.end > entity.start
             # Verify the entity text matches the slice from the original text
-            assert text[entity.start:entity.end].lower() == entity.text.lower()
+            assert text[entity.start : entity.end].lower() == entity.text.lower()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -126,10 +126,12 @@ class TestKeywordFallbackNoEntities:
         assert results[0].entity_density == 0.0
 
     def test_bland_vs_conflict_density_comparison(self, prefilter):
-        results = prefilter.prefilter([
-            "The conflict between government and rebel forces led to war.",
-            "The cat sat on the mat and looked out the window.",
-        ])
+        results = prefilter.prefilter(
+            [
+                "The conflict between government and rebel forces led to war.",
+                "The cat sat on the mat and looked out the window.",
+            ]
+        )
         assert results[0].entity_density > results[1].entity_density
 
 
@@ -158,9 +160,7 @@ class TestPrefilterResultProperties:
         """entity_count should reflect the current length of entities list."""
         result = PrefilterResult(chunk_index=0, chunk_text="test", entities=[])
         assert result.entity_count == 0
-        result.entities.append(
-            PrefilterEntity(text="x", label="kw", start=0, end=1)
-        )
+        result.entities.append(PrefilterEntity(text="x", label="kw", start=0, end=1))
         assert result.entity_count == 1
 
     def test_default_density_and_priority(self):
@@ -275,10 +275,12 @@ class TestEntityDensityCalculation:
 
     def test_priority_score_normalization(self, prefilter):
         """Priority scores should be normalized: max density chunk gets 1.0."""
-        results = prefilter.prefilter([
-            "conflict war escalation violence",  # high density
-            "The cat sat on the mat",  # zero density
-        ])
+        results = prefilter.prefilter(
+            [
+                "conflict war escalation violence",  # high density
+                "The cat sat on the mat",  # zero density
+            ]
+        )
         # Highest density chunk should have priority_score = 1.0
         assert results[0].priority_score == pytest.approx(1.0)
         # Zero density chunk should have priority_score = 0.0

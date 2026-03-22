@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 from ulid import ULID
 
 
@@ -23,6 +23,7 @@ def _ulid() -> str:
 
 class EdgeType(StrEnum):
     """All 20 DIALECTICA edge types."""
+
     PARTY_TO = "PARTY_TO"
     PARTICIPATES_IN = "PARTICIPATES_IN"
     HAS_INTEREST = "HAS_INTEREST"
@@ -205,13 +206,9 @@ def validate_relationship(rel: ConflictRelationship) -> list[str]:
         return errors
 
     if rel.source_label and rel.source_label not in schema["source"]:
-        errors.append(
-            f"{rel.type}: source must be {schema['source']}, got '{rel.source_label}'"
-        )
+        errors.append(f"{rel.type}: source must be {schema['source']}, got '{rel.source_label}'")
     if rel.target_label and rel.target_label not in schema["target"]:
-        errors.append(
-            f"{rel.type}: target must be {schema['target']}, got '{rel.target_label}'"
-        )
+        errors.append(f"{rel.type}: target must be {schema['target']}, got '{rel.target_label}'")
 
     for req_prop in schema["required"]:
         if req_prop not in rel.properties:

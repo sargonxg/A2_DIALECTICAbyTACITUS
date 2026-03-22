@@ -6,6 +6,7 @@ Level 1 — Association (seeing/observing)
 Level 2 — Intervention (doing/acting)
 Level 3 — Counterfactual (imagining/reasoning)
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -108,18 +109,35 @@ class PearlCausalFramework(TheoryFramework):
 
         # Counterfactual indicators (check first — most specific)
         counterfactual_kw = [
-            "would have", "could have", "should have", "had been",
-            "what if", "if only", "alternatively", "imagine",
-            "hypothetical", "counterfactual", "different outcome",
+            "would have",
+            "could have",
+            "should have",
+            "had been",
+            "what if",
+            "if only",
+            "alternatively",
+            "imagine",
+            "hypothetical",
+            "counterfactual",
+            "different outcome",
         ]
         if any(kw in q for kw in counterfactual_kw):
             return "counterfactual"
 
         # Intervention indicators
         intervention_kw = [
-            "what happens if we", "if we do", "effect of", "impact of",
-            "intervene", "impose", "introduce", "change", "action",
-            "implement", "cause", "result of doing",
+            "what happens if we",
+            "if we do",
+            "effect of",
+            "impact of",
+            "intervene",
+            "impose",
+            "introduce",
+            "change",
+            "action",
+            "implement",
+            "cause",
+            "result of doing",
         ]
         if any(kw in q for kw in intervention_kw):
             return "intervention"
@@ -160,7 +178,7 @@ class PearlCausalFramework(TheoryFramework):
         if not all_levels:
             dominant = context.get("reasoning_type", "association")
         else:
-            level_counts = {l: all_levels.count(l) for l in set(all_levels)}
+            level_counts = {lvl: all_levels.count(lvl) for lvl in set(all_levels)}
             dominant = max(level_counts, key=level_counts.get)  # type: ignore[arg-type]
 
         level_num = {"association": 1, "intervention": 2, "counterfactual": 3}[dominant]
@@ -218,7 +236,7 @@ class PearlCausalFramework(TheoryFramework):
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="What would have happened if the conflict had been handled differently at an earlier stage?",
+                question="What would have happened if the conflict had been handled differently at an earlier stage?",  # noqa: E501
                 framework=self.name,
                 purpose="Encourage counterfactual reasoning",
                 response_type="open",

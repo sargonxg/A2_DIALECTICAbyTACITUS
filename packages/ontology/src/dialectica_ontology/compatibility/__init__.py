@@ -1,11 +1,5 @@
 """Compatibility mappings — PLOVER, CAMEO, ACLED, UCDP interoperability."""
 
-from dialectica_ontology.compatibility.plover import (
-    dialectica_to_plover,
-    event_type_quadclass,
-    plover_quadclass,
-    plover_to_dialectica,
-)
 from dialectica_ontology.compatibility.acled import (
     acled_actor_to_dialectica,
     acled_to_dialectica,
@@ -17,6 +11,12 @@ from dialectica_ontology.compatibility.cameo import (
     cameo_to_dialectica,
     dialectica_to_cameo,
     dialectica_to_cameo_event,
+)
+from dialectica_ontology.compatibility.plover import (
+    dialectica_to_plover,
+    event_type_quadclass,
+    plover_quadclass,
+    plover_to_dialectica,
 )
 from dialectica_ontology.compatibility.ucdp import (
     dialectica_to_ucdp_incompatibility,

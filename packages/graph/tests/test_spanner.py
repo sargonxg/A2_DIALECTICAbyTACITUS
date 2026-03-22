@@ -4,15 +4,15 @@ Tests for dialectica_graph — Schema, CRUD, traversal, vector search, analytics
 Uses MockGraphClient for unit tests (no Spanner emulator required).
 Integration tests with Spanner emulator are marked with @pytest.mark.integration.
 """
+
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta
+import os
+import sys
+from datetime import datetime
 
 import pytest
-
-from dialectica_ontology.primitives import Actor, Conflict, ConflictNode, Event
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 from dialectica_graph import create_graph_client
 from dialectica_graph.models import (
@@ -32,10 +32,8 @@ from dialectica_graph.vector import (
     validate_embedding,
 )
 from dialectica_graph.writer import WriteResult, bulk_upsert
-from dialectica_graph.traversal import PathResult
+from dialectica_ontology.relationships import EdgeType
 
-import sys
-import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from conftest import (
@@ -47,7 +45,6 @@ from conftest import (
     make_edge,
     make_event,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  SCHEMA TESTS
@@ -334,9 +331,7 @@ class TestVectorSearch:
         await mock_client.upsert_node(b, TEST_WORKSPACE_ID, TEST_TENANT_ID)
         await mock_client.upsert_node(c, TEST_WORKSPACE_ID, TEST_TENANT_ID)
 
-        results = await mock_client.vector_search(
-            emb_a, TEST_WORKSPACE_ID, top_k=2
-        )
+        results = await mock_client.vector_search(emb_a, TEST_WORKSPACE_ID, top_k=2)
         assert len(results) >= 1
         assert isinstance(results[0], ScoredNode)
         # First result should be the most similar
@@ -353,9 +348,7 @@ class TestVectorSearch:
         await mock_client.upsert_node(actor, TEST_WORKSPACE_ID, TEST_TENANT_ID)
         await mock_client.upsert_node(conflict, TEST_WORKSPACE_ID, TEST_TENANT_ID)
 
-        results = await mock_client.vector_search(
-            emb, TEST_WORKSPACE_ID, label="Actor", top_k=10
-        )
+        results = await mock_client.vector_search(emb, TEST_WORKSPACE_ID, label="Actor", top_k=10)
         for r in results:
             assert r.node.label == "Actor"
 
@@ -421,9 +414,7 @@ class TestBatchOperations:
     @pytest.mark.asyncio
     async def test_batch_upsert_nodes(self, mock_client: MockGraphClient):
         actors = [make_actor(f"Batch Actor {i}") for i in range(5)]
-        ids = await mock_client.batch_upsert_nodes(
-            actors, TEST_WORKSPACE_ID, TEST_TENANT_ID
-        )
+        ids = await mock_client.batch_upsert_nodes(actors, TEST_WORKSPACE_ID, TEST_TENANT_ID)
         assert len(ids) == 5
         nodes = await mock_client.get_nodes(TEST_WORKSPACE_ID)
         assert len(nodes) == 5
@@ -437,9 +428,7 @@ class TestBatchOperations:
         await mock_client.upsert_node(conflict, TEST_WORKSPACE_ID, TEST_TENANT_ID)
 
         edges = [make_edge(a, conflict, EdgeType.PARTY_TO) for a in actors]
-        ids = await mock_client.batch_upsert_edges(
-            edges, TEST_WORKSPACE_ID, TEST_TENANT_ID
-        )
+        ids = await mock_client.batch_upsert_edges(edges, TEST_WORKSPACE_ID, TEST_TENANT_ID)
         assert len(ids) == 3
 
     @pytest.mark.asyncio
@@ -510,9 +499,7 @@ class TestTenantIsolation:
             ctx.validate()
 
     def test_spanner_node_filter(self):
-        where, params = TenantFilter.spanner_node_filter(
-            workspace_id="ws1", tenant_id="t1"
-        )
+        where, params = TenantFilter.spanner_node_filter(workspace_id="ws1", tenant_id="t1")
         assert "workspace_id = @ws" in where
         assert "tenant_id = @tid" in where
         assert "deleted_at IS NULL" in where
@@ -520,9 +507,7 @@ class TestTenantIsolation:
         assert params["tid"] == "t1"
 
     def test_cypher_node_filter(self):
-        where, params = TenantFilter.cypher_node_filter(
-            workspace_id="ws1", tenant_id="t1"
-        )
+        where, params = TenantFilter.cypher_node_filter(workspace_id="ws1", tenant_id="t1")
         assert "workspace_id = $ws" in where
         assert "tenant_id = $tid" in where
 

@@ -1,53 +1,53 @@
 """Tests for dialectica_ontology.symbolic_rules — All deterministic conflict grammar rules."""
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from dialectica_ontology.symbolic_rules import (
-    # Enums and dataclasses
-    Severity,
-    RuleCategory,
-    Finding,
-    # Structural rules
-    rule_conflict_has_parties,
-    rule_event_has_timestamp,
-    rule_edge_endpoints_exist,
-    rule_process_has_conflict,
-    rule_outcome_has_process,
-    # Conflict rules
-    rule_glasl_level_derivation,
-    # Escalation rules
-    rule_rapid_escalation,
-    rule_escalation_trajectory,
-    rule_stage_regression_alert,
-    # Ripeness rules
-    rule_mutually_hurting_stalemate,
-    rule_mutually_enticing_opportunity,
-    rule_ripeness_window,
-    # Trust rules
-    compute_overall_trust,
-    rule_trust_deficit,
-    rule_trust_breach_event,
-    rule_trust_formula_validation,
-    # Power rules
-    rule_power_asymmetry,
-    rule_multi_domain_power_concentration,
-    # Causal rules
-    rule_causal_chain_length,
-    rule_causal_cycles,
-    rule_escalation_retaliation_pattern,
-    # Process rules
-    rule_power_based_no_resolution,
-    rule_glasl_process_recommendation,
-    rule_rights_based_escalation_warning,
+    _DEFAULT_RULES,
     # Constants / maps
     GLASL_INTERVENTION_MAP,
     INTERVENTION_PROCESS_MAP,
+    Finding,
+    RuleCategory,
     # Rule engine
     RuleEngine,
-    _DEFAULT_RULES,
+    # Enums and dataclasses
+    Severity,
+    # Trust rules
+    compute_overall_trust,
+    # Causal rules
+    rule_causal_chain_length,
+    rule_causal_cycles,
+    # Structural rules
+    rule_conflict_has_parties,
+    rule_edge_endpoints_exist,
+    rule_escalation_retaliation_pattern,
+    rule_escalation_trajectory,
+    rule_event_has_timestamp,
+    # Conflict rules
+    rule_glasl_level_derivation,
+    rule_glasl_process_recommendation,
+    rule_multi_domain_power_concentration,
+    rule_mutually_enticing_opportunity,
+    # Ripeness rules
+    rule_mutually_hurting_stalemate,
+    rule_outcome_has_process,
+    # Power rules
+    rule_power_asymmetry,
+    # Process rules
+    rule_power_based_no_resolution,
+    rule_process_has_conflict,
+    # Escalation rules
+    rule_rapid_escalation,
+    rule_rights_based_escalation_warning,
+    rule_ripeness_window,
+    rule_stage_regression_alert,
+    rule_trust_breach_event,
+    rule_trust_deficit,
+    rule_trust_formula_validation,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Enums, Dataclasses, Registry
@@ -157,14 +157,20 @@ class TestGlaslInterventionMap:
         for i in range(1, 10):
             assert i in GLASL_INTERVENTION_MAP
 
-    @pytest.mark.parametrize("stage,intervention", [
-        (1, "moderation"), (2, "moderation"),
-        (3, "facilitation"),
-        (4, "process_consultation"),
-        (5, "mediation"), (6, "mediation"),
-        (7, "arbitration"),
-        (8, "power_intervention"), (9, "power_intervention"),
-    ])
+    @pytest.mark.parametrize(
+        "stage,intervention",
+        [
+            (1, "moderation"),
+            (2, "moderation"),
+            (3, "facilitation"),
+            (4, "process_consultation"),
+            (5, "mediation"),
+            (6, "mediation"),
+            (7, "arbitration"),
+            (8, "power_intervention"),
+            (9, "power_intervention"),
+        ],
+    )
     def test_stage_to_intervention(self, stage, intervention):
         assert GLASL_INTERVENTION_MAP[stage] == intervention
 
@@ -172,8 +178,12 @@ class TestGlaslInterventionMap:
 class TestInterventionProcessMap:
     def test_has_all_intervention_types(self):
         expected = {
-            "moderation", "facilitation", "process_consultation",
-            "mediation", "arbitration", "power_intervention",
+            "moderation",
+            "facilitation",
+            "process_consultation",
+            "mediation",
+            "arbitration",
+            "power_intervention",
         }
         assert set(INTERVENTION_PROCESS_MAP.keys()) == expected
 
@@ -280,7 +290,8 @@ class TestRuleEventHasTimestamp:
         ctx = {
             "nodes": {
                 "e1": {
-                    "id": "e1", "label": "Event",
+                    "id": "e1",
+                    "label": "Event",
                     "occurred_at": "2024-01-15T10:00:00",
                 },
             },
@@ -324,7 +335,12 @@ class TestRuleEdgeEndpointsExist:
         ctx = {
             "nodes": {"c1": {"id": "c1", "label": "Conflict"}},
             "edges": [
-                {"type": "PARTY_TO", "source_id": "missing_actor", "target_id": "c1", "properties": {}},
+                {
+                    "type": "PARTY_TO",
+                    "source_id": "missing_actor",
+                    "target_id": "c1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_edge_endpoints_exist(ctx)
@@ -335,7 +351,12 @@ class TestRuleEdgeEndpointsExist:
         ctx = {
             "nodes": {"a1": {"id": "a1", "label": "Actor"}},
             "edges": [
-                {"type": "PARTY_TO", "source_id": "a1", "target_id": "missing_conflict", "properties": {}},
+                {
+                    "type": "PARTY_TO",
+                    "source_id": "a1",
+                    "target_id": "missing_conflict",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_edge_endpoints_exist(ctx)
@@ -346,7 +367,12 @@ class TestRuleEdgeEndpointsExist:
         ctx = {
             "nodes": {},
             "edges": [
-                {"type": "PARTY_TO", "source_id": "missing_a", "target_id": "missing_b", "properties": {}},
+                {
+                    "type": "PARTY_TO",
+                    "source_id": "missing_a",
+                    "target_id": "missing_b",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_edge_endpoints_exist(ctx)
@@ -379,7 +405,12 @@ class TestRuleProcessHasConflict:
                 "c1": {"id": "c1", "label": "Conflict"},
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_process_has_conflict(ctx)
@@ -434,7 +465,9 @@ class TestRuleGlaslLevelDerivation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": stage,
                 },
             },
@@ -449,7 +482,9 @@ class TestRuleGlaslLevelDerivation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": stage,
                 },
             },
@@ -463,7 +498,9 @@ class TestRuleGlaslLevelDerivation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": stage,
                 },
             },
@@ -479,8 +516,11 @@ class TestRuleGlaslLevelDerivation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
-                    "glasl_stage": 2, "glasl_level": "lose_lose",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
+                    "glasl_stage": 2,
+                    "glasl_level": "lose_lose",
                 },
             },
             "edges": [],
@@ -493,12 +533,15 @@ class TestRuleGlaslLevelDerivation:
         assert findings[0].details["stored_level"] == "lose_lose"
 
     def test_mismatch_plus_lose_lose(self):
-        """Stage 7 with stored win_win => both CONFLICT-002 (mismatch) and CONFLICT-003 (lose-lose)."""
+        """Stage 7 with stored win_win => both CONFLICT-002 (mismatch) and CONFLICT-003 (lose-lose)."""  # noqa: E501
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
-                    "glasl_stage": 7, "glasl_level": "win_win",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
+                    "glasl_stage": 7,
+                    "glasl_level": "win_win",
                 },
             },
             "edges": [],
@@ -512,7 +555,9 @@ class TestRuleGlaslLevelDerivation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": "invalid",
                 },
             },
@@ -536,8 +581,11 @@ class TestRuleGlaslLevelDerivation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
-                    "glasl_stage": 5, "glasl_level": "win_lose",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
+                    "glasl_stage": 5,
+                    "glasl_level": "win_lose",
                 },
             },
             "edges": [],
@@ -610,7 +658,8 @@ class TestRuleRapidEscalation:
 
     def test_single_record(self):
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [{"glasl_stage": 3, "timestamp": "2024-01-01T00:00:00"}],
             },
@@ -623,7 +672,8 @@ class TestRuleRapidEscalation:
 
     def test_invalid_timestamp_skipped(self):
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [
                     {"glasl_stage": 2, "timestamp": "not-a-date"},
@@ -659,7 +709,8 @@ class TestRuleEscalationTrajectory:
     def test_non_monotonic_not_flagged(self):
         base = datetime(2024, 1, 1)
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [
                     {"glasl_stage": 3, "timestamp": (base).isoformat()},
@@ -673,7 +724,8 @@ class TestRuleEscalationTrajectory:
 
     def test_fewer_than_3_records_skipped(self):
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [
                     {"glasl_stage": 2, "timestamp": "2024-01-01T00:00:00"},
@@ -712,7 +764,8 @@ class TestRuleStageRegressionAlert:
 
     def test_escalation_not_flagged(self):
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [
                     {"glasl_stage": 3, "timestamp": "2024-01-01T00:00:00"},
@@ -725,7 +778,8 @@ class TestRuleStageRegressionAlert:
 
     def test_same_stage_not_flagged(self):
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [
                     {"glasl_stage": 3, "timestamp": "2024-01-01T00:00:00"},
@@ -738,7 +792,8 @@ class TestRuleStageRegressionAlert:
 
     def test_single_record(self):
         ctx = {
-            "nodes": {}, "edges": [],
+            "nodes": {},
+            "edges": [],
             "conflict_history": {
                 "c1": [{"glasl_stage": 3, "timestamp": "2024-01-01T00:00:00"}],
             },
@@ -758,7 +813,9 @@ class TestRuleMutuallyHurtingStalemate:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "kriesberg_phase": "stalemate",
                 },
                 "a1": {"id": "a1", "label": "Actor", "name": "Alice"},
@@ -783,7 +840,9 @@ class TestRuleMutuallyHurtingStalemate:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "kriesberg_phase": "stalemate",
                 },
                 "a1": {"id": "a1", "label": "Actor"},
@@ -801,7 +860,9 @@ class TestRuleMutuallyHurtingStalemate:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "intensity": "severe",
                 },
                 "a1": {"id": "a1", "label": "Actor"},
@@ -823,7 +884,9 @@ class TestRuleMutuallyHurtingStalemate:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "intensity": "low",
                     "kriesberg_phase": "emergence",
                 },
@@ -837,7 +900,9 @@ class TestRuleMutuallyHurtingStalemate:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "kriesberg_phase": "stalemate",
                 },
                 "a1": {"id": "a1", "label": "Actor"},
@@ -847,7 +912,12 @@ class TestRuleMutuallyHurtingStalemate:
             "edges": [
                 {"type": "PARTY_TO", "source_id": "a1", "target_id": "c1", "properties": {}},
                 {"type": "PARTY_TO", "source_id": "a2", "target_id": "c1", "properties": {}},
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_mutually_hurting_stalemate(ctx)
@@ -932,7 +1002,9 @@ class TestRuleRipenessWindow:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "kriesberg_phase": "stalemate",
                 },
                 "a1": {"id": "a1", "label": "Actor"},
@@ -960,7 +1032,9 @@ class TestRuleRipenessWindow:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "kriesberg_phase": "stalemate",
                 },
                 "a1": {"id": "a1", "label": "Actor"},
@@ -1015,7 +1089,8 @@ class TestRuleTrustDeficit:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "overall_trust": 0.15,
                 },
             },
@@ -1030,7 +1105,8 @@ class TestRuleTrustDeficit:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "overall_trust": 0.7,
                 },
             },
@@ -1043,7 +1119,8 @@ class TestRuleTrustDeficit:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "overall_trust": 0.3,
                 },
             },
@@ -1071,7 +1148,9 @@ class TestRuleTrustDeficit:
             },
             "edges": [
                 {
-                    "type": "TRUSTS", "source_id": "a1", "target_id": "a2",
+                    "type": "TRUSTS",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"trust_state_id": "ts1"},
                 },
             ],
@@ -1153,7 +1232,8 @@ class TestRuleTrustFormulaValidation:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "propensity_to_trust": 0.8,
                     "perceived_ability": 0.9,
                     "perceived_benevolence": 0.8,
@@ -1171,7 +1251,8 @@ class TestRuleTrustFormulaValidation:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "propensity_to_trust": 1.0,
                     "perceived_ability": 1.0,
                     "perceived_benevolence": 1.0,
@@ -1188,7 +1269,8 @@ class TestRuleTrustFormulaValidation:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "propensity_to_trust": 0.8,
                     # missing perceived_ability, benevolence, integrity
                     "overall_trust": 0.5,
@@ -1204,7 +1286,8 @@ class TestRuleTrustFormulaValidation:
         ctx = {
             "nodes": {
                 "ts1": {
-                    "id": "ts1", "label": "TrustState",
+                    "id": "ts1",
+                    "label": "TrustState",
                     "propensity_to_trust": 0.8,
                     "perceived_ability": 0.9,
                     "perceived_benevolence": 0.8,
@@ -1237,7 +1320,9 @@ class TestRulePowerAsymmetry:
                 {"type": "PARTY_TO", "source_id": "a1", "target_id": "c1", "properties": {}},
                 {"type": "PARTY_TO", "source_id": "a2", "target_id": "c1", "properties": {}},
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"magnitude": 0.8, "domain": "economic"},
                 },
             ],
@@ -1256,7 +1341,9 @@ class TestRulePowerAsymmetry:
             },
             "edges": [
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"magnitude": 0.9, "domain": "military"},
                 },
             ],
@@ -1273,7 +1360,9 @@ class TestRulePowerAsymmetry:
             },
             "edges": [
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"magnitude": 0.3, "domain": "economic"},
                 },
             ],
@@ -1286,7 +1375,9 @@ class TestRulePowerAsymmetry:
             "nodes": {},
             "edges": [
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {},
                 },
             ],
@@ -1303,7 +1394,9 @@ class TestRulePowerAsymmetry:
             },
             "edges": [
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"power_dynamic_id": "pd1", "domain": "political"},
                 },
             ],
@@ -1324,11 +1417,15 @@ class TestRuleMultiDomainPowerConcentration:
             },
             "edges": [
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"domain": "economic"},
                 },
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"domain": "military"},
                 },
             ],
@@ -1348,7 +1445,9 @@ class TestRuleMultiDomainPowerConcentration:
             },
             "edges": [
                 {
-                    "type": "HAS_POWER_OVER", "source_id": "a1", "target_id": "a2",
+                    "type": "HAS_POWER_OVER",
+                    "source_id": "a1",
+                    "target_id": "a2",
                     "properties": {"domain": "economic"},
                 },
             ],
@@ -1390,7 +1489,7 @@ class TestRuleCausalChainLength:
         ctx = {
             "nodes": {f"e{i}": {"id": f"e{i}", "label": "Event"} for i in range(1, 7)},
             "edges": [
-                {"type": "CAUSED", "source_id": f"e{i}", "target_id": f"e{i+1}", "properties": {}}
+                {"type": "CAUSED", "source_id": f"e{i}", "target_id": f"e{i + 1}", "properties": {}}
                 for i in range(1, 6)
             ],
         }
@@ -1484,11 +1583,15 @@ class TestRuleEscalationRetaliationPattern:
             "nodes": {},
             "edges": [
                 {
-                    "type": "CAUSED", "source_id": "e1", "target_id": "e2",
+                    "type": "CAUSED",
+                    "source_id": "e1",
+                    "target_id": "e2",
                     "properties": {"mechanism": "escalation"},
                 },
                 {
-                    "type": "CAUSED", "source_id": "e2", "target_id": "e3",
+                    "type": "CAUSED",
+                    "source_id": "e2",
+                    "target_id": "e3",
                     "properties": {"mechanism": "retaliation"},
                 },
             ],
@@ -1503,7 +1606,9 @@ class TestRuleEscalationRetaliationPattern:
             "nodes": {},
             "edges": [
                 {
-                    "type": "CAUSED", "source_id": "e1", "target_id": "e2",
+                    "type": "CAUSED",
+                    "source_id": "e1",
+                    "target_id": "e2",
                     "properties": {"mechanism": "escalation"},
                 },
             ],
@@ -1516,11 +1621,15 @@ class TestRuleEscalationRetaliationPattern:
             "nodes": {},
             "edges": [
                 {
-                    "type": "CAUSED", "source_id": "e1", "target_id": "e2",
+                    "type": "CAUSED",
+                    "source_id": "e1",
+                    "target_id": "e2",
                     "properties": {"mechanism": "diplomatic"},
                 },
                 {
-                    "type": "CAUSED", "source_id": "e2", "target_id": "e3",
+                    "type": "CAUSED",
+                    "source_id": "e2",
+                    "target_id": "e3",
                     "properties": {"mechanism": "economic"},
                 },
             ],
@@ -1545,11 +1654,13 @@ class TestRulePowerBasedNoResolution:
         ctx = {
             "nodes": {
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "power_based",
                 },
                 "o1": {
-                    "id": "o1", "label": "Outcome",
+                    "id": "o1",
+                    "label": "Outcome",
                     "outcome_type": "no_resolution",
                 },
             },
@@ -1567,11 +1678,13 @@ class TestRulePowerBasedNoResolution:
         ctx = {
             "nodes": {
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "power_based",
                 },
                 "o1": {
-                    "id": "o1", "label": "Outcome",
+                    "id": "o1",
+                    "label": "Outcome",
                     "outcome_type": "full_resolution",
                 },
             },
@@ -1586,11 +1699,13 @@ class TestRulePowerBasedNoResolution:
         ctx = {
             "nodes": {
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "interest_based",
                 },
                 "o1": {
-                    "id": "o1", "label": "Outcome",
+                    "id": "o1",
+                    "label": "Outcome",
                     "outcome_type": "no_resolution",
                 },
             },
@@ -1613,17 +1728,25 @@ class TestRuleGlaslProcessRecommendation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 7,  # arbitration recommended
                 },
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "process_type": "negotiation",  # wrong for stage 7
                     "status": "active",
                 },
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_glasl_process_recommendation(ctx)
@@ -1635,7 +1758,9 @@ class TestRuleGlaslProcessRecommendation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 5,  # mediation recommended
                 },
             },
@@ -1650,17 +1775,25 @@ class TestRuleGlaslProcessRecommendation:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 1,  # moderation -> negotiation
                 },
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "process_type": "negotiation",
                     "status": "active",
                 },
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_glasl_process_recommendation(ctx)
@@ -1684,16 +1817,24 @@ class TestRuleRightsBasedEscalationWarning:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 2,
                 },
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "rights_based",
                 },
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_rights_based_escalation_warning(ctx)
@@ -1706,16 +1847,24 @@ class TestRuleRightsBasedEscalationWarning:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 6,  # > 4, so skip
                 },
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "rights_based",
                 },
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_rights_based_escalation_warning(ctx)
@@ -1725,16 +1874,24 @@ class TestRuleRightsBasedEscalationWarning:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 2,
                 },
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "interest_based",
                 },
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_rights_based_escalation_warning(ctx)
@@ -1744,16 +1901,24 @@ class TestRuleRightsBasedEscalationWarning:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 4,
                 },
                 "p1": {
-                    "id": "p1", "label": "Process",
+                    "id": "p1",
+                    "label": "Process",
                     "resolution_approach": "rights_based",
                 },
             },
             "edges": [
-                {"type": "RESOLVED_THROUGH", "source_id": "c1", "target_id": "p1", "properties": {}},
+                {
+                    "type": "RESOLVED_THROUGH",
+                    "source_id": "c1",
+                    "target_id": "p1",
+                    "properties": {},
+                },
             ],
         }
         findings = rule_rights_based_escalation_warning(ctx)
@@ -1788,8 +1953,9 @@ class TestRuleEngine:
         engine = RuleEngine(load_defaults=False)
 
         def my_rule(ctx):
-            return [Finding(rule_id="CUSTOM-001", category="custom",
-                            severity="info", message="custom")]
+            return [
+                Finding(rule_id="CUSTOM-001", category="custom", severity="info", message="custom")
+            ]
 
         engine.register("custom", my_rule)
         assert engine.rule_count == 1
@@ -1835,7 +2001,9 @@ class TestRuleEngine:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 8,
                 },
             },
@@ -1852,7 +2020,9 @@ class TestRuleEngine:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
                     "glasl_stage": 8,
                 },
             },
@@ -1871,8 +2041,11 @@ class TestRuleEngine:
         ctx = {
             "nodes": {
                 "c1": {
-                    "id": "c1", "label": "Conflict", "name": "Test",
-                    "glasl_stage": 8, "glasl_level": "win_win",
+                    "id": "c1",
+                    "label": "Conflict",
+                    "name": "Test",
+                    "glasl_stage": 8,
+                    "glasl_level": "win_win",
                 },
             },
             "edges": [],
@@ -1880,7 +2053,9 @@ class TestRuleEngine:
         findings = engine.run(ctx)
         severity_order = {"info": 0, "warning": 1, "alert": 2, "critical": 3}
         for i in range(len(findings) - 1):
-            assert severity_order.get(findings[i].severity, 0) >= severity_order.get(findings[i + 1].severity, 0)
+            assert severity_order.get(findings[i].severity, 0) >= severity_order.get(
+                findings[i + 1].severity, 0
+            )
 
     def test_run_category_convenience(self):
         engine = RuleEngine()

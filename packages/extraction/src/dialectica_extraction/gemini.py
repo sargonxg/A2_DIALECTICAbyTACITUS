@@ -5,6 +5,7 @@ Uses structured JSON output mode with tier-appropriate prompts.
 Primary model: gemini-2.5-flash-001, complex: gemini-2.5-pro-001.
 Supports LiteLLM as an alternative backend for provider-agnostic access.
 """
+
 from __future__ import annotations
 
 import json
@@ -13,13 +14,12 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from dialectica_ontology.tiers import OntologyTier
-
-from dialectica_extraction.prompts.system import build_system_prompt
 from dialectica_extraction.prompts.extraction_essential import EXTRACTION_ESSENTIAL_PROMPT
-from dialectica_extraction.prompts.extraction_standard import EXTRACTION_STANDARD_PROMPT
 from dialectica_extraction.prompts.extraction_full import EXTRACTION_FULL_PROMPT
+from dialectica_extraction.prompts.extraction_standard import EXTRACTION_STANDARD_PROMPT
 from dialectica_extraction.prompts.relationship import RELATIONSHIP_PROMPT
+from dialectica_extraction.prompts.system import build_system_prompt
+from dialectica_ontology.tiers import OntologyTier
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ class GeminiExtractor:
                 logger.warning("Gemini call error (attempt %d): %s", attempt + 1, e)
                 metrics.retries = attempt + 1
                 if attempt < self._max_retries - 1:
-                    time.sleep(2 ** attempt)
+                    time.sleep(2**attempt)
 
         return None, metrics
 
@@ -223,7 +223,7 @@ class GeminiExtractor:
             "Please fix them and return valid JSON.\n\n"
             f"Entities:\n{json.dumps(entities, indent=2, default=str)}\n\n"
             f"Errors:\n" + "\n".join(f"- {e}" for e in errors) + "\n\n"
-            "Return: {\"nodes\": [...]}"
+            'Return: {"nodes": [...]}'
         )
 
         result_dict, metrics = self._call_gemini(repair_prompt, system_prompt)

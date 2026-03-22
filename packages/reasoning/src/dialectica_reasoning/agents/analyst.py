@@ -1,12 +1,13 @@
 """
 Analyst Agent — Main analysis agent combining all reasoning capabilities.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from dialectica_graph import GraphClient
-from dialectica_reasoning.query_engine import ConflictQueryEngine, AnalysisResponse
+from dialectica_reasoning.query_engine import AnalysisResponse, ConflictQueryEngine
 
 
 @dataclass

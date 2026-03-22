@@ -4,6 +4,7 @@ GLiNER Pre-filter — Zero-shot NER for conflict entity-dense passage selection.
 Uses GLiNER for entity detection if available; falls back to keyword detection.
 Scores chunks by entity density to prioritize entity-rich passages for Gemini.
 """
+
 from __future__ import annotations
 
 import logging
@@ -183,13 +184,15 @@ class GLiNERPreFilter:
         """Fallback: pre-filter using keyword matching."""
         entities = []
         for match in _KEYWORD_PATTERN.finditer(text):
-            entities.append(PrefilterEntity(
-                text=match.group(),
-                label="keyword_match",
-                start=match.start(),
-                end=match.end(),
-                score=0.5,
-            ))
+            entities.append(
+                PrefilterEntity(
+                    text=match.group(),
+                    label="keyword_match",
+                    start=match.start(),
+                    end=match.end(),
+                    score=0.5,
+                )
+            )
 
         word_count = max(len(text.split()), 1)
         density = len(entities) / word_count * 100

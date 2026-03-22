@@ -3,10 +3,11 @@ Tests for SymbolicFirewall — deterministic conclusions block contradicting
 probabilistic predictions, non-contradicting predictions pass through,
 and deterministic conclusions always have confidence=1.0.
 """
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 import pytest
 
@@ -14,7 +15,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from dialectica_ontology.confidence import Conclusion, ConfidenceType
 from dialectica_reasoning.symbolic.firewall import SymbolicFirewall
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  CONCLUSION MODEL TESTS

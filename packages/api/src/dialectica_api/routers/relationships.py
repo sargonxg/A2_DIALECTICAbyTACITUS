@@ -1,6 +1,7 @@
 """
 Relationships Router — CRUD for conflict graph edges.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from dialectica_api.deps import get_graph_client, get_current_tenant
+from dialectica_api.deps import get_current_tenant, get_graph_client
 
 router = APIRouter(prefix="/v1/workspaces/{workspace_id}/relationships", tags=["relationships"])
 
@@ -27,8 +28,8 @@ async def list_relationships(
     workspace_id: str,
     edge_type: str | None = Query(None),
     limit: int = Query(100, le=1000),
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> list[EdgeResponse]:
     """List edges in a workspace with optional type filter."""
     if graph_client is None:
@@ -51,8 +52,8 @@ async def list_relationships(
 async def delete_relationship(
     workspace_id: str,
     edge_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> None:
     """Delete a relationship."""
     if graph_client is None:

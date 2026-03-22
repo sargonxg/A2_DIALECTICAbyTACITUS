@@ -1,15 +1,17 @@
 """
 Workspaces Router — CRUD operations for conflict workspaces.
 """
+
 from __future__ import annotations
 
+import contextlib
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
-from dialectica_api.deps import get_graph_client, get_current_tenant
+from dialectica_api.deps import get_current_tenant, get_graph_client
 
 router = APIRouter(prefix="/v1/workspaces", tags=["workspaces"])
 
@@ -49,11 +51,12 @@ _workspaces: dict[str, dict[str, Any]] = {}
 @router.post("", response_model=WorkspaceResponse, status_code=201)
 async def create_workspace(
     body: WorkspaceCreate,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> WorkspaceResponse:
     """Create a new conflict workspace."""
     import uuid
+
     workspace_id = str(uuid.uuid4())[:8]
     now = datetime.utcnow().isoformat()
     workspace = {
@@ -69,17 +72,15 @@ async def create_workspace(
     _workspaces[workspace_id] = workspace
 
     if graph_client:
-        try:
+        with contextlib.suppress(Exception):
             await graph_client.initialize_schema()
-        except Exception:
-            pass
 
     return WorkspaceResponse(**workspace)
 
 
 @router.get("", response_model=list[WorkspaceResponse])
 async def list_workspaces(
-    tenant_id: str = Depends(get_current_tenant),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
 ) -> list[WorkspaceResponse]:
     """List all workspaces for the current tenant."""
     tenant_workspaces = [
@@ -93,8 +94,8 @@ async def list_workspaces(
 @router.get("/{workspace_id}", response_model=WorkspaceResponse)
 async def get_workspace(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> WorkspaceResponse:
     """Get a workspace by ID."""
     ws = _workspaces.get(workspace_id)
@@ -119,7 +120,7 @@ async def get_workspace(
 async def update_workspace(
     workspace_id: str,
     body: WorkspaceUpdate,
-    tenant_id: str = Depends(get_current_tenant),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
 ) -> WorkspaceResponse:
     """Update workspace metadata."""
     ws = _workspaces.get(workspace_id)
@@ -136,7 +137,7 @@ async def update_workspace(
 @router.delete("/{workspace_id}", status_code=204)
 async def delete_workspace(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
 ) -> None:
     """Delete a workspace."""
     ws = _workspaces.get(workspace_id)

@@ -4,22 +4,21 @@ UCDP Connector — Uppsala Conflict Data Program.
 REST client for https://ucdpapi.pcr.uu.se/api/.
 Maps UCDP dyads to ACO Actor pairs with Conflict nodes.
 """
+
 from __future__ import annotations
 
 import logging
-import os
-from datetime import datetime
 from typing import Any
 
 import httpx
 
-from dialectica_ontology.primitives import Actor, Conflict, Event, ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 from dialectica_ontology.compatibility.ucdp import (
+    ucdp_conflict_type_to_domain,
     ucdp_to_dialectica_incompatibility,
     ucdp_to_dialectica_intensity,
-    ucdp_conflict_type_to_domain,
 )
+from dialectica_ontology.primitives import Actor, Conflict, ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 logger = logging.getLogger(__name__)
 
@@ -86,15 +85,9 @@ class UCDPConnector:
 
         for raw in conflicts:
             # Create Conflict node
-            incompatibility = ucdp_to_dialectica_incompatibility(
-                raw.get("Incompatibility", "")
-            )
-            intensity = ucdp_to_dialectica_intensity(
-                raw.get("IntensityLevel", 0)
-            )
-            domain = ucdp_conflict_type_to_domain(
-                raw.get("TypeOfConflict", "")
-            )
+            ucdp_to_dialectica_incompatibility(raw.get("Incompatibility", ""))
+            ucdp_to_dialectica_intensity(raw.get("IntensityLevel", 0))
+            domain = ucdp_conflict_type_to_domain(raw.get("TypeOfConflict", ""))
 
             conflict = Conflict(
                 name=raw.get("ConflictName", raw.get("Location", "Unknown")),
@@ -123,26 +116,30 @@ class UCDPConnector:
                     nodes.append(actor)
 
                 if side_name and side_name in actor_cache:
-                    edges.append(ConflictRelationship(
-                        type=EdgeType.PARTY_TO,
-                        source_id=actor_cache[side_name].id,
-                        target_id=conflict.id,
-                        source_label="Actor",
-                        target_label="Conflict",
-                        workspace_id=workspace_id,
-                    ))
+                    edges.append(
+                        ConflictRelationship(
+                            type=EdgeType.PARTY_TO,
+                            source_id=actor_cache[side_name].id,
+                            target_id=conflict.id,
+                            source_label="Actor",
+                            target_label="Conflict",
+                            workspace_id=workspace_id,
+                        )
+                    )
 
             # Opposition edge between sides
             side_a = raw.get("SideA", "")
             side_b = raw.get("SideB", "")
             if side_a in actor_cache and side_b in actor_cache:
-                edges.append(ConflictRelationship(
-                    type=EdgeType.OPPOSED_TO,
-                    source_id=actor_cache[side_a].id,
-                    target_id=actor_cache[side_b].id,
-                    source_label="Actor",
-                    target_label="Actor",
-                    workspace_id=workspace_id,
-                ))
+                edges.append(
+                    ConflictRelationship(
+                        type=EdgeType.OPPOSED_TO,
+                        source_id=actor_cache[side_a].id,
+                        target_id=actor_cache[side_b].id,
+                        source_label="Actor",
+                        target_label="Actor",
+                        workspace_id=workspace_id,
+                    )
+                )
 
         return nodes, edges

@@ -3,12 +3,12 @@ GCS Document Loader — Download and extract text from GCS-hosted documents.
 
 Supports PDF (pymupdf), DOCX (python-docx), TXT, HTML, and Markdown.
 """
+
 from __future__ import annotations
 
 import io
 import logging
 import os
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ async def load_document_from_gcs(gcs_uri: str) -> str:
 
     try:
         from google.cloud import storage
+
         client = storage.Client()
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(blob_path)
@@ -59,6 +60,7 @@ def _extract_pdf(content: bytes) -> str:
     """Extract text from PDF using pymupdf."""
     try:
         import pymupdf
+
         doc = pymupdf.open(stream=content, filetype="pdf")
         text_parts = []
         for page in doc:
@@ -69,25 +71,28 @@ def _extract_pdf(content: bytes) -> str:
         logger.warning("pymupdf not installed, trying pypdf")
         try:
             from pypdf import PdfReader
+
             reader = PdfReader(io.BytesIO(content))
             return "\n\n".join(page.extract_text() or "" for page in reader.pages)
-        except ImportError:
-            raise ImportError("Install pymupdf or pypdf for PDF support")
+        except ImportError as err:
+            raise ImportError("Install pymupdf or pypdf for PDF support") from err
 
 
 def _extract_docx(content: bytes) -> str:
     """Extract text from DOCX using python-docx."""
     try:
         from docx import Document
+
         doc = Document(io.BytesIO(content))
         return "\n\n".join(p.text for p in doc.paragraphs if p.text.strip())
-    except ImportError:
-        raise ImportError("Install python-docx for DOCX support")
+    except ImportError as err:
+        raise ImportError("Install python-docx for DOCX support") from err
 
 
 def _extract_html(content: bytes) -> str:
     """Extract text from HTML by stripping tags."""
     import re
+
     text = content.decode("utf-8", errors="replace")
     # Strip HTML tags
     text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.DOTALL)

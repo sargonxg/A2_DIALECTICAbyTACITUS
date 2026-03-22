@@ -8,6 +8,7 @@ Covers:
 - GET /history and GET /{benchmark_id} endpoints
 - Benchmark runner comparison logic
 """
+
 from __future__ import annotations
 
 import json
@@ -16,7 +17,6 @@ import os
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -40,13 +40,15 @@ def tenant_headers() -> dict[str, str]:
 async def client() -> AsyncClient:
     # Configure auth keys via environment so middleware recognises both keys
     os.environ["ADMIN_API_KEY"] = ADMIN_KEY
-    os.environ["API_KEYS_JSON"] = json.dumps([
-        {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
-        {"key": TENANT_KEY, "level": "standard", "tenant_id": "testuser"},
-    ])
+    os.environ["API_KEYS_JSON"] = json.dumps(
+        [
+            {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
+            {"key": TENANT_KEY, "level": "standard", "tenant_id": "testuser"},
+        ]
+    )
 
-    from dialectica_api.main import create_app
     from dialectica_api.deps import get_graph_client
+    from dialectica_api.main import create_app
 
     test_app = create_app()
     test_app.dependency_overrides[get_graph_client] = lambda: None
@@ -71,12 +73,14 @@ async def client() -> AsyncClient:
 
     # Clear in-memory benchmark history between tests
     from dialectica_api.routers.benchmark import _benchmark_history
+
     _benchmark_history.clear()
 
 
 # ---------------------------------------------------------------------------
 # POST /v1/admin/benchmark/run
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_run_benchmark_returns_200_with_valid_scores(
@@ -162,6 +166,7 @@ async def test_run_benchmark_with_graph_augmented(
 # Auth: non-admin gets 403
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_run_benchmark_non_admin_gets_403(
     client: AsyncClient, tenant_headers: dict[str, str]
@@ -190,6 +195,7 @@ async def test_history_non_admin_gets_403(
 # Invalid corpus_id returns 422
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_invalid_corpus_id_returns_422(
     client: AsyncClient, admin_headers: dict[str, str]
@@ -206,6 +212,7 @@ async def test_invalid_corpus_id_returns_422(
 # ---------------------------------------------------------------------------
 # GET /v1/admin/benchmark/history
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_history_returns_past_runs(
@@ -237,10 +244,9 @@ async def test_history_returns_past_runs(
 # GET /v1/admin/benchmark/{benchmark_id}
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
-async def test_get_benchmark_by_id(
-    client: AsyncClient, admin_headers: dict[str, str]
-) -> None:
+async def test_get_benchmark_by_id(client: AsyncClient, admin_headers: dict[str, str]) -> None:
     """Fetch a specific benchmark run by ID."""
     run_resp = await client.post(
         "/v1/admin/benchmark/run",
@@ -259,9 +265,7 @@ async def test_get_benchmark_by_id(
 
 
 @pytest.mark.asyncio
-async def test_get_benchmark_not_found(
-    client: AsyncClient, admin_headers: dict[str, str]
-) -> None:
+async def test_get_benchmark_not_found(client: AsyncClient, admin_headers: dict[str, str]) -> None:
     resp = await client.get(
         "/v1/admin/benchmark/nonexistent_id",
         headers=admin_headers,
@@ -272,6 +276,7 @@ async def test_get_benchmark_not_found(
 # ---------------------------------------------------------------------------
 # BenchmarkRunner unit tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_runner_compare_nodes() -> None:

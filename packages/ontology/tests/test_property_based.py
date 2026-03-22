@@ -6,32 +6,52 @@ Tests:
   - Every StrEnum value is a valid non-empty string
   - Tier filtering preserves subset relationships (Essential < Standard < Full)
 """
+
 from __future__ import annotations
 
 import json
 
 import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from dialectica_ontology.primitives import (
-    Actor, Conflict, Event, Issue, Interest, Norm, Process, Outcome,
-    Narrative, EmotionalState, TrustState, PowerDynamic, Location, Evidence, Role,
-    ConflictNode, NODE_TYPES,
-)
 from dialectica_ontology.enums import (
-    ActorType, ConflictScale, ConflictDomain, ConflictStatus,
-    EventType, InterestType, NormType, ProcessType, OutcomeType,
-    NarrativeType, PrimaryEmotion, PowerDomain, RoleType,
-    GlaslStage, KriesbergPhase, ViolenceType, Intensity,
+    ActorType,
+    ConflictDomain,
+    ConflictScale,
+    ConflictStatus,
+    EventType,
+    GlaslStage,
+    Intensity,
+    InterestType,
+    KriesbergPhase,
+    NarrativeType,
+    NormType,
+    OutcomeType,
+    PowerDomain,
+    PrimaryEmotion,
+    ProcessType,
+    RoleType,
+    ViolenceType,
 )
-from dialectica_ontology.tiers import OntologyTier, TIER_NODES, TIER_EDGES, get_available_nodes, get_available_edges
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType, EDGE_SCHEMA
-
+from dialectica_ontology.primitives import (
+    NODE_TYPES,
+    Actor,
+    Conflict,
+    Event,
+)
+from dialectica_ontology.relationships import EDGE_SCHEMA, EdgeType
+from dialectica_ontology.tiers import (
+    OntologyTier,
+    get_available_edges,
+    get_available_nodes,
+)
 
 # ── Hypothesis Strategies ─────────────────────────────────────────────────
 
-safe_text = st.text(min_size=1, max_size=100, alphabet=st.characters(whitelist_categories=("L", "N", "Z")))
+safe_text = st.text(
+    min_size=1, max_size=100, alphabet=st.characters(whitelist_categories=("L", "N", "Z"))
+)
 confidence = st.floats(min_value=0.0, max_value=1.0, allow_nan=False)
 
 actor_strategy = st.builds(
@@ -95,21 +115,44 @@ class TestJsonRoundTrip:
 
 
 class TestStrEnumValidity:
-    @pytest.mark.parametrize("enum_cls", [
-        ActorType, ConflictScale, ConflictDomain, ConflictStatus,
-        EventType, InterestType, NormType, ProcessType, OutcomeType,
-        NarrativeType, PrimaryEmotion, PowerDomain, RoleType,
-        GlaslStage, KriesbergPhase, ViolenceType, Intensity,
-    ])
+    @pytest.mark.parametrize(
+        "enum_cls",
+        [
+            ActorType,
+            ConflictScale,
+            ConflictDomain,
+            ConflictStatus,
+            EventType,
+            InterestType,
+            NormType,
+            ProcessType,
+            OutcomeType,
+            NarrativeType,
+            PrimaryEmotion,
+            PowerDomain,
+            RoleType,
+            GlaslStage,
+            KriesbergPhase,
+            ViolenceType,
+            Intensity,
+        ],
+    )
     def test_enum_values_are_nonempty_strings(self, enum_cls):
         for member in enum_cls:
             assert isinstance(member.value, str)
             assert len(member.value) > 0
             assert member.value == member.value.strip()
 
-    @pytest.mark.parametrize("enum_cls", [
-        ActorType, ConflictScale, ConflictDomain, ConflictStatus, EventType,
-    ])
+    @pytest.mark.parametrize(
+        "enum_cls",
+        [
+            ActorType,
+            ConflictScale,
+            ConflictDomain,
+            ConflictStatus,
+            EventType,
+        ],
+    )
     def test_enum_no_none_values(self, enum_cls):
         for member in enum_cls:
             assert member.value is not None
@@ -122,12 +165,16 @@ class TestTierSubsets:
     def test_essential_subset_of_standard(self):
         essential_nodes = get_available_nodes(OntologyTier.ESSENTIAL)
         standard_nodes = get_available_nodes(OntologyTier.STANDARD)
-        assert essential_nodes <= standard_nodes, f"Essential nodes not subset of Standard: {essential_nodes - standard_nodes}"
+        assert essential_nodes <= standard_nodes, (
+            f"Essential nodes not subset of Standard: {essential_nodes - standard_nodes}"
+        )
 
     def test_standard_subset_of_full(self):
         standard_nodes = get_available_nodes(OntologyTier.STANDARD)
         full_nodes = get_available_nodes(OntologyTier.FULL)
-        assert standard_nodes <= full_nodes, f"Standard nodes not subset of Full: {standard_nodes - full_nodes}"
+        assert standard_nodes <= full_nodes, (
+            f"Standard nodes not subset of Full: {standard_nodes - full_nodes}"
+        )
 
     def test_essential_edges_subset_of_standard(self):
         essential_edges = get_available_edges(OntologyTier.ESSENTIAL)
@@ -159,6 +206,10 @@ class TestRelationshipConstraints:
             src = schema.get("source_label", "")
             tgt = schema.get("target_label", "")
             if src:
-                assert src in valid_labels, f"{edge_type} source_label '{src}' not a valid node type"
+                assert src in valid_labels, (
+                    f"{edge_type} source_label '{src}' not a valid node type"
+                )
             if tgt:
-                assert tgt in valid_labels, f"{edge_type} target_label '{tgt}' not a valid node type"
+                assert tgt in valid_labels, (
+                    f"{edge_type} target_label '{tgt}' not a valid node type"
+                )

@@ -4,15 +4,16 @@ Network Metrics — Graph topology analysis using networkx.
 Computes centrality measures, detects communities, identifies brokers,
 and measures polarisation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from dialectica_graph import GraphClient
-from dialectica_ontology.relationships import EdgeType
 
 try:
     import networkx as nx  # type: ignore[import-untyped]
+
     _NX_AVAILABLE = True
 except ImportError:
     _NX_AVAILABLE = False
@@ -60,13 +61,13 @@ class NetworkAnalyzer:
     def __init__(self, graph_client: GraphClient) -> None:
         self._gc = graph_client
 
-    async def _build_actor_graph(self, workspace_id: str) -> "nx.Graph":
+    async def _build_actor_graph(self, workspace_id: str) -> nx.Graph:
         """Build networkx graph from actor nodes and edges between actors."""
         actors = await self._gc.get_nodes(workspace_id, label="Actor")
         edges = await self._gc.get_edges(workspace_id)
         actor_ids = {a.id for a in actors}
 
-        G = nx.Graph() if _NX_AVAILABLE else None
+        G = nx.Graph() if _NX_AVAILABLE else None  # noqa: N806
         if G is None:
             return G  # type: ignore[return-value]
 
@@ -74,10 +75,6 @@ class NetworkAnalyzer:
             G.add_node(a.id, label=getattr(a, "name", a.id))
 
         # Include edges between actors (interactions, alliances, oppositions)
-        relevant_types = {
-            EdgeType.PARTY_TO, EdgeType.ALLIED_WITH, EdgeType.OPPOSED_TO,
-            EdgeType.TRUSTS, EdgeType.HAS_POWER_OVER,
-        }
         for e in edges:
             if e.source_id in actor_ids and e.target_id in actor_ids:
                 weight = float(e.weight) if e.weight else 1.0
@@ -89,7 +86,7 @@ class NetworkAnalyzer:
         if not _NX_AVAILABLE:
             return []
 
-        G = await self._build_actor_graph(workspace_id)
+        G = await self._build_actor_graph(workspace_id)  # noqa: N806
         if not G or G.number_of_nodes() == 0:
             return []
 
@@ -100,16 +97,18 @@ class NetworkAnalyzer:
             try:
                 eigenvector = nx.eigenvector_centrality(G, max_iter=100)
             except nx.PowerIterationFailedConvergence:
-                eigenvector = {n: 0.0 for n in G.nodes()}
+                eigenvector = dict.fromkeys(G.nodes(), 0.0)
 
             for node in G.nodes():
-                results.append(ActorCentrality(
-                    actor_id=node,
-                    betweenness=round(betweenness.get(node, 0.0), 4),
-                    closeness=round(closeness.get(node, 0.0), 4),
-                    eigenvector=round(eigenvector.get(node, 0.0), 4),
-                    degree=G.degree(node),  # type: ignore[arg-type]
-                ))
+                results.append(
+                    ActorCentrality(
+                        actor_id=node,
+                        betweenness=round(betweenness.get(node, 0.0), 4),
+                        closeness=round(closeness.get(node, 0.0), 4),
+                        eigenvector=round(eigenvector.get(node, 0.0), 4),
+                        degree=G.degree(node),  # type: ignore[arg-type]
+                    )
+                )
         except Exception:
             pass
         return sorted(results, key=lambda r: r.betweenness, reverse=True)
@@ -119,7 +118,7 @@ class NetworkAnalyzer:
         if not _NX_AVAILABLE:
             return []
 
-        G = await self._build_actor_graph(workspace_id)
+        G = await self._build_actor_graph(workspace_id)  # noqa: N806
         if not G or G.number_of_nodes() < 2:
             return []
 
@@ -131,11 +130,13 @@ class NetworkAnalyzer:
 
         communities: list[Community] = []
         for i, community_set in enumerate(partition):
-            communities.append(Community(
-                community_id=i,
-                actor_ids=list(community_set),
-                summary=f"Community {i}: {len(community_set)} actors",
-            ))
+            communities.append(
+                Community(
+                    community_id=i,
+                    actor_ids=list(community_set),
+                    summary=f"Community {i}: {len(community_set)} actors",
+                )
+            )
         return communities
 
     async def identify_brokers(self, workspace_id: str) -> list[BrokerActor]:
@@ -156,19 +157,21 @@ class NetworkAnalyzer:
             if c.betweenness < 0.1:
                 continue
             bridges = set()
-            G = await self._build_actor_graph(workspace_id)
+            G = await self._build_actor_graph(workspace_id)  # noqa: N806
             if G and c.actor_id in G:
                 for neighbor in G.neighbors(c.actor_id):
                     nc = actor_community.get(neighbor)
                     ac = actor_community.get(c.actor_id)
                     if nc is not None and nc != ac:
                         bridges.add(nc)
-            brokers.append(BrokerActor(
-                actor_id=c.actor_id,
-                betweenness=c.betweenness,
-                bridges_communities=list(bridges),
-                mediation_potential=round(min(1.0, c.betweenness * 2), 3),
-            ))
+            brokers.append(
+                BrokerActor(
+                    actor_id=c.actor_id,
+                    betweenness=c.betweenness,
+                    bridges_communities=list(bridges),
+                    mediation_potential=round(min(1.0, c.betweenness * 2), 3),
+                )
+            )
         return sorted(brokers, key=lambda b: b.betweenness, reverse=True)
 
     async def compute_polarization(self, workspace_id: str) -> PolarisationReport:
@@ -176,7 +179,7 @@ class NetworkAnalyzer:
         if not _NX_AVAILABLE:
             return PolarisationReport()
 
-        G = await self._build_actor_graph(workspace_id)
+        G = await self._build_actor_graph(workspace_id)  # noqa: N806
         if not G or G.number_of_nodes() < 2:
             return PolarisationReport()
 

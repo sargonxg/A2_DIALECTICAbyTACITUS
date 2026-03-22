@@ -4,19 +4,19 @@ Symbolic Inference — Forward-chaining rule engine for derived facts.
 Generates inferred edges/properties from structural, temporal, and
 relational rules. Inferred facts are marked with confidence < 1.0.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
-from uuid import uuid4
 
 from dialectica_graph import GraphClient
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
+from dialectica_ontology.relationships import EdgeType
 
 
 @dataclass
 class InferredFact:
     """A fact derived by symbolic inference."""
+
     fact_type: str  # "edge" | "property"
     subject_id: str
     predicate: str
@@ -76,16 +76,18 @@ class SymbolicInference:
             for b in list(b_set):
                 for c in alliance_map.get(b, set()):
                     if c != a and frozenset([a, c]) not in existing_pairs:
-                        facts.append(InferredFact(
-                            fact_type="edge",
-                            subject_id=a,
-                            predicate="POTENTIALLY_ALLIED_WITH",
-                            object_id=c,
-                            confidence=0.6,
-                            method="symbolic_inference",
-                            rule_name="alliance_transitivity",
-                            evidence_ids=[b],
-                        ))
+                        facts.append(
+                            InferredFact(
+                                fact_type="edge",
+                                subject_id=a,
+                                predicate="POTENTIALLY_ALLIED_WITH",
+                                object_id=c,
+                                confidence=0.6,
+                                method="symbolic_inference",
+                                rule_name="alliance_transitivity",
+                                evidence_ids=[b],
+                            )
+                        )
                         existing_pairs.add(frozenset([a, c]))  # prevent duplicates
 
         return facts
@@ -109,16 +111,18 @@ class SymbolicInference:
                         pair = frozenset([a, c])
                         if pair not in seen:
                             seen.add(pair)
-                            facts.append(InferredFact(
-                                fact_type="edge",
-                                subject_id=a,
-                                predicate="POTENTIALLY_ALLIED_WITH",
-                                object_id=c,
-                                confidence=0.55,
-                                method="symbolic_inference",
-                                rule_name="enemy_of_enemy",
-                                evidence_ids=[b],
-                            ))
+                            facts.append(
+                                InferredFact(
+                                    fact_type="edge",
+                                    subject_id=a,
+                                    predicate="POTENTIALLY_ALLIED_WITH",
+                                    object_id=c,
+                                    confidence=0.55,
+                                    method="symbolic_inference",
+                                    rule_name="enemy_of_enemy",
+                                    evidence_ids=[b],
+                                )
+                            )
         return facts
 
     async def _infer_trust_from_alliance(self, workspace_id: str) -> list[InferredFact]:
@@ -130,24 +134,28 @@ class SymbolicInference:
         facts: list[InferredFact] = []
         for e in allied:
             if (e.source_id, e.target_id) not in trusts:
-                facts.append(InferredFact(
-                    fact_type="edge",
-                    subject_id=e.source_id,
-                    predicate="INFERRED_TRUST",
-                    object_id=e.target_id,
-                    object_value={"overall_trust": 0.65, "inferred": True},
-                    confidence=0.65,
-                    method="symbolic_inference",
-                    rule_name="trust_from_alliance",
-                    evidence_ids=[e.id],
-                ))
+                facts.append(
+                    InferredFact(
+                        fact_type="edge",
+                        subject_id=e.source_id,
+                        predicate="INFERRED_TRUST",
+                        object_id=e.target_id,
+                        object_value={"overall_trust": 0.65, "inferred": True},
+                        confidence=0.65,
+                        method="symbolic_inference",
+                        rule_name="trust_from_alliance",
+                        evidence_ids=[e.id],
+                    )
+                )
         return facts
 
     async def _infer_opposition_from_power(self, workspace_id: str) -> list[InferredFact]:
         """Strong coercive power asymmetry suggests latent opposition."""
         edges = await self._gc.get_edges(workspace_id)
         power_edges = [e for e in edges if e.type == EdgeType.HAS_POWER_OVER]
-        opposed = {frozenset([e.source_id, e.target_id]) for e in edges if e.type == EdgeType.OPPOSED_TO}
+        opposed = {
+            frozenset([e.source_id, e.target_id]) for e in edges if e.type == EdgeType.OPPOSED_TO
+        }
 
         facts: list[InferredFact] = []
         for e in power_edges:
@@ -155,16 +163,18 @@ class SymbolicInference:
             if props.get("domain") == "coercive" and float(props.get("magnitude", 0)) > 0.7:
                 pair = frozenset([e.source_id, e.target_id])
                 if pair not in opposed:
-                    facts.append(InferredFact(
-                        fact_type="edge",
-                        subject_id=e.source_id,
-                        predicate="LATENT_OPPOSITION",
-                        object_id=e.target_id,
-                        confidence=0.5,
-                        method="symbolic_inference",
-                        rule_name="opposition_from_coercive_power",
-                        evidence_ids=[e.id],
-                    ))
+                    facts.append(
+                        InferredFact(
+                            fact_type="edge",
+                            subject_id=e.source_id,
+                            predicate="LATENT_OPPOSITION",
+                            object_id=e.target_id,
+                            confidence=0.5,
+                            method="symbolic_inference",
+                            rule_name="opposition_from_coercive_power",
+                            evidence_ids=[e.id],
+                        )
+                    )
         return facts
 
     async def _infer_conflict_escalation_level(self, workspace_id: str) -> list[InferredFact]:
@@ -182,15 +192,17 @@ class SymbolicInference:
         for c in conflicts:
             explicit_stage = getattr(c, "glasl_stage", None)
             if explicit_stage is None:
-                facts.append(InferredFact(
-                    fact_type="property",
-                    subject_id=c.id,
-                    predicate="inferred_glasl_stage",
-                    object_value=inferred_stage,
-                    confidence=0.5,
-                    method="symbolic_inference",
-                    rule_name="escalation_from_events",
-                ))
+                facts.append(
+                    InferredFact(
+                        fact_type="property",
+                        subject_id=c.id,
+                        predicate="inferred_glasl_stage",
+                        object_value=inferred_stage,
+                        confidence=0.5,
+                        method="symbolic_inference",
+                        rule_name="escalation_from_events",
+                    )
+                )
         return facts
 
     async def _infer_temporal_ordering(self, workspace_id: str) -> list[InferredFact]:
@@ -205,13 +217,15 @@ class SymbolicInference:
         for i in range(len(timed) - 1):
             ev_a, _ = timed[i]
             ev_b, _ = timed[i + 1]
-            facts.append(InferredFact(
-                fact_type="edge",
-                subject_id=ev_b.id,
-                predicate="PRECEDED_BY",
-                object_id=ev_a.id,
-                confidence=0.95,
-                method="symbolic_inference",
-                rule_name="temporal_ordering",
-            ))
+            facts.append(
+                InferredFact(
+                    fact_type="edge",
+                    subject_id=ev_b.id,
+                    predicate="PRECEDED_BY",
+                    object_id=ev_a.id,
+                    confidence=0.95,
+                    method="symbolic_inference",
+                    rule_name="temporal_ordering",
+                )
+            )
         return facts

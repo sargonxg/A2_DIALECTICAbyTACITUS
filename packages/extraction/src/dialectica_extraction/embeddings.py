@@ -6,6 +6,7 @@ Fallback: sentence-transformers/all-MiniLM-L6-v2 (128 dimensions, local)
 
 Used for: Node embeddings in Spanner vector index, semantic search.
 """
+
 from __future__ import annotations
 
 import logging
@@ -38,8 +39,8 @@ class EmbeddingService:
         if self._vertex_model is not None:
             return True
         try:
-            from vertexai.language_models import TextEmbeddingModel
             import vertexai
+            from vertexai.language_models import TextEmbeddingModel
 
             if self._project_id:
                 vertexai.init(project=self._project_id)
@@ -130,7 +131,7 @@ class EmbeddingService:
         """
         texts = [_node_to_embedding_text(n) for n in nodes]
         embeddings = self.embed_texts(texts)
-        return {node.id: emb for node, emb in zip(nodes, embeddings) if emb}
+        return {node.id: emb for node, emb in zip(nodes, embeddings, strict=False) if emb}
 
 
 def _node_to_embedding_text(node: ConflictNode) -> str:

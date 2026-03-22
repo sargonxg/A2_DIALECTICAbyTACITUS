@@ -1,15 +1,16 @@
 """
 Advisor Agent — Actionable recommendations synthesis.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from dialectica_graph import GraphClient
-from dialectica_reasoning.symbolic.escalation import EscalationDetector
-from dialectica_reasoning.symbolic.ripeness import RipenessScorer
-from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
 from dialectica_reasoning.symbolic.constraint_engine import ConflictGrammarEngine
+from dialectica_reasoning.symbolic.escalation import EscalationDetector
+from dialectica_reasoning.symbolic.pattern_matching import PatternMatcher
+from dialectica_reasoning.symbolic.ripeness import RipenessScorer
 
 
 @dataclass
@@ -54,63 +55,75 @@ class AdvisorAgent:
         # Escalation-based recommendations
         if stage_num >= 7:
             report.urgency_level = "critical"
-            recommendations.append(Recommendation(
-                priority=1,
-                category="de_escalation",
-                action="Implement immediate de-escalation measures",
-                rationale=f"Glasl stage {stage_num} — lose-lose territory. Immediate intervention required.",
-                timeframe="Immediate (0-7 days)",
-            ))
+            recommendations.append(
+                Recommendation(
+                    priority=1,
+                    category="de_escalation",
+                    action="Implement immediate de-escalation measures",
+                    rationale=f"Glasl stage {stage_num} — lose-lose territory. Immediate intervention required.",  # noqa: E501
+                    timeframe="Immediate (0-7 days)",
+                )
+            )
         elif stage_num >= 5:
             report.urgency_level = "high"
-            recommendations.append(Recommendation(
-                priority=1,
-                category="de_escalation",
-                action="Introduce circuit-breaker through neutral third party",
-                rationale=f"Glasl stage {stage_num} — conflict losing-face dynamics. Need external help.",
-                timeframe="Urgent (7-30 days)",
-            ))
+            recommendations.append(
+                Recommendation(
+                    priority=1,
+                    category="de_escalation",
+                    action="Introduce circuit-breaker through neutral third party",
+                    rationale=f"Glasl stage {stage_num} — conflict losing-face dynamics. Need external help.",  # noqa: E501
+                    timeframe="Urgent (7-30 days)",
+                )
+            )
 
         # Ripeness recommendations
         if ripe.is_ripe:
-            recommendations.append(Recommendation(
-                priority=1,
-                category="process",
-                action="Initiate formal mediation process now",
-                rationale=f"Conflict is ripe: MHS={ripe.mhs_score:.2f}, MEO={ripe.meo_score:.2f}.",
-                timeframe="Immediate — window may close",
-            ))
+            recommendations.append(
+                Recommendation(
+                    priority=1,
+                    category="process",
+                    action="Initiate formal mediation process now",
+                    rationale=f"Conflict is ripe: MHS={ripe.mhs_score:.2f}, MEO={ripe.meo_score:.2f}.",  # noqa: E501
+                    timeframe="Immediate — window may close",
+                )
+            )
         elif ripe.mhs_score > 0.5 and ripe.meo_score < 0.3:
-            recommendations.append(Recommendation(
-                priority=2,
-                category="process",
-                action="Create mutually enticing opportunity",
-                rationale="Stalemate pressure high but no resolution path visible.",
-                timeframe="30-60 days",
-            ))
+            recommendations.append(
+                Recommendation(
+                    priority=2,
+                    category="process",
+                    action="Create mutually enticing opportunity",
+                    rationale="Stalemate pressure high but no resolution path visible.",
+                    timeframe="30-60 days",
+                )
+            )
 
         # Pattern-based recommendations
         for pattern in patterns:
             if pattern.confidence > 0.5:
-                recommendations.append(Recommendation(
-                    priority=2,
-                    category="structural",
-                    action=pattern.intervention_recommendation,
-                    rationale=f"Pattern detected: {pattern.pattern_name} (confidence={pattern.confidence:.2f})",
-                    timeframe="Medium-term (30-90 days)",
-                    actors_involved=pattern.evidence_ids[:3],
-                ))
+                recommendations.append(
+                    Recommendation(
+                        priority=2,
+                        category="structural",
+                        action=pattern.intervention_recommendation,
+                        rationale=f"Pattern detected: {pattern.pattern_name} (confidence={pattern.confidence:.2f})",  # noqa: E501
+                        timeframe="Medium-term (30-90 days)",
+                        actors_involved=pattern.evidence_ids[:3],
+                    )
+                )
 
         # Rule violation recommendations
         critical_findings = [f for f in rule_report.findings if f.severity == "CRITICAL"]
         for finding in critical_findings[:3]:
-            recommendations.append(Recommendation(
-                priority=1,
-                category="structural",
-                action=finding.recommendation,
-                rationale=finding.description,
-                timeframe="Urgent (7-30 days)",
-            ))
+            recommendations.append(
+                Recommendation(
+                    priority=1,
+                    category="structural",
+                    action=finding.recommendation,
+                    rationale=finding.description,
+                    timeframe="Urgent (7-30 days)",
+                )
+            )
 
         # Sort by priority
         recommendations.sort(key=lambda r: r.priority)

@@ -1,6 +1,7 @@
 """
 Relationship Strength Scoring — Compute confidence and weight for extracted edges.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.relationships import ConflictRelationship

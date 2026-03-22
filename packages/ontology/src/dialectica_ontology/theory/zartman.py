@@ -5,6 +5,7 @@ I. William Zartman's ripeness theory: conflicts become ripe for resolution
 when parties perceive a mutually hurting stalemate (MHS) and/or a
 mutually enticing opportunity (MEO), combined with a perceived way out.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -70,11 +71,15 @@ class ZartmanFramework(TheoryFramework):
             return True
 
         keywords = set(context.get("keywords", []))
-        mhs_keywords = {"stalemate", "impasse", "exhaustion", "mutual_damage", "hurting_stalemate", "deadlock"}
-        if len(keywords & mhs_keywords) >= 2:
-            return True
-
-        return False
+        mhs_keywords = {
+            "stalemate",
+            "impasse",
+            "exhaustion",
+            "mutual_damage",
+            "hurting_stalemate",
+            "deadlock",
+        }
+        return len(keywords & mhs_keywords) >= 2
 
     def mutually_enticing_opportunity(self, context: dict) -> bool:
         """Assess whether a mutually enticing opportunity exists.
@@ -94,11 +99,15 @@ class ZartmanFramework(TheoryFramework):
             return True
 
         keywords = set(context.get("keywords", []))
-        meo_keywords = {"opportunity", "mutual_gain", "incentive", "benefit", "enticing", "breakthrough"}
-        if len(keywords & meo_keywords) >= 2:
-            return True
-
-        return False
+        meo_keywords = {
+            "opportunity",
+            "mutual_gain",
+            "incentive",
+            "benefit",
+            "enticing",
+            "breakthrough",
+        }
+        return len(keywords & meo_keywords) >= 2
 
     def _assess_way_out(self, context: dict) -> bool:
         """Assess whether parties perceive a viable way out."""
@@ -106,7 +115,14 @@ class ZartmanFramework(TheoryFramework):
             return True
 
         keywords = set(context.get("keywords", []))
-        way_out_keywords = {"proposal", "solution", "framework", "mediator", "negotiation", "way_out"}
+        way_out_keywords = {
+            "proposal",
+            "solution",
+            "framework",
+            "mediator",
+            "negotiation",
+            "way_out",
+        }
         return len(keywords & way_out_keywords) >= 1
 
     def assess_ripeness(self, context: dict) -> dict:
@@ -179,7 +195,7 @@ class ZartmanFramework(TheoryFramework):
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="Do the parties see a viable path to resolution (mediator, framework, proposal)?",
+                question="Do the parties see a viable path to resolution (mediator, framework, proposal)?",  # noqa: E501
                 framework=self.name,
                 purpose="Assess perceived way out",
                 response_type="boolean",

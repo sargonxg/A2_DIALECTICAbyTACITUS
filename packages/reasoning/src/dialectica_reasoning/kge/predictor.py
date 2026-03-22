@@ -1,4 +1,5 @@
 """Link Predictor — Given (Actor, LEVERAGES, ?) predict missing targets."""
+
 from __future__ import annotations
 
 import logging
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PredictionResult:
     """A predicted link with score."""
+
     target_id: str
     target_label: str
     relation: str
@@ -54,12 +56,14 @@ class LinkPredictor:
 
             results: list[PredictionResult] = []
             for _, row in predictions.head(top_k).iterrows():
-                results.append(PredictionResult(
-                    target_id=str(row.get("tail_label", "")),
-                    target_label=str(row.get("tail_label", "")),
-                    relation=relation,
-                    score=float(row.get("score", 0)),
-                ))
+                results.append(
+                    PredictionResult(
+                        target_id=str(row.get("tail_label", "")),
+                        target_label=str(row.get("tail_label", "")),
+                        relation=relation,
+                        score=float(row.get("score", 0)),
+                    )
+                )
             return results
         except Exception as e:
             logger.error("Link prediction failed: %s", e)
@@ -84,12 +88,14 @@ class LinkPredictor:
 
             results: list[PredictionResult] = []
             for _, row in predictions.head(top_k).iterrows():
-                results.append(PredictionResult(
-                    target_id=str(row.get("head_label", "")),
-                    target_label=str(row.get("head_label", "")),
-                    relation=relation,
-                    score=float(row.get("score", 0)),
-                ))
+                results.append(
+                    PredictionResult(
+                        target_id=str(row.get("head_label", "")),
+                        target_label=str(row.get("head_label", "")),
+                        relation=relation,
+                        score=float(row.get("score", 0)),
+                    )
+                )
             return results
         except Exception as e:
             logger.error("Head prediction failed: %s", e)

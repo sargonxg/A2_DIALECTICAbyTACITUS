@@ -2,6 +2,7 @@
 
 Requires optional dependencies: pip install dialectica-reasoning[kge]
 """
+
 from __future__ import annotations
 
 import logging
@@ -9,17 +10,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 try:
-    from dialectica_reasoning.kge.trainer import KGETrainer
+    from dialectica_reasoning.kge.config import KGEConfig
     from dialectica_reasoning.kge.exporter import KGEExporter
     from dialectica_reasoning.kge.predictor import LinkPredictor
-    from dialectica_reasoning.kge.config import KGEConfig
+    from dialectica_reasoning.kge.trainer import KGETrainer
 
     KGE_AVAILABLE = True
 except ImportError:
     KGE_AVAILABLE = False
-    logger.warning(
-        "KGE features unavailable: install with pip install dialectica-reasoning[kge]"
-    )
+    logger.warning("KGE features unavailable: install with pip install dialectica-reasoning[kge]")
 
     # Provide stubs so downstream code can check KGE_AVAILABLE
     KGETrainer = None  # type: ignore[assignment,misc]

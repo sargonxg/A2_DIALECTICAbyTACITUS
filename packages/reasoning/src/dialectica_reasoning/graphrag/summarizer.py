@@ -4,6 +4,7 @@ Community Summarizer — Generate conflict-specific summaries for graph communit
 Uses Gemini Pro for synthesis. Stores summaries + embeddings in Qdrant
 collection dialectica_communities for global query support.
 """
+
 from __future__ import annotations
 
 import logging
@@ -104,8 +105,9 @@ class CommunitySummarizer:
         for community in communities:
             member_set = set(community.member_ids)
             comm_nodes = [n for n in all_nodes if n.id in member_set]
-            comm_edges = [e for e in all_edges
-                         if e.source_id in member_set or e.target_id in member_set]
+            comm_edges = [
+                e for e in all_edges if e.source_id in member_set or e.target_id in member_set
+            ]
 
             summary = await self.summarize_community(community, comm_nodes, comm_edges)
             community.summary = summary
@@ -115,11 +117,12 @@ class CommunitySummarizer:
         if self._vs and self._embed_fn and summaries:
             try:
                 embeddings = self._embed_fn.embed_text(summaries)
-                for i, (community, emb) in enumerate(zip(communities, embeddings)):
+                for _i, (community, emb) in enumerate(zip(communities, embeddings, strict=False)):
                     if emb:
                         logger.debug(
                             "Stored community %d summary embedding (dim=%d)",
-                            community.community_id, len(emb),
+                            community.community_id,
+                            len(emb),
                         )
             except Exception as e:
                 logger.warning("Community embedding storage failed: %s", e)
