@@ -233,7 +233,7 @@ class TestPatternMatching:
 
     def test_same_domain_conflicts_share_patterns(self):
         """Conflicts in the same domain should share structural patterns."""
-        c1 = Conflict(name="C1", scale="macro", domain="geopolitical", status="active")
-        c2 = Conflict(name="C2", scale="macro", domain="geopolitical", status="active")
+        c1 = Conflict(name="C1", scale="macro", domain="political", status="active")
+        c2 = Conflict(name="C2", scale="macro", domain="political", status="active")
         assert c1.domain == c2.domain
         assert c1.scale == c2.scale
