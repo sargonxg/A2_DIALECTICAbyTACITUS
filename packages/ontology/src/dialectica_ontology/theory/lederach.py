@@ -6,6 +6,7 @@ operating across micro (personal), meso (relational/community),
 and macro (structural/systemic) levels. Emphasises moral imagination
 as the capacity to envision a future beyond the current conflict.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -26,14 +27,14 @@ LEVELS: dict[str, dict[str, str]] = {
         "description": "Community and relational dynamics: intergroup tensions, local leadership.",
         "actors": "community leaders, organisations, ethnic/religious groups",
         "indicators": "intergroup_tension,community_division,leadership_conflict,social_cohesion",
-        "intervention": "Community dialogue, mediation, relationship building, local peace committees.",
+        "intervention": "Community dialogue, mediation, relationship building, local peace committees.",  # noqa: E501
     },
     "macro": {
         "name": "Macro (Structural/Systemic)",
-        "description": "Large-scale structural issues: policy, governance, institutional inequality.",
+        "description": "Large-scale structural issues: policy, governance, institutional inequality.",  # noqa: E501
         "actors": "governments, international organisations, systemic actors",
-        "indicators": "policy_failure,institutional_inequality,governance,systemic_discrimination,state_violence",
-        "intervention": "Policy reform, institutional change, peace agreements, structural transformation.",
+        "indicators": "policy_failure,institutional_inequality,governance,systemic_discrimination,state_violence",  # noqa: E501
+        "intervention": "Policy reform, institutional change, peace agreements, structural transformation.",  # noqa: E501
     },
 }
 
@@ -114,8 +115,13 @@ class LederachFramework(TheoryFramework):
         """Assess indicators of moral imagination in the conflict context."""
         keywords = set(context.get("keywords", []))
         imagination_indicators = {
-            "creativity", "vision", "empathy", "transcendence",
-            "relationship_building", "future_oriented", "reconciliation",
+            "creativity",
+            "vision",
+            "empathy",
+            "transcendence",
+            "relationship_building",
+            "future_oriented",
+            "reconciliation",
         }
         overlap = keywords & imagination_indicators
 

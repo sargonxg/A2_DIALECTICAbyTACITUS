@@ -5,6 +5,7 @@ Subscribes to dialectica-extraction-requests topic, runs the LangGraph
 extraction pipeline, and publishes results to dialectica-graph-updates.
 Failed messages (after 3 retries) go to dialectica-extraction-dlq.
 """
+
 from __future__ import annotations
 
 import json
@@ -65,12 +66,14 @@ class PubSubExtractionWorker:
     def _get_subscriber(self) -> Any:
         if self._subscriber is None:
             from google.cloud import pubsub_v1
+
             self._subscriber = pubsub_v1.SubscriberClient()
         return self._subscriber
 
     def _get_publisher(self) -> Any:
         if self._publisher is None:
             from google.cloud import pubsub_v1
+
             self._publisher = pubsub_v1.PublisherClient()
         return self._publisher
 
@@ -95,7 +98,10 @@ class PubSubExtractionWorker:
 
         logger.info(
             "Processing extraction: doc=%s ws=%s tier=%s retry=%d",
-            msg.document_id, msg.workspace_id, msg.tier, msg.retry_count,
+            msg.document_id,
+            msg.workspace_id,
+            msg.tier,
+            msg.retry_count,
         )
 
         try:
@@ -120,14 +126,17 @@ class PubSubExtractionWorker:
             stats = result.get("ingestion_stats", {})
 
             # Publish success to graph-updates topic
-            self._publish(GRAPH_UPDATES_TOPIC, {
-                "document_id": msg.document_id,
-                "workspace_id": msg.workspace_id,
-                "tenant_id": msg.tenant_id,
-                "status": "complete",
-                "nodes_extracted": stats.get("nodes_written", 0),
-                "edges_extracted": stats.get("edges_written", 0),
-            })
+            self._publish(
+                GRAPH_UPDATES_TOPIC,
+                {
+                    "document_id": msg.document_id,
+                    "workspace_id": msg.workspace_id,
+                    "tenant_id": msg.tenant_id,
+                    "status": "complete",
+                    "nodes_extracted": stats.get("nodes_written", 0),
+                    "edges_extracted": stats.get("edges_written", 0),
+                },
+            )
 
             logger.info(
                 "Extraction complete: doc=%s nodes=%d edges=%d",
@@ -150,16 +159,20 @@ class PubSubExtractionWorker:
                 return {"status": "retrying", "retry_count": msg.retry_count}
             else:
                 # Send to DLQ
-                self._publish(DLQ_TOPIC, {
-                    **msg.to_dict(),
-                    "error": str(e)[:500],
-                    "status": "failed",
-                })
+                self._publish(
+                    DLQ_TOPIC,
+                    {
+                        **msg.to_dict(),
+                        "error": str(e)[:500],
+                        "status": "failed",
+                    },
+                )
                 return {"status": "failed", "error": str(e)[:200]}
 
     async def _load_document(self, gcs_uri: str) -> str:
         """Load document from GCS and extract text."""
         from dialectica_extraction.gcs_loader import load_document_from_gcs
+
         return await load_document_from_gcs(gcs_uri)
 
     def start_pull(self) -> None:
@@ -169,6 +182,7 @@ class PubSubExtractionWorker:
 
         def callback(message: Any) -> None:
             import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(self.process_message(message.data))

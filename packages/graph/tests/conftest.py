@@ -6,28 +6,24 @@ Provides:
   - Spanner emulator fixture for integration tests (requires docker-compose)
   - Common test data factories
 """
+
 from __future__ import annotations
 
-import json
-import os
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-from dialectica_ontology.primitives import Actor, Conflict, ConflictNode, Event
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 from dialectica_graph.interface import GraphClient
 from dialectica_graph.models import (
     ActorNetworkResult,
     EscalationResult,
-    EscalationTrajectoryPoint,
     ScoredNode,
     SubgraphResult,
     WorkspaceStats,
 )
+from dialectica_ontology.primitives import Actor, Conflict, ConflictNode, Event
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 TEST_WORKSPACE_ID = "ws-test-001"
 TEST_TENANT_ID = "tenant-test-001"
@@ -101,17 +97,13 @@ class MockGraphClient(GraphClient):
     async def initialize_schema(self) -> None:
         pass
 
-    async def upsert_node(
-        self, node: ConflictNode, workspace_id: str, tenant_id: str
-    ) -> str:
+    async def upsert_node(self, node: ConflictNode, workspace_id: str, tenant_id: str) -> str:
         node.workspace_id = workspace_id
         node.tenant_id = tenant_id
         self._nodes[node.id] = node
         return node.id
 
-    async def delete_node(
-        self, node_id: str, workspace_id: str, hard: bool = False
-    ) -> bool:
+    async def delete_node(self, node_id: str, workspace_id: str, hard: bool = False) -> bool:
         if hard:
             self._nodes.pop(node_id, None)
             self._edges = {
@@ -125,13 +117,10 @@ class MockGraphClient(GraphClient):
                 node.metadata["deleted_at"] = datetime.utcnow().isoformat()
         return True
 
-    async def get_node(
-        self, node_id: str, workspace_id: str
-    ) -> ConflictNode | None:
+    async def get_node(self, node_id: str, workspace_id: str) -> ConflictNode | None:
         node = self._nodes.get(node_id)
-        if node and node.workspace_id == workspace_id:
-            if "deleted_at" not in node.metadata:
-                return node
+        if node and node.workspace_id == workspace_id and "deleted_at" not in node.metadata:
+            return node
         return None
 
     async def get_nodes(
@@ -227,9 +216,7 @@ class MockGraphClient(GraphClient):
         scored.sort(key=lambda s: s.score, reverse=True)
         return scored[:top_k]
 
-    async def execute_query(
-        self, query: str, params: dict | None = None
-    ) -> list[dict]:
+    async def execute_query(self, query: str, params: dict | None = None) -> list[dict]:
         return []
 
     async def get_workspace_stats(self, workspace_id: str) -> WorkspaceStats:
@@ -248,9 +235,7 @@ class MockGraphClient(GraphClient):
         stats.compute_density()
         return stats
 
-    async def get_actor_network(
-        self, actor_id: str, workspace_id: str
-    ) -> ActorNetworkResult:
+    async def get_actor_network(self, actor_id: str, workspace_id: str) -> ActorNetworkResult:
         actor = await self.get_node(actor_id, workspace_id)
         if not actor:
             raise ValueError(f"Actor {actor_id} not found")
@@ -265,9 +250,7 @@ class MockGraphClient(GraphClient):
         events = await self.get_nodes(workspace_id, label="Event")
         return sorted(events, key=lambda e: e.created_at)
 
-    async def get_escalation_trajectory(
-        self, workspace_id: str
-    ) -> EscalationResult:
+    async def get_escalation_trajectory(self, workspace_id: str) -> EscalationResult:
         return EscalationResult()
 
     async def batch_upsert_nodes(
@@ -317,7 +300,4 @@ def sample_conflict() -> Conflict:
 @pytest.fixture
 def sample_events() -> list[Event]:
     base = datetime(2024, 1, 1)
-    return [
-        make_event(f"Event {i}", occurred_at=base + timedelta(days=i * 30))
-        for i in range(5)
-    ]
+    return [make_event(f"Event {i}", occurred_at=base + timedelta(days=i * 30)) for i in range(5)]

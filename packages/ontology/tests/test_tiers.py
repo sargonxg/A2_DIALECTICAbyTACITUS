@@ -2,12 +2,9 @@
 
 from dialectica_ontology.tiers import (
     OntologyTier,
-    TIER_NODES,
-    TIER_EDGES,
-    TIER_FEATURES,
-    get_available_nodes,
     get_available_edges,
     get_available_features,
+    get_available_nodes,
 )
 
 

@@ -8,6 +8,7 @@ Named vectors:
 Tenant isolation via payload filtering on tenant_id.
 Supports hybrid search with Reciprocal Rank Fusion (RRF).
 """
+
 from __future__ import annotations
 
 import logging
@@ -50,23 +51,24 @@ class QdrantVectorStore:
         if self._client is None:
             try:
                 from qdrant_client import QdrantClient
+
                 self._client = QdrantClient(
                     host=self._host,
                     port=self._port,
                     api_key=self._api_key,
                 )
-            except ImportError:
+            except ImportError as err:
                 raise ImportError(
                     "qdrant-client not installed. Install with: pip install qdrant-client>=1.12"
-                )
+                ) from err
         return self._client
 
     async def initialize_collection(self) -> None:
         """Create the collection with named vectors if it doesn't exist."""
         from qdrant_client.models import (
             Distance,
-            VectorParams,
             PayloadSchemaType,
+            VectorParams,
         )
 
         client = self._get_client()
@@ -147,7 +149,7 @@ class QdrantVectorStore:
         date_to: datetime | None = None,
     ) -> list[dict]:
         """Search by semantic similarity with tenant isolation."""
-        from qdrant_client.models import Filter, FieldCondition, MatchValue, Range
+        from qdrant_client.models import FieldCondition, Filter, MatchValue, Range
 
         client = self._get_client()
         must_conditions = [
@@ -155,18 +157,14 @@ class QdrantVectorStore:
         ]
         if node_types:
             for nt in node_types:
-                must_conditions.append(
-                    FieldCondition(key="node_type", match=MatchValue(value=nt))
-                )
+                must_conditions.append(FieldCondition(key="node_type", match=MatchValue(value=nt)))
         if date_from or date_to:
             range_params: dict[str, Any] = {}
             if date_from:
                 range_params["gte"] = date_from.isoformat()
             if date_to:
                 range_params["lte"] = date_to.isoformat()
-            must_conditions.append(
-                FieldCondition(key="created_at", range=Range(**range_params))
-            )
+            must_conditions.append(FieldCondition(key="created_at", range=Range(**range_params)))
 
         results = client.query_points(
             collection_name=self._collection_name,
@@ -189,7 +187,7 @@ class QdrantVectorStore:
         top_k: int = 10,
     ) -> list[dict]:
         """Search by structural (KGE) similarity."""
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         client = self._get_client()
         results = client.query_points(
@@ -197,9 +195,11 @@ class QdrantVectorStore:
             query=kge_embedding,
             using="structural",
             limit=top_k,
-            query_filter=Filter(must=[
-                FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)),
-            ]),
+            query_filter=Filter(
+                must=[
+                    FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)),
+                ]
+            ),
             with_payload=True,
         )
 
@@ -219,12 +219,8 @@ class QdrantVectorStore:
 
         score(d) = sum(1 / (60 + rank_i(d))) across both result sets.
         """
-        semantic_results = await self.search_semantic(
-            query_embedding, tenant_id, top_k=top_k * 2
-        )
-        structural_results = await self.search_structural(
-            kge_embedding, tenant_id, top_k=top_k * 2
-        )
+        semantic_results = await self.search_semantic(query_embedding, tenant_id, top_k=top_k * 2)
+        structural_results = await self.search_structural(kge_embedding, tenant_id, top_k=top_k * 2)
 
         rrf_scores: dict[str, float] = {}
         payloads: dict[str, dict] = {}
@@ -248,14 +244,16 @@ class QdrantVectorStore:
 
     async def delete_tenant(self, tenant_id: str) -> None:
         """Delete all vectors for a tenant (GDPR erasure)."""
-        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         client = self._get_client()
         client.delete(
             collection_name=self._collection_name,
-            points_selector=Filter(must=[
-                FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)),
-            ]),
+            points_selector=Filter(
+                must=[
+                    FieldCondition(key="tenant_id", match=MatchValue(value=tenant_id)),
+                ]
+            ),
         )
         logger.info("Deleted vectors for tenant %s", tenant_id)
 

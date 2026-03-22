@@ -1,10 +1,11 @@
 """
 Narrative Frame Detection — Identify dominant and counter-narrative frames.
 """
+
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # Frame indicator patterns
 DIAGNOSTIC_SIGNALS = re.compile(

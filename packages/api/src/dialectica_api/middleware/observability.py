@@ -6,12 +6,12 @@ Provides:
   - LatencyMiddleware: logs request latency
   - TenantContextMiddleware: extracts tenant_id for structured logging
 """
+
 from __future__ import annotations
 
 import logging
 import time
 import uuid
-from typing import Any
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -22,9 +22,7 @@ logger = logging.getLogger("dialectica.observability")
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Add X-Request-ID header to all requests for tracing."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("x-request-id", str(uuid.uuid4())[:12])
         request.state.request_id = request_id
 
@@ -36,9 +34,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 class LatencyMiddleware(BaseHTTPMiddleware):
     """Log request latency and method/path for all requests."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         start = time.time()
         response = await call_next(request)
         latency_ms = (time.time() - start) * 1000
@@ -63,9 +59,7 @@ class LatencyMiddleware(BaseHTTPMiddleware):
 class TenantContextMiddleware(BaseHTTPMiddleware):
     """Extract tenant_id from auth state and attach to request for logging."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Tenant ID is set by AuthMiddleware; fall back to header
         tenant_id = getattr(request.state, "tenant_id", None)
         if not tenant_id:

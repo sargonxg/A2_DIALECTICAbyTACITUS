@@ -5,20 +5,19 @@ Admin-only endpoints for running benchmark evaluations against gold-standard
 annotated corpora. Measures precision, recall, and F1 for node extraction,
 edge extraction, and graph-augmented structural accuracy.
 """
+
 from __future__ import annotations
 
-from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from dialectica_api.deps import require_admin
 from dialectica_api.benchmark_runner import (
     BenchmarkRunner,
-    VALID_CORPUS_IDS,
 )
+from dialectica_api.deps import require_admin
 
 router = APIRouter(prefix="/v1/admin/benchmark", tags=["benchmark"])
 
@@ -29,6 +28,7 @@ _benchmark_history: dict[str, dict[str, Any]] = {}
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
+
 
 class CorpusId(StrEnum):
     jcpoa = "jcpoa"
@@ -46,6 +46,7 @@ class BenchmarkTier(StrEnum):
 
 class BenchmarkRunRequest(BaseModel):
     """Request body for POST /run."""
+
     corpus_id: CorpusId = CorpusId.jcpoa
     custom_text: str | None = None
     custom_gold: dict[str, Any] | None = None
@@ -86,6 +87,7 @@ class BenchmarkRunResponse(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _metric_to_response(m: Any) -> MetricScoreResponse:
     return MetricScoreResponse(
         precision=m.precision,
@@ -121,6 +123,7 @@ def _result_to_response(result: Any) -> BenchmarkRunResponse:
 # Endpoints
 # ---------------------------------------------------------------------------
 
+
 @router.post("/run", response_model=BenchmarkRunResponse)
 async def run_benchmark(
     body: BenchmarkRunRequest,
@@ -147,12 +150,12 @@ async def run_benchmark(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
-        )
+        ) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
-        )
+        ) from exc
 
     response = _result_to_response(result)
 

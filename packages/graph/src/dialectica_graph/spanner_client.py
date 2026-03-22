@@ -11,6 +11,7 @@ Uses:
 Multi-tenant: All queries include WHERE tenant_id = @tid filter.
 Dynamic labels: node.label → stored in label column.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,9 +21,6 @@ from typing import Any
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
-
-from dialectica_ontology.primitives import NODE_TYPES, ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 from dialectica_graph.interface import GraphClient
 from dialectica_graph.models import (
@@ -35,6 +33,8 @@ from dialectica_graph.models import (
 )
 from dialectica_graph.spanner_schema import get_ddl_statements
 from dialectica_graph.tenant import TenantFilter
+from dialectica_ontology.primitives import NODE_TYPES, ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,15 @@ def _node_to_row(node: ConflictNode, workspace_id: str, tenant_id: str) -> dict:
     data = node.model_dump(exclude={"embedding", "metadata", "source_text"})
     # Separate base columns from label-specific properties
     base_keys = {
-        "id", "label", "workspace_id", "tenant_id",
-        "created_at", "updated_at", "source_text",
-        "confidence", "extraction_method",
+        "id",
+        "label",
+        "workspace_id",
+        "tenant_id",
+        "created_at",
+        "updated_at",
+        "source_text",
+        "confidence",
+        "extraction_method",
     }
     properties = {k: v for k, v in data.items() if k not in base_keys and v is not None}
     # Convert datetime values in properties to ISO strings for JSON
@@ -140,7 +146,7 @@ def _row_to_edge(row: dict) -> ConflictRelationship:
 
 def _results_to_dicts(result_set: Any, columns: list[str]) -> list[dict]:
     """Convert a Spanner result set to a list of dicts."""
-    return [dict(zip(columns, row)) for row in result_set]
+    return [dict(zip(columns, row, strict=False)) for row in result_set]
 
 
 class SpannerGraphClient(GraphClient):
@@ -175,9 +181,7 @@ class SpannerGraphClient(GraphClient):
 
     # ── Node CRUD ──────────────────────────────────────────────────────────
 
-    async def upsert_node(
-        self, node: ConflictNode, workspace_id: str, tenant_id: str
-    ) -> str:
+    async def upsert_node(self, node: ConflictNode, workspace_id: str, tenant_id: str) -> str:
         node.workspace_id = workspace_id
         node.tenant_id = tenant_id
         row = _node_to_row(node, workspace_id, tenant_id)
@@ -188,9 +192,7 @@ class SpannerGraphClient(GraphClient):
         )
         return node.id
 
-    async def delete_node(
-        self, node_id: str, workspace_id: str, hard: bool = False
-    ) -> bool:
+    async def delete_node(self, node_id: str, workspace_id: str, hard: bool = False) -> bool:
         if hard:
             # Also delete connected edges
             def _hard_delete(txn: Any) -> None:
@@ -227,13 +229,8 @@ class SpannerGraphClient(GraphClient):
             self._database.run_in_transaction(_soft_delete)
         return True
 
-    async def get_node(
-        self, node_id: str, workspace_id: str
-    ) -> ConflictNode | None:
-        sql = (
-            "SELECT * FROM Nodes "
-            "WHERE workspace_id = @ws AND id = @nid AND deleted_at IS NULL"
-        )
+    async def get_node(self, node_id: str, workspace_id: str) -> ConflictNode | None:
+        sql = "SELECT * FROM Nodes WHERE workspace_id = @ws AND id = @nid AND deleted_at IS NULL"
         params = {"ws": workspace_id, "nid": node_id}
         ptypes = {"ws": param_types.STRING, "nid": param_types.STRING}
 
@@ -253,10 +250,7 @@ class SpannerGraphClient(GraphClient):
         limit: int = 100,
         offset: int = 0,
     ) -> list[ConflictNode]:
-        sql = (
-            "SELECT * FROM Nodes "
-            "WHERE workspace_id = @ws AND deleted_at IS NULL"
-        )
+        sql = "SELECT * FROM Nodes WHERE workspace_id = @ws AND deleted_at IS NULL"
         params: dict[str, Any] = {"ws": workspace_id}
         ptypes: dict[str, Any] = {"ws": param_types.STRING}
 
@@ -327,19 +321,8 @@ class SpannerGraphClient(GraphClient):
     ) -> SubgraphResult:
         """Multi-hop traversal using Spanner GQL MATCH on the property graph."""
         # Build the GQL query
-        edge_filter = ""
         if edge_types:
-            labels = " | ".join(edge_types)
-            edge_filter = f":{labels}"
-
-        gql = (
-            f"GRAPH ConflictGraph "
-            f"MATCH path = (start)-[e{edge_filter}]-{{1,{hops}}}(end) "
-            f"WHERE start.id = @start_id "
-            f"RETURN DISTINCT start, e, end"
-        )
-        params = {"start_id": start_id}
-        ptypes = {"start_id": param_types.STRING}
+            " | ".join(edge_types)
 
         seen_nodes: dict[str, ConflictNode] = {}
         edges: list[ConflictRelationship] = []
@@ -453,18 +436,18 @@ class SpannerGraphClient(GraphClient):
         for row in rows:
             distance = row.pop("distance", 0.0)
             node = _row_to_node(row)
-            scored.append(ScoredNode(
-                node=node,
-                score=1.0 - distance,  # cosine similarity = 1 - cosine distance
-                distance=distance,
-            ))
+            scored.append(
+                ScoredNode(
+                    node=node,
+                    score=1.0 - distance,  # cosine similarity = 1 - cosine distance
+                    distance=distance,
+                )
+            )
         return scored
 
     # ── Raw Query ──────────────────────────────────────────────────────────
 
-    async def execute_query(
-        self, query: str, params: dict | None = None
-    ) -> list[dict]:
+    async def execute_query(self, query: str, params: dict | None = None) -> list[dict]:
         ptypes = {}
         if params:
             for k, v in params.items():
@@ -478,9 +461,7 @@ class SpannerGraphClient(GraphClient):
                     ptypes[k] = param_types.BOOL
 
         with self._database.snapshot() as snapshot:
-            result = snapshot.execute_sql(
-                query, params=params or {}, param_types=ptypes
-            )
+            result = snapshot.execute_sql(query, params=params or {}, param_types=ptypes)
             columns = [col.name for col in result.metadata.row_type.fields]
             return _results_to_dicts(result, columns)
 
@@ -496,10 +477,7 @@ class SpannerGraphClient(GraphClient):
             "GROUP BY label"
         )
         # Edge counts by type
-        sql_edges = (
-            "SELECT type, COUNT(*) as cnt FROM Edges "
-            "WHERE workspace_id = @ws GROUP BY type"
-        )
+        sql_edges = "SELECT type, COUNT(*) as cnt FROM Edges WHERE workspace_id = @ws GROUP BY type"
         params = {"ws": workspace_id}
         ptypes = {"ws": param_types.STRING}
 
@@ -517,9 +495,7 @@ class SpannerGraphClient(GraphClient):
         stats.compute_density()
         return stats
 
-    async def get_actor_network(
-        self, actor_id: str, workspace_id: str
-    ) -> ActorNetworkResult:
+    async def get_actor_network(self, actor_id: str, workspace_id: str) -> ActorNetworkResult:
         # Get the actor node
         actor = await self.get_node(actor_id, workspace_id)
         if actor is None:
@@ -615,9 +591,7 @@ class SpannerGraphClient(GraphClient):
 
         return [_row_to_node(r) for r in rows]
 
-    async def get_escalation_trajectory(
-        self, workspace_id: str
-    ) -> EscalationResult:
+    async def get_escalation_trajectory(self, workspace_id: str) -> EscalationResult:
         """Compute Glasl escalation trajectory from Conflict nodes."""
         sql = (
             "SELECT * FROM Nodes "
@@ -639,11 +613,13 @@ class SpannerGraphClient(GraphClient):
             props = json.loads(row["properties"]) if row.get("properties") else {}
             glasl = props.get("glasl_stage")
             if glasl is not None:
-                trajectory.append(EscalationTrajectoryPoint(
-                    timestamp=row.get("created_at", datetime.utcnow()),
-                    glasl_stage=int(glasl),
-                    evidence=props.get("name", node.id),
-                ))
+                trajectory.append(
+                    EscalationTrajectoryPoint(
+                        timestamp=row.get("created_at", datetime.utcnow()),
+                        glasl_stage=int(glasl),
+                        evidence=props.get("name", node.id),
+                    )
+                )
 
         esc = EscalationResult(trajectory=trajectory)
         if trajectory:

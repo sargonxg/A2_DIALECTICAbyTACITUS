@@ -4,8 +4,10 @@ ACLED Connector — Armed Conflict Location & Event Data Project.
 OAuth REST client for https://api.acleddata.com/acled/read.
 Maps ACLED events to ACO Event/Actor nodes with severity scaling.
 """
+
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 from datetime import datetime
@@ -13,9 +15,9 @@ from typing import Any
 
 import httpx
 
-from dialectica_ontology.primitives import Actor, Event, ConflictNode
+from dialectica_ontology.compatibility.acled import acled_actor_to_dialectica, acled_to_dialectica
+from dialectica_ontology.primitives import Actor, ConflictNode, Event
 from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from dialectica_ontology.compatibility.acled import acled_to_dialectica, acled_actor_to_dialectica
 
 logger = logging.getLogger(__name__)
 
@@ -97,10 +99,8 @@ class ACLEDConnector:
 
             occurred_at = None
             if raw.get("event_date"):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     occurred_at = datetime.strptime(raw["event_date"], "%Y-%m-%d")
-                except (ValueError, TypeError):
-                    pass
 
             event = Event(
                 event_type=event_type,
@@ -117,13 +117,15 @@ class ACLEDConnector:
             for actor_field in ["actor1", "actor2"]:
                 actor_name = raw.get(actor_field, "")
                 if actor_name and actor_name in actor_cache:
-                    edges.append(ConflictRelationship(
-                        type=EdgeType.PARTICIPATED_IN,
-                        source_id=actor_cache[actor_name].id,
-                        target_id=event.id,
-                        source_label="Actor",
-                        target_label="Event",
-                        workspace_id=workspace_id,
-                    ))
+                    edges.append(
+                        ConflictRelationship(
+                            type=EdgeType.PARTICIPATED_IN,
+                            source_id=actor_cache[actor_name].id,
+                            target_id=event.id,
+                            source_label="Actor",
+                            target_label="Event",
+                            workspace_id=workspace_id,
+                        )
+                    )
 
         return nodes, edges

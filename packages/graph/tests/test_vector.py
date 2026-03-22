@@ -1,17 +1,17 @@
 """Tests for QdrantVectorStore — named vectors, tenant isolation, hybrid search."""
+
 from __future__ import annotations
 
-import sys
 import os
-from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+import sys
 from dataclasses import dataclass
+from unittest.mock import MagicMock
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from dialectica_graph.vector import QdrantVectorStore, COLLECTION_NAME, SEMANTIC_DIM, STRUCTURAL_DIM
+from dialectica_graph.vector import COLLECTION_NAME, SEMANTIC_DIM, STRUCTURAL_DIM, QdrantVectorStore
 from dialectica_ontology.primitives import Actor
 
 
@@ -69,9 +69,7 @@ class TestUpsertVectors:
     @pytest.mark.asyncio
     async def test_upsert_skips_missing_embedding(self, mock_store):
         actor = Actor(name="Test", actor_type="person")
-        count = await mock_store.upsert_vectors(
-            [actor], {}, tenant_id="t1", workspace_id="ws1"
-        )
+        count = await mock_store.upsert_vectors([actor], {}, tenant_id="t1", workspace_id="ws1")
         assert count == 0
 
 
@@ -80,10 +78,12 @@ class TestSearchSemantic:
     def mock_store(self):
         store = QdrantVectorStore()
         mock_client = MagicMock()
-        mock_client.query_points.return_value = MockQueryResult(points=[
-            MockPoint(payload={"node_id": "n1", "node_type": "Actor"}, score=0.95),
-            MockPoint(payload={"node_id": "n2", "node_type": "Event"}, score=0.82),
-        ])
+        mock_client.query_points.return_value = MockQueryResult(
+            points=[
+                MockPoint(payload={"node_id": "n1", "node_type": "Actor"}, score=0.95),
+                MockPoint(payload={"node_id": "n2", "node_type": "Event"}, score=0.82),
+            ]
+        )
         store._client = mock_client
         return store
 
@@ -117,15 +117,19 @@ class TestHybridSearch:
 
         def query_side_effect(**kwargs):
             if kwargs.get("using") == "semantic":
-                return MockQueryResult(points=[
-                    MockPoint(payload={"node_id": "n1"}, score=0.9),
-                    MockPoint(payload={"node_id": "n2"}, score=0.8),
-                ])
+                return MockQueryResult(
+                    points=[
+                        MockPoint(payload={"node_id": "n1"}, score=0.9),
+                        MockPoint(payload={"node_id": "n2"}, score=0.8),
+                    ]
+                )
             else:
-                return MockQueryResult(points=[
-                    MockPoint(payload={"node_id": "n2"}, score=0.95),
-                    MockPoint(payload={"node_id": "n3"}, score=0.7),
-                ])
+                return MockQueryResult(
+                    points=[
+                        MockPoint(payload={"node_id": "n2"}, score=0.95),
+                        MockPoint(payload={"node_id": "n3"}, score=0.7),
+                    ]
+                )
 
         mock_client.query_points.side_effect = query_side_effect
         store._client = mock_client

@@ -8,6 +8,7 @@ Tools:
   - compare_conflicts: Cross-case structural similarity
   - ingest_document: Extract and store conflict data
 """
+
 from __future__ import annotations
 
 import json
@@ -52,7 +53,7 @@ def create_mcp_server() -> Any:
             Structured conflict context with cited sources.
         """
         gc = _get_graph_client()
-        from dialectica_reasoning.graphrag import ConflictGraphRAGRetriever, ConflictContextBuilder
+        from dialectica_reasoning.graphrag import ConflictContextBuilder, ConflictGraphRAGRetriever
 
         retriever = ConflictGraphRAGRetriever(graph_client=gc)
         result = await retriever.retrieve(
@@ -173,8 +174,12 @@ def create_mcp_server() -> Any:
         esc_b = await gc.get_escalation_trajectory(workspace_b)
 
         # Simple structural comparison
-        shared_node_types = set(stats_a.node_counts_by_label.keys()) & set(stats_b.node_counts_by_label.keys())
-        shared_edge_types = set(stats_a.edge_counts_by_type.keys()) & set(stats_b.edge_counts_by_type.keys())
+        shared_node_types = set(stats_a.node_counts_by_label.keys()) & set(
+            stats_b.node_counts_by_label.keys()
+        )
+        shared_edge_types = set(stats_a.edge_counts_by_type.keys()) & set(
+            stats_b.edge_counts_by_type.keys()
+        )
 
         result = {
             "workspace_a": {
@@ -193,8 +198,13 @@ def create_mcp_server() -> Any:
             },
             "shared_node_types": list(shared_node_types),
             "shared_edge_types": list(shared_edge_types),
-            "structural_similarity": len(shared_node_types) / max(
-                len(set(stats_a.node_counts_by_label.keys()) | set(stats_b.node_counts_by_label.keys())), 1
+            "structural_similarity": len(shared_node_types)
+            / max(
+                len(
+                    set(stats_a.node_counts_by_label.keys())
+                    | set(stats_b.node_counts_by_label.keys())
+                ),
+                1,
             ),
         }
         return json.dumps(result, indent=2, default=str)
@@ -233,14 +243,17 @@ def create_mcp_server() -> Any:
         stats = result.get("ingestion_stats", {})
         errors = result.get("errors", [])
 
-        return json.dumps({
-            "status": "complete",
-            "nodes_extracted": stats.get("nodes_written", 0),
-            "edges_extracted": stats.get("edges_written", 0),
-            "errors": len(errors),
-            "review_needed": result.get("requires_review", False),
-            "review_reasons": result.get("review_reasons", []),
-        }, indent=2)
+        return json.dumps(
+            {
+                "status": "complete",
+                "nodes_extracted": stats.get("nodes_written", 0),
+                "edges_extracted": stats.get("edges_written", 0),
+                "errors": len(errors),
+                "review_needed": result.get("requires_review", False),
+                "review_reasons": result.get("review_reasons", []),
+            },
+            indent=2,
+        )
 
     return mcp
 

@@ -7,11 +7,11 @@ external services.
 
 Uses an inline MockGraphClient that mirrors the API conftest pattern.
 """
+
 from __future__ import annotations
 
-import sys
 import os
-from dataclasses import dataclass, field
+import sys
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -19,39 +19,29 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+from dialectica_ontology.confidence import Conclusion, ConfidenceType
 from dialectica_ontology.primitives import (
     Actor,
     Conflict,
     EmotionalState,
     Event,
     Process,
-    Outcome,
     TrustState,
 )
 from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from dialectica_ontology.enums import (
-    ConflictStatus,
-    GlaslStage,
-    PrimaryEmotion,
-    ProcessStatus,
-    ViolenceType,
-)
-from dialectica_ontology.confidence import Conclusion, ConfidenceType
-
 from dialectica_reasoning.symbolic.escalation import (
     EscalationDetector,
-    GlaslAssessment,
     Forecast,
+    GlaslAssessment,
 )
-from dialectica_reasoning.symbolic.ripeness import RipenessScorer, RipenessAssessment
-from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer, TrustMatrix
 from dialectica_reasoning.symbolic.firewall import SymbolicFirewall
 from dialectica_reasoning.symbolic.power_analysis import (
-    PowerMapper,
-    PowerMap,
     PowerAsymmetry,
+    PowerMap,
+    PowerMapper,
 )
-
+from dialectica_reasoning.symbolic.ripeness import RipenessAssessment, RipenessScorer
+from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer, TrustMatrix
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  INLINE MOCK GRAPH CLIENT
@@ -66,8 +56,8 @@ class MockGraphClient:
     """
 
     def __init__(self) -> None:
-        self.nodes: dict[str, dict[str, Any]] = {}   # {ws_id: {node_id: node}}
-        self.edges: dict[str, list[Any]] = {}         # {ws_id: [edge]}
+        self.nodes: dict[str, dict[str, Any]] = {}  # {ws_id: {node_id: node}}
+        self.edges: dict[str, list[Any]] = {}  # {ws_id: [edge]}
 
     def seed_nodes(self, workspace_id: str, nodes: list[Any]) -> None:
         """Add nodes to a workspace."""
@@ -92,7 +82,7 @@ class MockGraphClient:
         ws_nodes = list(self.nodes.get(workspace_id, {}).values())
         if label:
             ws_nodes = [n for n in ws_nodes if getattr(n, "label", "") == label]
-        return ws_nodes[offset: offset + limit]
+        return ws_nodes[offset : offset + limit]
 
     async def get_edges(
         self,
@@ -106,6 +96,7 @@ class MockGraphClient:
 
     async def get_workspace_stats(self, workspace_id: str) -> Any:
         from dialectica_graph.models import WorkspaceStats
+
         ws_nodes = self.nodes.get(workspace_id, {})
         ws_edges = self.edges.get(workspace_id, [])
         label_counts: dict[str, int] = {}
@@ -125,6 +116,7 @@ class MockGraphClient:
 
     async def get_escalation_trajectory(self, workspace_id: str) -> Any:
         from dialectica_graph.models import EscalationResult, EscalationTrajectoryPoint
+
         return EscalationResult(
             trajectory=[
                 EscalationTrajectoryPoint(
@@ -252,8 +244,9 @@ class TestEscalationDetectsGlaslStage:
     @pytest.mark.asyncio
     async def test_high_stage_conflict_yields_win_lose_or_worse(self):
         gc = MockGraphClient()
-        conflict = make_conflict("c-high", "Extreme Escalation", glasl_stage=7,
-                                 violence_type="direct")
+        conflict = make_conflict(
+            "c-high", "Extreme Escalation", glasl_stage=7, violence_type="direct"
+        )
         gc.seed_nodes(_WS, [conflict])
 
         detector = EscalationDetector(gc)
@@ -266,8 +259,9 @@ class TestEscalationDetectsGlaslStage:
     async def test_escalation_with_multiple_signals(self):
         """Combine conflict stage, toxic emotions, and high-severity events."""
         gc = MockGraphClient()
-        conflict = make_conflict("c-2", "Regional Dispute", glasl_stage=5,
-                                 violence_type="structural")
+        conflict = make_conflict(
+            "c-2", "Regional Dispute", glasl_stage=5, violence_type="structural"
+        )
         now = datetime.utcnow()
         events = [
             make_event("e-1", "threaten", 0.8, now - timedelta(days=5)),
@@ -336,8 +330,7 @@ class TestRipenessScorerBasic:
     async def test_ripeness_scorer_basic(self):
         gc = MockGraphClient()
         # Dormant conflict = stalemate signal (MHS)
-        conflict = make_conflict("c-ripe", "Stalemate Conflict", glasl_stage=4,
-                                 status="dormant")
+        conflict = make_conflict("c-ripe", "Stalemate Conflict", glasl_stage=4, status="dormant")
         # High-severity events = cost accumulation (MHS)
         now = datetime.utcnow()
         events = [
@@ -368,8 +361,7 @@ class TestRipenessScorerBasic:
         """Overall ripeness uses geometric mean — both MHS and MEO must be nonzero."""
         gc = MockGraphClient()
         # Only MHS signals, no MEO signals
-        conflict = make_conflict("c-no-meo", "No MEO", glasl_stage=5,
-                                 status="dormant")
+        conflict = make_conflict("c-no-meo", "No MEO", glasl_stage=5, status="dormant")
         gc.seed_nodes(_WS, [conflict])
 
         scorer = RipenessScorer(gc)
@@ -383,8 +375,7 @@ class TestRipenessScorerBasic:
     async def test_ripeness_with_processes_increases_meo(self):
         """Active processes and cooperative events increase MEO."""
         gc = MockGraphClient()
-        conflict = make_conflict("c-meo", "With MEO", glasl_stage=3,
-                                 status="active")
+        conflict = make_conflict("c-meo", "With MEO", glasl_stage=3, status="active")
         process = Process(
             id="proc-1",
             process_type="mediation_facilitative",
@@ -419,7 +410,11 @@ class TestTrustDeficitDetection:
         # Create a low-trust TrustState (with trustor/trustee stored in
         # the node itself — the TrustAnalyzer uses the fallback path)
         ts_low = make_trust_state(
-            "ts-low", ability=0.3, benevolence=0.2, integrity=0.1, overall=0.2,
+            "ts-low",
+            ability=0.3,
+            benevolence=0.2,
+            integrity=0.1,
+            overall=0.2,
         )
         # Attach trustor/trustee as attributes for the fallback path
         ts_low.metadata["trustor_id"] = "actor-a"
@@ -492,6 +487,7 @@ class TestTrustDeficitDetection:
         now = datetime.utcnow()
         # Use a simple mock object that has the attributes TrustAnalyzer reads
         from types import SimpleNamespace
+
         event = SimpleNamespace(
             id="ev-threaten",
             label="Event",
@@ -916,21 +912,30 @@ class TestEscalationSignals:
         gc = MockGraphClient()
         edges = [
             ConflictRelationship(
-                id="allied-1", type=EdgeType.ALLIED_WITH,
-                source_id="a", target_id="b",
-                source_label="Actor", target_label="Actor",
+                id="allied-1",
+                type=EdgeType.ALLIED_WITH,
+                source_id="a",
+                target_id="b",
+                source_label="Actor",
+                target_label="Actor",
                 workspace_id=_WS,
             ),
             ConflictRelationship(
-                id="allied-2", type=EdgeType.ALLIED_WITH,
-                source_id="c", target_id="d",
-                source_label="Actor", target_label="Actor",
+                id="allied-2",
+                type=EdgeType.ALLIED_WITH,
+                source_id="c",
+                target_id="d",
+                source_label="Actor",
+                target_label="Actor",
                 workspace_id=_WS,
             ),
             ConflictRelationship(
-                id="opposed-1", type=EdgeType.OPPOSED_TO,
-                source_id="a", target_id="c",
-                source_label="Actor", target_label="Actor",
+                id="opposed-1",
+                type=EdgeType.OPPOSED_TO,
+                source_id="a",
+                target_id="c",
+                source_label="Actor",
+                target_label="Actor",
                 workspace_id=_WS,
             ),
         ]

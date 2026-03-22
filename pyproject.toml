@@ -33,11 +33,16 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "ANN"]
-ignore = ["ANN101", "ANN102", "ANN401"]
 
-[tool.ruff.isort]
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.isort]
 known-first-party = ["dialectica_ontology", "dialectica_graph", "dialectica_extraction", "dialectica_reasoning", "dialectica_api"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["ANN001", "ANN003", "ANN201", "ANN202", "ANN204"]
 
 [tool.mypy]
 python_version = "3.12"

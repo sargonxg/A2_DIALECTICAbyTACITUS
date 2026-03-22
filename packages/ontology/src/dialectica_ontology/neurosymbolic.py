@@ -19,10 +19,7 @@ Theoretical basis: TACITUS Core Ontology v2.0 (see ontology.py NEUROSYMBOLIC{}).
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # ─── Symbolic Layer ────────────────────────────────────────────────────────────
 
@@ -88,8 +85,7 @@ class SymbolicLayer(BaseModel):
             SymbolicComponent(
                 name="temporal_logic",
                 description=(
-                    "Temporal logic via Allen's interval algebra "
-                    "on valid_from / valid_to intervals"
+                    "Temporal logic via Allen's interval algebra on valid_from / valid_to intervals"
                 ),
             ),
             SymbolicComponent(
@@ -170,8 +166,7 @@ class NeuralLayer(BaseModel):
             NeuralComponent(
                 name="r_gat",
                 description=(
-                    "R-GAT (Relational Graph Attention Network) "
-                    "for heterogeneous graph embedding"
+                    "R-GAT (Relational Graph Attention Network) for heterogeneous graph embedding"
                 ),
             ),
             NeuralComponent(
@@ -183,35 +178,28 @@ class NeuralLayer(BaseModel):
             ),
             NeuralComponent(
                 name="temporal_attention",
-                description=(
-                    "Temporal attention mechanism for trajectory forecasting"
-                ),
+                description=("Temporal attention mechanism for trajectory forecasting"),
             ),
             NeuralComponent(
                 name="narrative_similarity",
-                description=(
-                    "Narrative similarity via embedding cosine distance"
-                ),
+                description=("Narrative similarity via embedding cosine distance"),
             ),
             NeuralComponent(
                 name="conflict_pattern_matching",
                 description=(
-                    "Conflict pattern matching via subgraph isomorphism "
-                    "and neural fingerprinting"
+                    "Conflict pattern matching via subgraph isomorphism and neural fingerprinting"
                 ),
             ),
             NeuralComponent(
                 name="escalation_prediction",
                 description=(
-                    "Escalation prediction: GNN trained on historical "
-                    "(Event, Event, CAUSED) chains"
+                    "Escalation prediction: GNN trained on historical (Event, Event, CAUSED) chains"
                 ),
             ),
             NeuralComponent(
                 name="outcome_prediction",
                 description=(
-                    "Outcome prediction: predict resolution probability "
-                    "by dispute profile"
+                    "Outcome prediction: predict resolution probability by dispute profile"
                 ),
             ),
         ),
@@ -279,38 +267,25 @@ class BridgeProtocol(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     description: str = Field(
-        default=(
-            "How symbolic and neural layers interact "
-            "(reason-then-embed pipeline)"
-        ),
+        default=("How symbolic and neural layers interact (reason-then-embed pipeline)"),
     )
     pattern: tuple[BridgeStep, ...] = Field(
         default=(
             BridgeStep(
                 step=1,
-                description=(
-                    "Symbolic rules fire first (deterministic, explainable)"
-                ),
+                description=("Symbolic rules fire first (deterministic, explainable)"),
             ),
             BridgeStep(
                 step=2,
-                description=(
-                    "Neural layer fills gaps "
-                    "(predictions, similarities, anomalies)"
-                ),
+                description=("Neural layer fills gaps (predictions, similarities, anomalies)"),
             ),
             BridgeStep(
                 step=3,
-                description=(
-                    "Human-in-the-loop validates neural suggestions"
-                ),
+                description=("Human-in-the-loop validates neural suggestions"),
             ),
             BridgeStep(
                 step=4,
-                description=(
-                    "Validated suggestions become new symbolic rules "
-                    "(learning loop)"
-                ),
+                description=("Validated suggestions become new symbolic rules (learning loop)"),
             ),
         ),
         description="The 4-step reason-then-embed bridge pattern",
@@ -327,23 +302,13 @@ class BridgeProtocol(BaseModel):
         default=(
             ScientificRisk(
                 name="ontology_loss",
-                risk=(
-                    "If schema is too rigid, it flattens meaningful ambiguity."
-                ),
-                mitigation=(
-                    "Controlled vocabularies, confidence scores, "
-                    "preserved source_text."
-                ),
+                risk=("If schema is too rigid, it flattens meaningful ambiguity."),
+                mitigation=("Controlled vocabularies, confidence scores, preserved source_text."),
             ),
             ScientificRisk(
                 name="extraction_error_propagation",
-                risk=(
-                    "LLM misreads can look authoritative in symbolic layer."
-                ),
-                mitigation=(
-                    "Confidence scores, HITL validation, "
-                    "stated/inferred distinction."
-                ),
+                risk=("LLM misreads can look authoritative in symbolic layer."),
+                mitigation=("Confidence scores, HITL validation, stated/inferred distinction."),
             ),
             ScientificRisk(
                 name="normative_overreach",
@@ -351,9 +316,7 @@ class BridgeProtocol(BaseModel):
                     "System may identify strategic efficiency without "
                     "understanding procedural fairness or political legitimacy."
                 ),
-                mitigation=(
-                    "TACITUS is decision-support, not autonomous resolution."
-                ),
+                mitigation=("TACITUS is decision-support, not autonomous resolution."),
             ),
         ),
         description="Known scientific risks with mitigations",

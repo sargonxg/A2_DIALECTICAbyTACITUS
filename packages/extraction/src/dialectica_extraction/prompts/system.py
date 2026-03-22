@@ -1,10 +1,10 @@
 """
 Shared System Prompt Components — Common prompt fragments for DIALECTICA extraction.
 """
+
 from __future__ import annotations
 
-from dialectica_ontology.tiers import OntologyTier, TIER_NODES, TIER_EDGES
-
+from dialectica_ontology.tiers import TIER_EDGES, TIER_NODES, OntologyTier
 
 SYSTEM_IDENTITY = """\
 You are DIALECTICA, a neurosymbolic conflict analysis system. Your task is to \
@@ -18,13 +18,21 @@ confidence scores reflecting how clearly the text supports each extraction."""
 
 EXTRACTION_RULES = """\
 Rules:
-1. Every extracted entity MUST have a source_text field quoting the text that supports it.
-2. Confidence scores: 1.0 = explicit statement, 0.8 = strong implication, 0.6 = reasonable inference, 0.4 = weak inference.
-3. Do NOT hallucinate entities. If the text does not mention it, do not extract it.
-4. Prefer specificity: "protest march" over "event", "water rights" over "issue".
-5. Resolve ambiguity conservatively: if unclear whether someone is an ally or opponent, omit the relationship.
-6. Temporal information: extract dates, durations, and sequences when available.
-7. For each entity, use the exact label from the schema (e.g., "Actor", "Conflict", "Event")."""
+1. Every extracted entity MUST have a source_text field \
+quoting the text that supports it.
+2. Confidence scores: 1.0 = explicit statement, \
+0.8 = strong implication, 0.6 = reasonable inference, \
+0.4 = weak inference.
+3. Do NOT hallucinate entities. If the text does not mention it, \
+do not extract it.
+4. Prefer specificity: "protest march" over "event", \
+"water rights" over "issue".
+5. Resolve ambiguity conservatively: if unclear whether someone \
+is an ally or opponent, omit the relationship.
+6. Temporal information: extract dates, durations, and sequences \
+when available.
+7. For each entity, use the exact label from the schema \
+(e.g., "Actor", "Conflict", "Event")."""
 
 
 def get_node_type_descriptions(tier: OntologyTier) -> str:
@@ -38,8 +46,16 @@ def get_node_type_descriptions(tier: OntologyTier) -> str:
             continue
         fields = []
         for field_name, field_info in cls.model_fields.items():
-            if field_name in ("id", "workspace_id", "tenant_id", "created_at", "updated_at",
-                              "embedding", "metadata", "extraction_method"):
+            if field_name in (
+                "id",
+                "workspace_id",
+                "tenant_id",
+                "created_at",
+                "updated_at",
+                "embedding",
+                "metadata",
+                "extraction_method",
+            ):
                 continue
             required = field_info.is_required()
             annotation = field_info.annotation
@@ -52,7 +68,7 @@ def get_node_type_descriptions(tier: OntologyTier) -> str:
 
 def get_edge_type_descriptions(tier: OntologyTier) -> str:
     """Return a formatted description of edge types available at the given tier."""
-    from dialectica_ontology.relationships import EDGE_SCHEMA, EdgeType
+    from dialectica_ontology.relationships import EDGE_SCHEMA
 
     allowed = TIER_EDGES[tier]
     lines = []

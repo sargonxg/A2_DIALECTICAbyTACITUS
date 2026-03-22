@@ -1,6 +1,7 @@
 """
 Templates Router — Domain-specific workspace configuration templates.
 """
+
 from __future__ import annotations
 
 import os
@@ -12,7 +13,9 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/v1/templates", tags=["templates"])
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "data", "templates")
+TEMPLATES_DIR = os.path.join(
+    os.path.dirname(__file__), "..", "..", "..", "..", "..", "data", "templates"
+)
 
 
 class TemplateInfo(BaseModel):

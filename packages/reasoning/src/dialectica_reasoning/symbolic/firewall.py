@@ -6,10 +6,11 @@ This is the core architectural invariant of DIALECTICA: treaty violations,
 legal constraints, and other rule-derived facts always take priority over
 GNN/LLM predictions.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
 from dialectica_ontology.confidence import Conclusion, ConfidenceType
 
@@ -26,9 +27,7 @@ class SymbolicFirewall:
         deterministic_conclusions: Pre-computed symbolic conclusions.
     """
 
-    def __init__(
-        self, deterministic_conclusions: Sequence[Conclusion] | None = None
-    ) -> None:
+    def __init__(self, deterministic_conclusions: Sequence[Conclusion] | None = None) -> None:
         self._deterministic: list[Conclusion] = []
         if deterministic_conclusions:
             for c in deterministic_conclusions:
@@ -96,10 +95,10 @@ class SymbolicFirewall:
         merged: list[Conclusion] = []
         for c in symbolic:
             merged.append(c)
-            if c.conclusion_type == ConfidenceType.DETERMINISTIC:
-                # Ensure firewall knows about it
-                if not any(d.conclusion_id == c.conclusion_id for d in self._deterministic):
-                    self._deterministic.append(c)
+            if c.conclusion_type == ConfidenceType.DETERMINISTIC and not any(
+                d.conclusion_id == c.conclusion_id for d in self._deterministic
+            ):
+                self._deterministic.append(c)
 
         # Filter neural predictions through the firewall
         accepted = 0
@@ -131,9 +130,12 @@ class SymbolicFirewall:
         subject keywords + different assertion direction.
         """
         # Must be in the same workspace to contradict
-        if deterministic.workspace_id and prediction.workspace_id:
-            if deterministic.workspace_id != prediction.workspace_id:
-                return False
+        if (
+            deterministic.workspace_id
+            and prediction.workspace_id
+            and deterministic.workspace_id != prediction.workspace_id
+        ):
+            return False
 
         det_lower = deterministic.statement.lower()
         pred_lower = prediction.statement.lower()
@@ -159,7 +161,7 @@ class SymbolicFirewall:
                 return True
 
         # Check for "not" negation of the same statement
-        if det_lower.replace("not ", "") == pred_lower or pred_lower.replace("not ", "") == det_lower:
-            return True
-
-        return False
+        return bool(
+            det_lower.replace("not ", "") == pred_lower
+            or pred_lower.replace("not ", "") == det_lower
+        )

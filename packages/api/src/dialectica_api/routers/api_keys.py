@@ -4,6 +4,7 @@ API Key Management Router — CRUD for scoped API keys.
 Key format: pk_live_... (production), pk_test_... (sandbox)
 Scopes: graph:read, graph:write, extract, reason, admin
 """
+
 from __future__ import annotations
 
 import hashlib

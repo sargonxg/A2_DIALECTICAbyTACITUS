@@ -3,6 +3,7 @@ Response Models — Data classes for graph query results.
 
 SubgraphResult, ScoredNode, WorkspaceStats, ActorNetworkResult, EscalationResult.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

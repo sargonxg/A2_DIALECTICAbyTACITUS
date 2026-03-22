@@ -1,6 +1,7 @@
 """
 Graph Quality Analyzer — Completeness, consistency, and coverage metrics.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,10 +13,21 @@ from dialectica_ontology.relationships import validate_relationship
 
 # Expected node types for a complete conflict graph
 _EXPECTED_NODE_TYPES = [
-    "Actor", "Conflict", "Event", "Issue", "Interest",
-    "Norm", "Process", "Outcome", "Narrative",
-    "EmotionalState", "TrustState", "PowerDynamic",
-    "Location", "Evidence", "Role",
+    "Actor",
+    "Conflict",
+    "Event",
+    "Issue",
+    "Interest",
+    "Norm",
+    "Process",
+    "Outcome",
+    "Narrative",
+    "EmotionalState",
+    "TrustState",
+    "PowerDynamic",
+    "Location",
+    "Evidence",
+    "Role",
 ]
 
 _ESSENTIAL_NODE_TYPES = ["Actor", "Conflict", "Event"]
@@ -99,7 +111,15 @@ class GraphQualityAnalyzer:
         essential_present = all(t in present_types for t in _ESSENTIAL_NODE_TYPES)
         standard_present = all(t in present_types for t in _STANDARD_NODE_TYPES)
         full_present = all(t in present_types for t in _FULL_NODE_TYPES)
-        tier = "full" if full_present else ("standard" if standard_present else ("essential" if essential_present else "incomplete"))
+        tier = (
+            "full"
+            if full_present
+            else (
+                "standard"
+                if standard_present
+                else ("essential" if essential_present else "incomplete")
+            )
+        )
 
         return CompletenessReport(
             workspace_id=workspace_id,
@@ -183,10 +203,7 @@ class GraphQualityAnalyzer:
                 sources.add(str(src)[:50])
 
         # Average confidence
-        confidences = [
-            float(getattr(n, "confidence", 1.0))
-            for n in nodes
-        ]
+        confidences = [float(getattr(n, "confidence", 1.0)) for n in nodes]
         avg_conf = round(mean(confidences), 3) if confidences else 0.5
 
         # Coverage score
@@ -212,11 +229,16 @@ class GraphQualityAnalyzer:
         consistency = await self.assess_consistency(workspace_id)
         coverage = await self.assess_coverage(workspace_id)
 
-        overall = round(mean([
-            completeness.completeness_score,
-            consistency.consistency_score,
-            coverage.coverage_score,
-        ]), 3)
+        overall = round(
+            mean(
+                [
+                    completeness.completeness_score,
+                    consistency.consistency_score,
+                    coverage.coverage_score,
+                ]
+            ),
+            3,
+        )
 
         recommendations: list[str] = []
         if completeness.missing_node_types:
@@ -224,9 +246,13 @@ class GraphQualityAnalyzer:
             if missing_key:
                 recommendations.append(f"Add missing node types: {', '.join(missing_key[:3])}")
         if completeness.orphan_node_count > 5:
-            recommendations.append(f"Connect {completeness.orphan_node_count} orphan nodes via relationships.")
+            recommendations.append(
+                f"Connect {completeness.orphan_node_count} orphan nodes via relationships."
+            )
         if consistency.edge_schema_violations > 0:
-            recommendations.append(f"Fix {consistency.edge_schema_violations} edge schema violations.")
+            recommendations.append(
+                f"Fix {consistency.edge_schema_violations} edge schema violations."
+            )
         if coverage.avg_confidence < 0.5:
             recommendations.append("Validate low-confidence nodes to improve data quality.")
         if coverage.temporal_span_days < 30:

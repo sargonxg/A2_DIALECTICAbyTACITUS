@@ -1,6 +1,7 @@
 """
 Comparator Agent — Cross-workspace structural conflict comparison.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -100,6 +101,6 @@ class ComparatorAgent:
             key_similarities=similarities,
             insights=(
                 f"Structural similarity: {similarity:.0%}. "
-                f"{'Conflicts show strong structural parallels.' if similarity > 0.7 else 'Conflicts differ significantly in structure.'}"
+                f"{'Conflicts show strong structural parallels.' if similarity > 0.7 else 'Conflicts differ significantly in structure.'}"  # noqa: E501
             ),
         )

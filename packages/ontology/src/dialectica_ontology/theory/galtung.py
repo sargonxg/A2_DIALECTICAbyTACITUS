@@ -5,6 +5,7 @@ Johan Galtung's violence triangle (direct, structural, cultural) and
 peace theory (positive vs negative peace). Foundational framework for
 understanding multi-layered violence and comprehensive peacebuilding.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -150,7 +151,9 @@ class GaltungFramework(TheoryFramework):
 
         recommendations = []
         if violence["direct"]["severity"] > 0.5:
-            recommendations.append("Priority: Stop direct violence through ceasefire or intervention.")
+            recommendations.append(
+                "Priority: Stop direct violence through ceasefire or intervention."
+            )
         if violence["structural"]["severity"] > 0.3:
             recommendations.append("Address structural inequalities driving the conflict.")
         if violence["cultural"]["severity"] > 0.3:
@@ -194,7 +197,7 @@ class GaltungFramework(TheoryFramework):
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="Are there cultural beliefs, narratives, or ideologies that justify the conflict?",
+                question="Are there cultural beliefs, narratives, or ideologies that justify the conflict?",  # noqa: E501
                 framework=self.name,
                 purpose="Assess cultural violence",
                 response_type="open",

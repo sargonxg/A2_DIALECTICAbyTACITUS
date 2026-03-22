@@ -11,16 +11,14 @@ Implements:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
-from dialectica_ontology.primitives import ConflictNode, NODE_TYPES
+from dialectica_ontology.primitives import ConflictNode
 from dialectica_ontology.relationships import (
     ConflictRelationship,
     EdgeType,
-    EDGE_SCHEMA,
     validate_relationship,
 )
-from dialectica_ontology.tiers import OntologyTier, get_available_nodes, get_available_edges
+from dialectica_ontology.tiers import OntologyTier, get_available_edges, get_available_nodes
 
 
 def validate_relationship_types(rel: ConflictRelationship) -> list[str]:

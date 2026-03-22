@@ -1,65 +1,78 @@
 """Tests for dialectica_ontology.primitives — All 15 node type Pydantic models."""
 
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
-from dialectica_ontology.primitives import (
-    ConflictNode,
-    Actor,
-    Conflict,
-    Event,
-    Issue,
-    Interest,
-    Norm,
-    Process,
-    Outcome,
-    Narrative,
-    EmotionalState,
-    TrustState,
-    PowerDynamic,
-    Location,
-    Evidence,
-    Role,
-    NODE_TYPES,
-)
 from dialectica_ontology.enums import (
     ActorType,
     ConflictDomain,
     ConflictScale,
     ConflictStatus,
-    GlaslLevel,
+    EmotionIntensity,
     EventType,
+    EvidenceType,
+    GlaslLevel,
     InterestType,
+    LocationType,
+    NarrativeType,
     NormType,
+    OutcomeType,
+    PowerDirection,
+    PowerDomain,
+    PrimaryEmotion,
+    ProcessStatus,
     ProcessType,
     ResolutionApproach,
-    ProcessStatus,
-    OutcomeType,
-    NarrativeType,
-    PrimaryEmotion,
-    EmotionIntensity,
-    PowerDomain,
-    PowerDirection,
-    LocationType,
-    EvidenceType,
     RoleType,
 )
-
+from dialectica_ontology.primitives import (
+    NODE_TYPES,
+    Actor,
+    Conflict,
+    EmotionalState,
+    Event,
+    Evidence,
+    Interest,
+    Issue,
+    Location,
+    Narrative,
+    Norm,
+    Outcome,
+    PowerDynamic,
+    Process,
+    Role,
+    TrustState,
+)
 
 # ─── Registry ───────────────────────────────────────────────────────────────
+
 
 def test_node_types_registry():
     assert len(NODE_TYPES) == 15
     expected = {
-        "Actor", "Conflict", "Event", "Issue", "Interest", "Norm",
-        "Process", "Outcome", "Narrative", "EmotionalState", "TrustState",
-        "PowerDynamic", "Location", "Evidence", "Role",
+        "Actor",
+        "Conflict",
+        "Event",
+        "Issue",
+        "Interest",
+        "Norm",
+        "Process",
+        "Outcome",
+        "Narrative",
+        "EmotionalState",
+        "TrustState",
+        "PowerDynamic",
+        "Location",
+        "Evidence",
+        "Role",
     }
     assert set(NODE_TYPES.keys()) == expected
 
 
 # ─── ConflictNode base ──────────────────────────────────────────────────────
+
 
 def test_conflict_node_defaults():
     node = Actor(name="Test", actor_type=ActorType.PERSON)
@@ -91,6 +104,7 @@ def test_conflict_node_embedding_validation():
 
 
 # ─── 1. Actor ───────────────────────────────────────────────────────────────
+
 
 def test_actor_creation():
     a = Actor(name="Iran", actor_type=ActorType.STATE, iso_code="IRN")
@@ -131,6 +145,7 @@ def test_actor_serialization():
 
 
 # ─── 2. Conflict ────────────────────────────────────────────────────────────
+
 
 def test_conflict_creation():
     c = Conflict(
@@ -175,19 +190,24 @@ def test_conflict_glasl_level_derivation():
 def test_conflict_glasl_stage_range():
     with pytest.raises(ValidationError):
         Conflict(
-            name="Test", scale=ConflictScale.MICRO,
-            domain=ConflictDomain.WORKPLACE, status=ConflictStatus.ACTIVE,
+            name="Test",
+            scale=ConflictScale.MICRO,
+            domain=ConflictDomain.WORKPLACE,
+            status=ConflictStatus.ACTIVE,
             glasl_stage=0,
         )
     with pytest.raises(ValidationError):
         Conflict(
-            name="Test", scale=ConflictScale.MICRO,
-            domain=ConflictDomain.WORKPLACE, status=ConflictStatus.ACTIVE,
+            name="Test",
+            scale=ConflictScale.MICRO,
+            domain=ConflictDomain.WORKPLACE,
+            status=ConflictStatus.ACTIVE,
             glasl_stage=10,
         )
 
 
 # ─── 3. Event ───────────────────────────────────────────────────────────────
+
 
 def test_event_creation():
     e = Event(
@@ -206,6 +226,7 @@ def test_event_severity_range():
 
 # ─── 4. Issue ───────────────────────────────────────────────────────────────
 
+
 def test_issue_creation():
     i = Issue(name="Nuclear Enrichment", issue_type=InterestType.SUBSTANTIVE, salience=0.9)
     assert i.label == "Issue"
@@ -213,6 +234,7 @@ def test_issue_creation():
 
 
 # ─── 5. Interest ────────────────────────────────────────────────────────────
+
 
 def test_interest_creation():
     i = Interest(
@@ -235,6 +257,7 @@ def test_interest_priority_range():
 
 # ─── 6. Norm ────────────────────────────────────────────────────────────────
 
+
 def test_norm_creation():
     n = Norm(name="NPT", norm_type=NormType.TREATY, enforceability="binding")
     assert n.label == "Norm"
@@ -242,6 +265,7 @@ def test_norm_creation():
 
 
 # ─── 7. Process ─────────────────────────────────────────────────────────────
+
 
 def test_process_creation():
     p = Process(
@@ -253,6 +277,7 @@ def test_process_creation():
 
 
 # ─── 8. Outcome ─────────────────────────────────────────────────────────────
+
 
 def test_outcome_creation():
     o = Outcome(
@@ -267,6 +292,7 @@ def test_outcome_creation():
 
 # ─── 9. Narrative ───────────────────────────────────────────────────────────
 
+
 def test_narrative_creation():
     n = Narrative(
         content="Iran seeks nuclear weapons",
@@ -277,6 +303,7 @@ def test_narrative_creation():
 
 
 # ─── 10. EmotionalState ─────────────────────────────────────────────────────
+
 
 def test_emotional_state_creation():
     es = EmotionalState(
@@ -300,6 +327,7 @@ def test_emotional_state_valence_range():
 
 # ─── 11. TrustState ─────────────────────────────────────────────────────────
 
+
 def test_trust_state_creation():
     ts = TrustState(
         perceived_ability=0.7,
@@ -314,6 +342,7 @@ def test_trust_state_creation():
 
 # ─── 12. PowerDynamic ───────────────────────────────────────────────────────
 
+
 def test_power_dynamic_creation():
     pd = PowerDynamic(
         power_domain=PowerDomain.ECONOMIC,
@@ -325,6 +354,7 @@ def test_power_dynamic_creation():
 
 
 # ─── 13. Location ───────────────────────────────────────────────────────────
+
 
 def test_location_creation():
     loc = Location(
@@ -345,6 +375,7 @@ def test_location_country_code_validation():
 
 # ─── 14. Evidence ───────────────────────────────────────────────────────────
 
+
 def test_evidence_creation():
     e = Evidence(
         evidence_type=EvidenceType.DOCUMENT,
@@ -356,6 +387,7 @@ def test_evidence_creation():
 
 # ─── 15. Role ───────────────────────────────────────────────────────────────
 
+
 def test_role_creation():
     r = Role(role_type=RoleType.MEDIATOR, actor_id="actor_123", context_id="conflict_456")
     assert r.label == "Role"
@@ -364,21 +396,40 @@ def test_role_creation():
 
 # ─── Serialization / Deserialization ─────────────────────────────────────────
 
+
 def test_all_node_types_serializable():
     """Ensure all 15 node types can be serialized to dict and back."""
     samples = {
         "Actor": Actor(name="Test", actor_type=ActorType.PERSON),
-        "Conflict": Conflict(name="Test", scale=ConflictScale.MICRO, domain=ConflictDomain.WORKPLACE, status=ConflictStatus.ACTIVE),
+        "Conflict": Conflict(
+            name="Test",
+            scale=ConflictScale.MICRO,
+            domain=ConflictDomain.WORKPLACE,
+            status=ConflictStatus.ACTIVE,
+        ),
         "Event": Event(event_type=EventType.AGREE, severity=0.5, occurred_at=datetime.now()),
         "Issue": Issue(name="Test", issue_type=InterestType.SUBSTANTIVE),
         "Interest": Interest(description="Test", interest_type=InterestType.SUBSTANTIVE),
         "Norm": Norm(name="Test", norm_type=NormType.CONTRACT),
-        "Process": Process(process_type=ProcessType.NEGOTIATION, resolution_approach=ResolutionApproach.INTEREST_BASED, status=ProcessStatus.ACTIVE),
+        "Process": Process(
+            process_type=ProcessType.NEGOTIATION,
+            resolution_approach=ResolutionApproach.INTEREST_BASED,
+            status=ProcessStatus.ACTIVE,
+        ),
         "Outcome": Outcome(outcome_type=OutcomeType.AGREEMENT),
         "Narrative": Narrative(content="Test", narrative_type=NarrativeType.DOMINANT),
-        "EmotionalState": EmotionalState(primary_emotion=PrimaryEmotion.JOY, intensity=EmotionIntensity.LOW),
-        "TrustState": TrustState(perceived_ability=0.5, perceived_benevolence=0.5, perceived_integrity=0.5, overall_trust=0.5),
-        "PowerDynamic": PowerDynamic(power_domain=PowerDomain.COERCIVE, magnitude=0.5, direction=PowerDirection.SYMMETRIC),
+        "EmotionalState": EmotionalState(
+            primary_emotion=PrimaryEmotion.JOY, intensity=EmotionIntensity.LOW
+        ),
+        "TrustState": TrustState(
+            perceived_ability=0.5,
+            perceived_benevolence=0.5,
+            perceived_integrity=0.5,
+            overall_trust=0.5,
+        ),
+        "PowerDynamic": PowerDynamic(
+            power_domain=PowerDomain.COERCIVE, magnitude=0.5, direction=PowerDirection.SYMMETRIC
+        ),
         "Location": Location(name="Test", location_type=LocationType.CITY),
         "Evidence": Evidence(evidence_type=EvidenceType.DOCUMENT, description="Test"),
         "Role": Role(role_type=RoleType.MEDIATOR),

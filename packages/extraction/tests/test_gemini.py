@@ -1,19 +1,17 @@
 """
 Tests for dialectica_extraction.gemini — Gemini extractor (mocked).
 """
+
 from __future__ import annotations
 
-import json
-import sys
 import os
-from unittest.mock import MagicMock, patch
-
-import pytest
+import sys
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+from dialectica_extraction.gemini import ExtractionMetrics, GeminiExtractionResult, GeminiExtractor
 from dialectica_ontology.tiers import OntologyTier
-from dialectica_extraction.gemini import GeminiExtractor, GeminiExtractionResult, ExtractionMetrics
 
 
 class TestGeminiExtractor:
@@ -54,10 +52,18 @@ class TestGeminiExtractorWithMock:
     @patch("dialectica_extraction.gemini.GeminiExtractor._call_gemini")
     def test_extract_entities_success(self, mock_call):
         mock_call.return_value = (
-            {"nodes": [
-                {"label": "Actor", "name": "Alice", "actor_type": "person", "confidence": 0.9},
-                {"label": "Conflict", "name": "Dispute", "scale": "micro", "domain": "workplace", "status": "active"},
-            ]},
+            {
+                "nodes": [
+                    {"label": "Actor", "name": "Alice", "actor_type": "person", "confidence": 0.9},
+                    {
+                        "label": "Conflict",
+                        "name": "Dispute",
+                        "scale": "micro",
+                        "domain": "workplace",
+                        "status": "active",
+                    },
+                ]
+            },
             ExtractionMetrics(input_tokens=100, output_tokens=50, model="gemini-2.5-flash-001"),
         )
 
@@ -81,10 +87,18 @@ class TestGeminiExtractorWithMock:
     @patch("dialectica_extraction.gemini.GeminiExtractor._call_gemini")
     def test_extract_relationships(self, mock_call):
         mock_call.return_value = (
-            {"edges": [
-                {"type": "PARTY_TO", "source_id": "a1", "target_id": "c1",
-                 "source_label": "Actor", "target_label": "Conflict", "confidence": 0.8},
-            ]},
+            {
+                "edges": [
+                    {
+                        "type": "PARTY_TO",
+                        "source_id": "a1",
+                        "target_id": "c1",
+                        "source_label": "Actor",
+                        "target_label": "Conflict",
+                        "confidence": 0.8,
+                    },
+                ]
+            },
             ExtractionMetrics(),
         )
 
@@ -98,9 +112,11 @@ class TestGeminiExtractorWithMock:
     @patch("dialectica_extraction.gemini.GeminiExtractor._call_gemini")
     def test_repair_entities(self, mock_call):
         mock_call.return_value = (
-            {"nodes": [
-                {"label": "Actor", "name": "Alice", "actor_type": "person", "confidence": 0.9},
-            ]},
+            {
+                "nodes": [
+                    {"label": "Actor", "name": "Alice", "actor_type": "person", "confidence": 0.9},
+                ]
+            },
             ExtractionMetrics(),
         )
 
@@ -121,10 +137,12 @@ class TestGLiNERPreFilter:
 
         with patch.dict(os.environ, {"GLINER_ENABLED": "false"}):
             prefilter = GLiNERPreFilter()
-            results = prefilter.prefilter([
-                "The conflict between rebel forces escalated into violence.",
-                "The cat sat on the mat.",
-            ])
+            results = prefilter.prefilter(
+                [
+                    "The conflict between rebel forces escalated into violence.",
+                    "The cat sat on the mat.",
+                ]
+            )
             assert len(results) == 2
             # Conflict text should have higher entity density
             assert results[0].entity_count >= results[1].entity_count

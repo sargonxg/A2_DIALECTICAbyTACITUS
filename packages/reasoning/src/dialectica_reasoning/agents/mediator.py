@@ -1,14 +1,13 @@
 """
 Mediator Agent — Fisher/Ury interest mapping, BATNA analysis, intervention strategy.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from dialectica_graph import GraphClient
-from dialectica_reasoning.graphrag.retriever import ConflictGraphRAGRetriever
-from dialectica_reasoning.graphrag.context_builder import ConflictContextBuilder
-from dialectica_reasoning.symbolic.ripeness import RipenessScorer, RipenessAssessment
+from dialectica_reasoning.symbolic.ripeness import RipenessAssessment, RipenessScorer
 from dialectica_reasoning.symbolic.trust_analysis import TrustAnalyzer
 
 
@@ -42,9 +41,9 @@ class MediatorAgent:
             if getattr(e, "type", "") == "HAS_INTEREST":
                 interest = next((i for i in interests if i.id == e.target_id), None)
                 if interest:
-                    strategy.interests_by_actor.setdefault(
-                        e.source_id, []
-                    ).append(getattr(interest, "name", interest.id))
+                    strategy.interests_by_actor.setdefault(e.source_id, []).append(
+                        getattr(interest, "name", interest.id)
+                    )
 
         trust_matrix = await self._trust.compute_trust_matrix(workspace_id)
         strategy.trust_summary = (
@@ -56,8 +55,8 @@ class MediatorAgent:
         has_batna = any(getattr(a, "batna_strength", None) is not None for a in actors)
         strategy.batna_assessment = (
             "BATNA data available — leverage in process design."
-            if has_batna else
-            "BATNA not mapped — estimate from power analysis."
+            if has_batna
+            else "BATNA not mapped — estimate from power analysis."
         )
 
         ripe = strategy.ripeness

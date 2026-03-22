@@ -5,24 +5,20 @@ Mutually Enticing Opportunity (MEO) computation.
 Produces a composite ripeness score used to determine whether a
 conflict is ready for productive intervention.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from statistics import mean
 
 from dialectica_graph import GraphClient
-from dialectica_ontology.enums import ConflictStatus, ProcessStatus, RoleType
-from dialectica_ontology.primitives import (
-    Conflict,
-    Event,
-    Process,
-)
+from dialectica_ontology.enums import ConflictStatus, ProcessStatus
 from dialectica_ontology.relationships import EdgeType
-
 
 # ---------------------------------------------------------------------------
 # Result data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class RipenessAssessment:
@@ -38,6 +34,7 @@ class RipenessAssessment:
 # ---------------------------------------------------------------------------
 # Scorer
 # ---------------------------------------------------------------------------
+
 
 class RipenessScorer:
     """Computes Zartman ripeness from workspace graph data."""
@@ -67,8 +64,10 @@ class RipenessScorer:
         conflicts = await self._gc.get_nodes(workspace_id, label="Conflict")
         if conflicts:
             stalemate_count = sum(
-                1 for c in conflicts
-                if getattr(c, "status", None) in (
+                1
+                for c in conflicts
+                if getattr(c, "status", None)
+                in (
                     ConflictStatus.DORMANT,
                     ConflictStatus.LATENT,
                 )
@@ -79,19 +78,16 @@ class RipenessScorer:
         emotions = await self._gc.get_nodes(workspace_id, label="EmotionalState")
         if emotions:
             negative = {"anger", "fear", "sadness", "disgust"}
-            neg_count = sum(
-                1 for e in emotions
-                if getattr(e, "primary_emotion", None) in negative
-            )
+            neg_count = sum(1 for e in emotions if getattr(e, "primary_emotion", None) in negative)
             components.append(neg_count / len(emotions))
 
         # 4. No resolution process yet but high activity = stalemate
         edges = await self._gc.get_edges(workspace_id)
         resolved_ids = {e.source_id for e in edges if e.type == EdgeType.RESOLVED_THROUGH}
         active_unresolved = [
-            c for c in conflicts
-            if getattr(c, "status", None) == ConflictStatus.ACTIVE
-            and c.id not in resolved_ids
+            c
+            for c in conflicts
+            if getattr(c, "status", None) == ConflictStatus.ACTIVE and c.id not in resolved_ids
         ]
         if conflicts:
             components.append(len(active_unresolved) / len(conflicts))
@@ -118,8 +114,10 @@ class RipenessScorer:
         n_conflicts = max(len(conflicts), 1)
 
         active_processes = [
-            p for p in processes
-            if getattr(p, "status", None) in (
+            p
+            for p in processes
+            if getattr(p, "status", None)
+            in (
                 ProcessStatus.ACTIVE,
                 ProcessStatus.PENDING,
             )
@@ -133,7 +131,8 @@ class RipenessScorer:
         participates_edges = [e for e in edges if e.type == EdgeType.PARTICIPATES_IN]
         third_party_roles = {"mediator", "facilitator", "arbitrator", "neutral", "guarantor"}
         tp_count = sum(
-            1 for e in participates_edges
+            1
+            for e in participates_edges
             if e.properties.get("role_type", "").lower() in third_party_roles
         )
         components.append(min(1.0, tp_count * 0.25))
@@ -141,10 +140,7 @@ class RipenessScorer:
         # 3. Cooperative events indicating leadership openness
         events = await self._gc.get_nodes(workspace_id, label="Event")
         cooperative_types = {"agree", "consult", "support", "cooperate", "aid", "yield"}
-        coop_count = sum(
-            1 for ev in events
-            if getattr(ev, "event_type", "") in cooperative_types
-        )
+        coop_count = sum(1 for ev in events if getattr(ev, "event_type", "") in cooperative_types)
         total_events = max(len(events), 1)
         components.append(min(1.0, coop_count / total_events))
 
@@ -180,11 +176,15 @@ class RipenessScorer:
             factors.append("Low stalemate pressure — parties may not yet feel pain.")
 
         if meo >= 0.5:
-            factors.append("Good mutually enticing opportunity — processes and third parties available.")
+            factors.append(
+                "Good mutually enticing opportunity — processes and third parties available."
+            )
         elif meo >= 0.3:
             factors.append("Some opportunity for resolution exists.")
         else:
-            factors.append("Limited resolution opportunities — consider creating an enticing option.")
+            factors.append(
+                "Limited resolution opportunities — consider creating an enticing option."
+            )
 
         if is_ripe:
             factors.append("Conflict appears ripe for intervention.")

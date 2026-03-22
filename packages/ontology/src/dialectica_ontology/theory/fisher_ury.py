@@ -5,6 +5,7 @@ Roger Fisher and William Ury's principled negotiation framework from
 'Getting to Yes'. Focuses on interests over positions, BATNA analysis,
 ZOPA identification, and objective criteria.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -48,9 +49,7 @@ class FisherUryFramework(TheoryFramework):
             "while ZOPA (Zone of Possible Agreement) defines the bargaining range."
         )
 
-    def compute_zopa(
-        self, party_a_reservation: float, party_b_reservation: float
-    ) -> float | None:
+    def compute_zopa(self, party_a_reservation: float, party_b_reservation: float) -> float | None:
         """Compute the Zone of Possible Agreement.
 
         Args:
@@ -80,14 +79,28 @@ class FisherUryFramework(TheoryFramework):
         desc = batna_description.lower()
 
         strong_indicators = [
-            "excellent", "strong", "viable", "multiple options",
-            "competitive offer", "walk away", "alternative deal",
-            "better offer", "other partners", "independent",
+            "excellent",
+            "strong",
+            "viable",
+            "multiple options",
+            "competitive offer",
+            "walk away",
+            "alternative deal",
+            "better offer",
+            "other partners",
+            "independent",
         ]
         weak_indicators = [
-            "no alternative", "weak", "dependent", "desperate",
-            "no choice", "must agree", "stuck", "trapped",
-            "only option", "no leverage",
+            "no alternative",
+            "weak",
+            "dependent",
+            "desperate",
+            "no choice",
+            "must agree",
+            "stuck",
+            "trapped",
+            "only option",
+            "no leverage",
         ]
 
         strong_count = sum(1 for kw in strong_indicators if kw in desc)
@@ -140,9 +153,7 @@ class FisherUryFramework(TheoryFramework):
         result: dict = {}
 
         # Positions vs interests analysis
-        result["positions_vs_interests"] = self._detect_positions_vs_interests(
-            graph_context
-        )
+        result["positions_vs_interests"] = self._detect_positions_vs_interests(graph_context)
 
         # ZOPA analysis
         res_a = graph_context.get("reservation_a")
@@ -210,7 +221,7 @@ class FisherUryFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="What does each party really want (interests), beyond what they are asking for (positions)?",
+                question="What does each party really want (interests), beyond what they are asking for (positions)?",  # noqa: E501
                 framework=self.name,
                 purpose="Separate positions from interests",
                 response_type="open",
@@ -222,7 +233,7 @@ class FisherUryFramework(TheoryFramework):
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="Are there objective standards or criteria both parties would accept as fair?",
+                question="Are there objective standards or criteria both parties would accept as fair?",  # noqa: E501
                 framework=self.name,
                 purpose="Identify objective criteria",
                 response_type="open",

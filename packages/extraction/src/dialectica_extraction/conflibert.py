@@ -6,6 +6,7 @@ Uses snowood1/ConfliBERT-scr-uncased for:
   - Conflict actor NER extraction
   - Batch processing for efficiency
 """
+
 from __future__ import annotations
 
 import logging
@@ -54,14 +55,15 @@ class ConfliBERTClassifier:
             return
         try:
             from transformers import pipeline as hf_pipeline
+
             self._pipeline = hf_pipeline(
                 "text-classification",
                 model=self._model_name,
                 top_k=3,
             )
             logger.info("Loaded ConfliBERT classifier: %s", self._model_name)
-        except ImportError:
-            raise ImportError("transformers not installed. pip install transformers torch")
+        except ImportError as err:
+            raise ImportError("transformers not installed. pip install transformers torch") from err
         except Exception as e:
             logger.warning("ConfliBERT load failed: %s — using fallback", e)
             self._pipeline = None
@@ -71,6 +73,7 @@ class ConfliBERTClassifier:
             return
         try:
             from transformers import pipeline as hf_pipeline
+
             self._ner_pipeline = hf_pipeline(
                 "ner",
                 model=self._model_name,

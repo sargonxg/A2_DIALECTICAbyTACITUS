@@ -4,6 +4,7 @@ French-Raven Theory Framework — DIALECTICA implementation.
 John French and Bertram Raven's six bases of social power:
 coercive, reward, legitimate, expert, referent, and informational.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -94,16 +95,16 @@ class FrenchRavenFramework(TheoryFramework):
         Returns:
             Dict with each power base's detected presence and party distribution.
         """
-        keywords = set(
-            context.get("keywords", []) + context.get("power_indicators", [])
-        )
+        keywords = set(context.get("keywords", []) + context.get("power_indicators", []))
         party_a = set(context.get("party_a_power", []))
         party_b = set(context.get("party_b_power", []))
 
         result = {}
         for base_name, base_data in POWER_BASES.items():
             base_indicators = set(base_data["indicators"].split(","))
-            detected = bool(keywords & base_indicators) or base_name in party_a or base_name in party_b
+            detected = (
+                bool(keywords & base_indicators) or base_name in party_a or base_name in party_b
+            )
 
             holders = []
             if base_name in party_a:
@@ -184,7 +185,7 @@ class FrenchRavenFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="What sources of power does each party hold (authority, expertise, resources, relationships)?",
+                question="What sources of power does each party hold (authority, expertise, resources, relationships)?",  # noqa: E501
                 framework=self.name,
                 purpose="Identify power bases",
                 response_type="open",

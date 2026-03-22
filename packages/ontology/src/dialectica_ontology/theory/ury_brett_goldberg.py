@@ -4,6 +4,7 @@ Ury-Brett-Goldberg Theory Framework — DIALECTICA implementation.
 William Ury, Jeanne Brett, and Stephen Goldberg's dispute resolution
 framework distinguishing three approaches: interests, rights, and power.
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -23,7 +24,7 @@ APPROACHES: dict[str, dict[str, str]] = {
         "indicators": "needs,interests,negotiation,mediation,mutual_gain,problem_solving",
     },
     "rights": {
-        "description": "Resolving disputes by determining who is right based on rules, norms, or law.",
+        "description": "Resolving disputes by determining who is right based on rules, norms, or law.",  # noqa: E501
         "methods": "Arbitration, adjudication, legal proceedings, grievance procedures.",
         "cost": "Medium — may strain relationships but provides clear outcomes.",
         "when_appropriate": (
@@ -217,7 +218,7 @@ class UryBrettGoldbergFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="How is this dispute currently being addressed — through negotiation, rules/law, or force?",
+                question="How is this dispute currently being addressed — through negotiation, rules/law, or force?",  # noqa: E501
                 framework=self.name,
                 purpose="Identify current dispute resolution approach",
                 response_type="choice",

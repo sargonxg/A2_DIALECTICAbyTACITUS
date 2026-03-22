@@ -4,6 +4,7 @@ Tenant Isolation — Multi-tenant enforcement for DIALECTICA graph queries.
 Ensures all data access is scoped by tenant_id and workspace_id.
 Provides row-level filtering helpers for both Spanner SQL and Cypher.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -100,7 +101,4 @@ class TenantFilter:
         resource_workspace_id: str,
     ) -> bool:
         """Check if a tenant has access to a resource."""
-        return (
-            tenant_id == resource_tenant_id
-            and workspace_id == resource_workspace_id
-        )
+        return tenant_id == resource_tenant_id and workspace_id == resource_workspace_id

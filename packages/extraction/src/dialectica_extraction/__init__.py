@@ -14,21 +14,21 @@ Uses:
 """
 
 from dialectica_extraction.pipeline import (
+    ExtractionError,
     ExtractionPipeline,
     ExtractionState,
     TextChunk,
-    ExtractionError,
-    chunk_document,
-    gliner_prefilter,
-    extract_entities,
-    validate_schema,
-    repair_extraction,
-    extract_relationships,
-    resolve_coreference,
-    validate_structural_step,
-    compute_embeddings,
-    write_to_graph,
     build_pipeline,
+    chunk_document,
+    compute_embeddings,
+    extract_entities,
+    extract_relationships,
+    gliner_prefilter,
+    repair_extraction,
+    resolve_coreference,
+    validate_schema,
+    validate_structural_step,
+    write_to_graph,
 )
 
 __all__ = [

@@ -1,16 +1,16 @@
 """Tests for dialectica_ontology.theory — Theory framework implementations."""
 
 from dialectica_ontology.theory.base import TheoryFramework
-from dialectica_ontology.theory.glasl import GlaslFramework
+from dialectica_ontology.theory.deutsch import DeutschFramework
 from dialectica_ontology.theory.fisher_ury import FisherUryFramework
-from dialectica_ontology.theory.kriesberg import KriesbergFramework
 from dialectica_ontology.theory.galtung import GaltungFramework
+from dialectica_ontology.theory.glasl import GlaslFramework
+from dialectica_ontology.theory.kriesberg import KriesbergFramework
 from dialectica_ontology.theory.lederach import LederachFramework
 from dialectica_ontology.theory.zartman import ZartmanFramework
-from dialectica_ontology.theory.deutsch import DeutschFramework
-
 
 # ─── Base framework ─────────────────────────────────────────────────────────
+
 
 def test_framework_base_is_abstract():
     """TheoryFramework should define the interface."""
@@ -21,15 +21,23 @@ def test_framework_base_is_abstract():
 
 # ─── Glasl ───────────────────────────────────────────────────────────────────
 
+
 def test_glasl_framework_creation():
     g = GlaslFramework()
     assert g.name == "Glasl Escalation Model"
-    assert "9" in g.describe() or "nine" in g.describe().lower() or "escalation" in g.describe().lower()
+    assert (
+        "9" in g.describe()
+        or "nine" in g.describe().lower()
+        or "escalation" in g.describe().lower()
+    )
 
 
 def test_glasl_recommend_intervention():
     g = GlaslFramework()
-    assert "moderation" in g.recommend_intervention(1).lower() or "facilitation" in g.recommend_intervention(1).lower()
+    assert (
+        "moderation" in g.recommend_intervention(1).lower()
+        or "facilitation" in g.recommend_intervention(1).lower()
+    )
     assert "mediation" in g.recommend_intervention(5).lower()
     assert "power" in g.recommend_intervention(9).lower()
 
@@ -53,6 +61,7 @@ def test_glasl_score():
 
 
 # ─── Fisher/Ury ─────────────────────────────────────────────────────────────
+
 
 def test_fisher_ury_creation():
     f = FisherUryFramework()
@@ -80,6 +89,7 @@ def test_fisher_ury_assess():
 
 # ─── Kriesberg ───────────────────────────────────────────────────────────────
 
+
 def test_kriesberg_creation():
     k = KriesbergFramework()
     assert "Kriesberg" in k.name or "lifecycle" in k.name.lower()
@@ -92,6 +102,7 @@ def test_kriesberg_assess():
 
 
 # ─── Galtung ────────────────────────────────────────────────────────────────
+
 
 def test_galtung_creation():
     g = GaltungFramework()
@@ -106,12 +117,14 @@ def test_galtung_assess():
 
 # ─── Lederach ───────────────────────────────────────────────────────────────
 
+
 def test_lederach_creation():
-    l = LederachFramework()
-    assert "Lederach" in l.name or "nested" in l.name.lower()
+    fw = LederachFramework()
+    assert "Lederach" in fw.name or "nested" in fw.name.lower()
 
 
 # ─── Zartman ────────────────────────────────────────────────────────────────
+
 
 def test_zartman_creation():
     z = ZartmanFramework()
@@ -125,6 +138,7 @@ def test_zartman_ripeness():
 
 
 # ─── Deutsch ────────────────────────────────────────────────────────────────
+
 
 def test_deutsch_creation():
     d = DeutschFramework()

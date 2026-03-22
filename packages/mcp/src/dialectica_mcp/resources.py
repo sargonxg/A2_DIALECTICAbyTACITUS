@@ -1,6 +1,7 @@
 """
 MCP Resources — Expose workspace list and ontology schema as MCP resources.
 """
+
 from __future__ import annotations
 
 import json
@@ -9,7 +10,7 @@ from typing import Any
 
 def get_ontology_schema() -> dict[str, Any]:
     """Return the DIALECTICA ontology schema as a dict."""
-    from dialectica_ontology import NODE_TYPES, EDGE_SCHEMA
+    from dialectica_ontology import EDGE_SCHEMA, NODE_TYPES
     from dialectica_ontology.tiers import TIER_CONFIGS
 
     node_types = [
@@ -58,6 +59,7 @@ def register_resources(mcp: Any) -> None:
     def node_types() -> str:
         """List of all 15 DIALECTICA node types."""
         from dialectica_ontology import NODE_TYPES
+
         types = [type(n).__name__ for n in NODE_TYPES]
         return json.dumps(types)
 
@@ -65,6 +67,7 @@ def register_resources(mcp: Any) -> None:
     def tier_info() -> str:
         """Ontology tier configurations (essential, standard, full)."""
         from dialectica_ontology.tiers import TIER_CONFIGS
+
         return json.dumps(
             {t.value: c for t, c in TIER_CONFIGS.items()},
             indent=2,

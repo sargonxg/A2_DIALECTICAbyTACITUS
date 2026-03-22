@@ -7,10 +7,10 @@ Used for data import/export and interoperability with existing conflict database
 CAMEO (Conflict and Mediation Event Observations) defines actor codes and a
 hierarchical event code system (top-level 01-20).
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.enums import ActorType, EventType
-
 
 # ─── CAMEO actor codes -> DIALECTICA ActorType ───────────────────────────────
 
@@ -54,26 +54,26 @@ for _code, _actor_type in _CAMEO_ACTOR_TO_DIALECTICA.items():
 
 # CAMEO top-level event codes (01-20) with their primary label.
 _CAMEO_EVENT_TO_DIALECTICA: dict[str, EventType] = {
-    "01": EventType.AGREE,          # Make public statement
-    "02": EventType.SUPPORT,        # Appeal
-    "03": EventType.COOPERATE,      # Express intent to cooperate
-    "04": EventType.CONSULT,        # Consult
-    "05": EventType.COOPERATE,      # Engage in diplomatic cooperation
-    "06": EventType.COOPERATE,      # Engage in material cooperation
-    "07": EventType.AID,            # Provide aid
-    "08": EventType.YIELD,          # Yield
-    "09": EventType.INVESTIGATE,    # Investigate
-    "10": EventType.DEMAND,         # Demand
-    "11": EventType.DISAPPROVE,     # Disapprove
-    "12": EventType.REJECT,         # Reject
-    "13": EventType.THREATEN,       # Threaten
-    "14": EventType.PROTEST,        # Protest
+    "01": EventType.AGREE,  # Make public statement
+    "02": EventType.SUPPORT,  # Appeal
+    "03": EventType.COOPERATE,  # Express intent to cooperate
+    "04": EventType.CONSULT,  # Consult
+    "05": EventType.COOPERATE,  # Engage in diplomatic cooperation
+    "06": EventType.COOPERATE,  # Engage in material cooperation
+    "07": EventType.AID,  # Provide aid
+    "08": EventType.YIELD,  # Yield
+    "09": EventType.INVESTIGATE,  # Investigate
+    "10": EventType.DEMAND,  # Demand
+    "11": EventType.DISAPPROVE,  # Disapprove
+    "12": EventType.REJECT,  # Reject
+    "13": EventType.THREATEN,  # Threaten
+    "14": EventType.PROTEST,  # Protest
     "15": EventType.EXHIBIT_FORCE_POSTURE,  # Exhibit military posture
-    "16": EventType.REDUCE_RELATIONS,       # Reduce relations
-    "17": EventType.COERCE,         # Coerce
-    "18": EventType.ASSAULT,        # Assault
-    "19": EventType.ASSAULT,        # Fight
-    "20": EventType.ASSAULT,        # Engage in unconventional mass violence
+    "16": EventType.REDUCE_RELATIONS,  # Reduce relations
+    "17": EventType.COERCE,  # Coerce
+    "18": EventType.ASSAULT,  # Assault
+    "19": EventType.ASSAULT,  # Fight
+    "20": EventType.ASSAULT,  # Engage in unconventional mass violence
 }
 
 # Reverse mapping: DIALECTICA EventType -> list of CAMEO event codes
@@ -83,6 +83,7 @@ for _code, _etype in _CAMEO_EVENT_TO_DIALECTICA.items():
 
 
 # ─── Public API ──────────────────────────────────────────────────────────────
+
 
 def cameo_to_dialectica(cameo_code: str) -> ActorType:
     """Convert a CAMEO actor code to a DIALECTICA ActorType.

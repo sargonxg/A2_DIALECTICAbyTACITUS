@@ -4,15 +4,15 @@ Graph Writer — Write-optimized batch operations for DIALECTICA graph database.
 Provides bulk node/edge upsert with conflict resolution, atomic graph
 construction, and extraction result ingestion.
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
 
+from dialectica_graph.interface import GraphClient
 from dialectica_ontology.primitives import ConflictNode
 from dialectica_ontology.relationships import ConflictRelationship, validate_relationship
-
-from dialectica_graph.interface import GraphClient
 
 logger = logging.getLogger(__name__)
 
@@ -115,9 +115,7 @@ async def ingest_extraction_result(
         if not node.extraction_method:
             node.extraction_method = "gemini_extraction"
 
-    return await bulk_upsert(
-        client, nodes, edges, workspace_id, tenant_id, validate_edges=True
-    )
+    return await bulk_upsert(client, nodes, edges, workspace_id, tenant_id, validate_edges=True)
 
 
 async def merge_duplicate_nodes(

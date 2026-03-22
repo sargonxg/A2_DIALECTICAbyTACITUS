@@ -9,11 +9,12 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-
 # ─── Actor ──────────────────────────────────────────────────────────────────
+
 
 class ActorType(StrEnum):
     """Source: CAMEO/ACLED synthesis"""
+
     PERSON = "person"
     ORGANIZATION = "organization"
     STATE = "state"
@@ -23,10 +24,14 @@ class ActorType(StrEnum):
 
 # ─── Conflict ───────────────────────────────────────────────────────────────
 
+
 class ConflictScale(StrEnum):
     """Source: Lederach nested paradigm.
-    micro=interpersonal, meso=organizational/community, macro=national/international, meta=civilizational
+
+    micro=interpersonal, meso=organizational/community,
+    macro=national/international, meta=civilizational
     """
+
     MICRO = "micro"
     MESO = "meso"
     MACRO = "macro"
@@ -35,6 +40,7 @@ class ConflictScale(StrEnum):
 
 class ConflictDomain(StrEnum):
     """Source: TACITUS synthesis"""
+
     INTERPERSONAL = "interpersonal"
     WORKPLACE = "workplace"
     COMMERCIAL = "commercial"
@@ -45,6 +51,7 @@ class ConflictDomain(StrEnum):
 
 class ConflictStatus(StrEnum):
     """Source: Kriesberg + Lederach"""
+
     LATENT = "latent"
     ACTIVE = "active"
     DORMANT = "dormant"
@@ -54,6 +61,7 @@ class ConflictStatus(StrEnum):
 
 class KriesbergPhase(StrEnum):
     """Source: Kriesberg: Constructive Conflicts"""
+
     LATENT = "latent"
     EMERGING = "emerging"
     ESCALATING = "escalating"
@@ -67,6 +75,7 @@ class GlaslStage(StrEnum):
     """Source: Glasl: Confronting Conflict.
     9-stage escalation model with three levels (win-win, win-lose, lose-lose).
     """
+
     HARDENING = "hardening"
     DEBATE_AND_POLEMICS = "debate_and_polemics"
     ACTIONS_NOT_WORDS = "actions_not_words"
@@ -109,6 +118,7 @@ class GlaslStage(StrEnum):
 
 class GlaslLevel(StrEnum):
     """Source: Glasl (derived from stage 1-3, 4-6, 7-9)"""
+
     WIN_WIN = "win_win"
     WIN_LOSE = "win_lose"
     LOSE_LOSE = "lose_lose"
@@ -116,6 +126,7 @@ class GlaslLevel(StrEnum):
 
 class Incompatibility(StrEnum):
     """Source: UCDP + Galtung extended"""
+
     GOVERNMENT = "government"
     TERRITORY = "territory"
     RESOURCE = "resource"
@@ -126,6 +137,7 @@ class Incompatibility(StrEnum):
 
 class ViolenceType(StrEnum):
     """Source: Galtung violence triangle"""
+
     DIRECT = "direct"
     STRUCTURAL = "structural"
     CULTURAL = "cultural"
@@ -134,6 +146,7 @@ class ViolenceType(StrEnum):
 
 class Intensity(StrEnum):
     """Source: Synthesis (maps to UCDP minor/war thresholds)"""
+
     LOW = "low"
     MODERATE = "moderate"
     HIGH = "high"
@@ -143,10 +156,12 @@ class Intensity(StrEnum):
 
 # ─── Event ──────────────────────────────────────────────────────────────────
 
+
 class EventType(StrEnum):
     """Source: PLOVER 16-type ontology.
     Domain add-ons map specific events to these universal types.
     """
+
     # Cooperative spectrum
     AGREE = "agree"
     CONSULT = "consult"
@@ -170,6 +185,7 @@ class EventType(StrEnum):
 
 class EventMode(StrEnum):
     """Source: PLOVER mode concept (extended for non-geopolitical domains)"""
+
     VERBAL = "verbal"
     WRITTEN = "written"
     DIPLOMATIC = "diplomatic"
@@ -185,6 +201,7 @@ class EventMode(StrEnum):
 
 class EventContext(StrEnum):
     """Source: PLOVER context concept (extended)"""
+
     POLITICAL = "political"
     TERRITORIAL = "territorial"
     ECONOMIC = "economic"
@@ -201,6 +218,7 @@ class EventContext(StrEnum):
 
 class QuadClass(StrEnum):
     """Source: CAMEO/PLOVER QuadClass"""
+
     VERBAL_COOPERATION = "verbal_cooperation"
     MATERIAL_COOPERATION = "material_cooperation"
     VERBAL_CONFLICT = "verbal_conflict"
@@ -209,8 +227,10 @@ class QuadClass(StrEnum):
 
 # ─── Interest ───────────────────────────────────────────────────────────────
 
+
 class InterestType(StrEnum):
     """Source: Fisher/Ury + Rothman identity-based conflict"""
+
     SUBSTANTIVE = "substantive"
     PROCEDURAL = "procedural"
     PSYCHOLOGICAL = "psychological"
@@ -219,8 +239,10 @@ class InterestType(StrEnum):
 
 # ─── Norm ───────────────────────────────────────────────────────────────────
 
+
 class NormType(StrEnum):
     """Source: LKIF + CLO synthesis"""
+
     STATUTE = "statute"
     REGULATION = "regulation"
     TREATY = "treaty"
@@ -234,6 +256,7 @@ class NormType(StrEnum):
 
 class Enforceability(StrEnum):
     """Source: CLO (Core Legal Ontology)"""
+
     BINDING = "binding"
     ADVISORY = "advisory"
     ASPIRATIONAL = "aspirational"
@@ -241,8 +264,10 @@ class Enforceability(StrEnum):
 
 # ─── Process ────────────────────────────────────────────────────────────────
 
+
 class ProcessType(StrEnum):
     """Source: ADR taxonomy synthesis"""
+
     NEGOTIATION = "negotiation"
     MEDIATION_FACILITATIVE = "mediation_facilitative"
     MEDIATION_EVALUATIVE = "mediation_evaluative"
@@ -263,6 +288,7 @@ class ResolutionApproach(StrEnum):
     THE meta-framework: conflicts most efficiently resolved at interest level;
     rights/power escalate cost.
     """
+
     INTEREST_BASED = "interest_based"
     RIGHTS_BASED = "rights_based"
     POWER_BASED = "power_based"
@@ -270,6 +296,7 @@ class ResolutionApproach(StrEnum):
 
 class ProcessStatus(StrEnum):
     """Source: ADR lifecycle synthesis"""
+
     PENDING = "pending"
     ACTIVE = "active"
     SUSPENDED = "suspended"
@@ -280,8 +307,10 @@ class ProcessStatus(StrEnum):
 
 # ─── Outcome ────────────────────────────────────────────────────────────────
 
+
 class OutcomeType(StrEnum):
     """Source: Multi-domain synthesis"""
+
     AGREEMENT = "agreement"
     SETTLEMENT = "settlement"
     AWARD = "award"
@@ -297,6 +326,7 @@ class OutcomeType(StrEnum):
 
 class Durability(StrEnum):
     """Source: Peace research (positive vs negative peace)"""
+
     TEMPORARY = "temporary"
     DURABLE = "durable"
     PERMANENT = "permanent"
@@ -304,10 +334,12 @@ class Durability(StrEnum):
 
 # ─── Emotion ────────────────────────────────────────────────────────────────
 
+
 class PrimaryEmotion(StrEnum):
     """Source: Plutchik wheel of emotions.
     8 primary emotions with dyads (combinations) and opposites.
     """
+
     JOY = "joy"
     TRUST = "trust"
     FEAR = "fear"
@@ -347,6 +379,7 @@ class PrimaryEmotion(StrEnum):
 
 class EmotionIntensity(StrEnum):
     """Source: Plutchik (e.g., annoyance -> anger -> rage)"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -354,8 +387,10 @@ class EmotionIntensity(StrEnum):
 
 # ─── Narrative ──────────────────────────────────────────────────────────────
 
+
 class NarrativeType(StrEnum):
     """Source: Winslade & Monk: Narrative Mediation"""
+
     DOMINANT = "dominant"
     ALTERNATIVE = "alternative"
     COUNTER = "counter"
@@ -364,10 +399,12 @@ class NarrativeType(StrEnum):
 
 # ─── ConflictMode ───────────────────────────────────────────────────────────
 
+
 class ConflictMode(StrEnum):
     """Source: Thomas-Kilmann Conflict Mode Instrument.
     Dual-concern model mapping assertiveness x cooperativeness.
     """
+
     COMPETING = "competing"
     COLLABORATING = "collaborating"
     COMPROMISING = "compromising"
@@ -399,8 +436,10 @@ class ConflictMode(StrEnum):
 
 # ─── Power ──────────────────────────────────────────────────────────────────
 
+
 class PowerDomain(StrEnum):
     """Source: French & Raven + Ury/Brett/Goldberg"""
+
     COERCIVE = "coercive"
     ECONOMIC = "economic"
     POLITICAL = "political"
@@ -413,8 +452,10 @@ class PowerDomain(StrEnum):
 
 # ─── Role ───────────────────────────────────────────────────────────────────
 
+
 class RoleType(StrEnum):
     """Source: Multi-domain synthesis"""
+
     CLAIMANT = "claimant"
     RESPONDENT = "respondent"
     MEDIATOR = "mediator"
@@ -437,8 +478,10 @@ class RoleType(StrEnum):
 
 # ─── Additional inline enums used in node/edge properties ───────────────────
 
+
 class BatnaStrength(StrEnum):
     """BATNA quality assessment for Interest node."""
+
     STRONG = "strong"
     MODERATE = "moderate"
     WEAK = "weak"
@@ -446,6 +489,7 @@ class BatnaStrength(StrEnum):
 
 class Formality(StrEnum):
     """Process formality level."""
+
     INFORMAL = "informal"
     SEMI_FORMAL = "semi_formal"
     FORMAL = "formal"
@@ -453,6 +497,7 @@ class Formality(StrEnum):
 
 class ProcessStage(StrEnum):
     """Process lifecycle stage."""
+
     INTAKE = "intake"
     DIALOGUE = "dialogue"
     EVALUATION = "evaluation"
@@ -462,6 +507,7 @@ class ProcessStage(StrEnum):
 
 class FrameType(StrEnum):
     """Dewulf frame classification for Narrative node."""
+
     IDENTITY = "identity"
     CHARACTERIZATION = "characterization"
     POWER = "power"
@@ -472,6 +518,7 @@ class FrameType(StrEnum):
 
 class TrustBasis(StrEnum):
     """Lewicki & Bunker trust development stage."""
+
     CALCULUS = "calculus"
     KNOWLEDGE = "knowledge"
     IDENTIFICATION = "identification"
@@ -479,6 +526,7 @@ class TrustBasis(StrEnum):
 
 class PowerDirection(StrEnum):
     """Direction of power asymmetry."""
+
     A_OVER_B = "a_over_b"
     B_OVER_A = "b_over_a"
     SYMMETRIC = "symmetric"
@@ -486,6 +534,7 @@ class PowerDirection(StrEnum):
 
 class LocationType(StrEnum):
     """Geographic hierarchy level."""
+
     POINT = "point"
     BUILDING = "building"
     CITY = "city"
@@ -497,6 +546,7 @@ class LocationType(StrEnum):
 
 class EvidenceType(StrEnum):
     """Evidence classification."""
+
     DOCUMENT = "document"
     TESTIMONY = "testimony"
     EXPERT_OPINION = "expert_opinion"
@@ -507,6 +557,7 @@ class EvidenceType(StrEnum):
 
 class Side(StrEnum):
     """UCDP convention for conflict sides."""
+
     SIDE_A = "side_a"
     SIDE_B = "side_b"
     THIRD_PARTY = "third_party"
@@ -515,6 +566,7 @@ class Side(StrEnum):
 
 class CausalMechanism(StrEnum):
     """Causal mechanism for CAUSED edge."""
+
     ESCALATION = "escalation"
     RETALIATION = "retaliation"
     CONTAGION = "contagion"
@@ -525,5 +577,6 @@ class CausalMechanism(StrEnum):
 
 class AllianceFormality(StrEnum):
     """Alliance formality for ALLIED_WITH edge."""
+
     FORMAL = "formal"
     TACIT = "tacit"

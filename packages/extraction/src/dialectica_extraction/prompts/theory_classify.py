@@ -1,6 +1,7 @@
 """
 Theory Classification Prompt — Classify conflict using theoretical frameworks.
 """
+
 from __future__ import annotations
 
 THEORY_CLASSIFY_PROMPT = """\

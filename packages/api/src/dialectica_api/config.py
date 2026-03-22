@@ -4,6 +4,7 @@ API Configuration — Pydantic Settings for DIALECTICA API.
 All settings load from environment variables with sensible defaults.
 Validated at startup — missing required settings fail fast.
 """
+
 from __future__ import annotations
 
 from pydantic_settings import BaseSettings

@@ -3,6 +3,7 @@ Trust Analysis — Mayer/Davis/Schoorman ABIntegrity trust model.
 
 Computes trust matrices between actors and detects trust-altering events.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -75,15 +76,17 @@ class TrustAnalyzer:
                 integrity = getattr(ts_node, "perceived_integrity", integrity)
 
             overall = round(mean([ability, benevolence, integrity]), 3)
-            dyads.append(TrustDyad(
-                trustor_id=e.source_id,
-                trustee_id=e.target_id,
-                ability=round(float(ability), 3),
-                benevolence=round(float(benevolence), 3),
-                integrity=round(float(integrity), 3),
-                overall_trust=overall,
-                confidence=float(props.get("confidence", 0.5)),
-            ))
+            dyads.append(
+                TrustDyad(
+                    trustor_id=e.source_id,
+                    trustee_id=e.target_id,
+                    ability=round(float(ability), 3),
+                    benevolence=round(float(benevolence), 3),
+                    integrity=round(float(integrity), 3),
+                    overall_trust=overall,
+                    confidence=float(props.get("confidence", 0.5)),
+                )
+            )
 
         # Fallback: build from TrustState nodes directly
         if not dyads:
@@ -96,16 +99,20 @@ class TrustAnalyzer:
                 ability = float(getattr(ts, "perceived_ability", 0.5))
                 benevolence = float(getattr(ts, "perceived_benevolence", 0.5))
                 integrity = float(getattr(ts, "perceived_integrity", 0.5))
-                overall = float(getattr(ts, "overall_trust", round(mean([ability, benevolence, integrity]), 3)))
-                dyads.append(TrustDyad(
-                    trustor_id=trustor,
-                    trustee_id=trustee,
-                    ability=round(ability, 3),
-                    benevolence=round(benevolence, 3),
-                    integrity=round(integrity, 3),
-                    overall_trust=round(overall, 3),
-                    confidence=float(getattr(ts, "confidence", 0.5)),
-                ))
+                overall = float(
+                    getattr(ts, "overall_trust", round(mean([ability, benevolence, integrity]), 3))
+                )
+                dyads.append(
+                    TrustDyad(
+                        trustor_id=trustor,
+                        trustee_id=trustee,
+                        ability=round(ability, 3),
+                        benevolence=round(benevolence, 3),
+                        integrity=round(integrity, 3),
+                        overall_trust=round(overall, 3),
+                        confidence=float(getattr(ts, "confidence", 0.5)),
+                    )
+                )
 
         matrix = TrustMatrix(workspace_id=workspace_id, dyads=dyads)
         if dyads:
@@ -128,8 +135,25 @@ class TrustAnalyzer:
         cutoff = datetime.utcnow() - timedelta(days=window_days)
         events = await self._gc.get_nodes(workspace_id, label="Event")
 
-        eroding = {"betray", "deceive", "violate_agreement", "threaten", "coerce", "assault", "accuse"}
-        building = {"agree", "support", "cooperate", "yield", "apologise", "comply", "consult", "aid"}
+        eroding = {
+            "betray",
+            "deceive",
+            "violate_agreement",
+            "threaten",
+            "coerce",
+            "assault",
+            "accuse",
+        }
+        building = {
+            "agree",
+            "support",
+            "cooperate",
+            "yield",
+            "apologise",
+            "comply",
+            "consult",
+            "aid",
+        }
 
         for node in events:
             occ = getattr(node, "occurred_at", None)
@@ -142,23 +166,27 @@ class TrustAnalyzer:
             if not performer or not target:
                 continue
             if et in eroding:
-                changes.append(TrustChange(
-                    trustor_id=target,
-                    trustee_id=performer,
-                    event_id=node.id,
-                    event_description=getattr(node, "description", et),
-                    trust_delta=-round(severity * 0.3, 3),
-                    timestamp=occ,
-                    change_type="decrease",
-                ))
+                changes.append(
+                    TrustChange(
+                        trustor_id=target,
+                        trustee_id=performer,
+                        event_id=node.id,
+                        event_description=getattr(node, "description", et),
+                        trust_delta=-round(severity * 0.3, 3),
+                        timestamp=occ,
+                        change_type="decrease",
+                    )
+                )
             elif et in building:
-                changes.append(TrustChange(
-                    trustor_id=target,
-                    trustee_id=performer,
-                    event_id=node.id,
-                    event_description=getattr(node, "description", et),
-                    trust_delta=round(severity * 0.2, 3),
-                    timestamp=occ,
-                    change_type="increase",
-                ))
+                changes.append(
+                    TrustChange(
+                        trustor_id=target,
+                        trustee_id=performer,
+                        event_id=node.id,
+                        event_description=getattr(node, "description", et),
+                        trust_delta=round(severity * 0.2, 3),
+                        timestamp=occ,
+                        change_type="increase",
+                    )
+                )
         return changes

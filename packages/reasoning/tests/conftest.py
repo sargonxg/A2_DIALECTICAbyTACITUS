@@ -1,13 +1,12 @@
 """Shared fixtures for reasoning tests — JCPOA and HR mediation data."""
+
 from __future__ import annotations
 
-import json
 import os
 
 import pytest
 
-from dialectica_ontology.primitives import Actor, Conflict, Event, Issue
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
+from dialectica_ontology.primitives import Actor, Conflict, Event
 
 SEED_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "seed", "samples")
 
@@ -38,11 +37,32 @@ def jcpoa_conflict():
 @pytest.fixture
 def jcpoa_events():
     from datetime import datetime
+
     return [
-        Event(event_type="agree", severity=0.1, occurred_at=datetime(2015, 7, 14), description="JCPOA signed"),
-        Event(event_type="reject", severity=0.6, occurred_at=datetime(2018, 5, 8), description="US withdraws from JCPOA"),
-        Event(event_type="coerce", severity=0.7, occurred_at=datetime(2018, 11, 5), description="US reimposesall sanctions"),
-        Event(event_type="protest", severity=0.4, occurred_at=datetime(2019, 5, 8), description="Iran reduces compliance"),
+        Event(
+            event_type="agree",
+            severity=0.1,
+            occurred_at=datetime(2015, 7, 14),
+            description="JCPOA signed",
+        ),
+        Event(
+            event_type="reject",
+            severity=0.6,
+            occurred_at=datetime(2018, 5, 8),
+            description="US withdraws from JCPOA",
+        ),
+        Event(
+            event_type="coerce",
+            severity=0.7,
+            occurred_at=datetime(2018, 11, 5),
+            description="US reimposesall sanctions",
+        ),
+        Event(
+            event_type="protest",
+            severity=0.4,
+            occurred_at=datetime(2019, 5, 8),
+            description="Iran reduces compliance",
+        ),
     ]
 
 

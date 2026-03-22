@@ -42,8 +42,8 @@ from dialectica_ontology.enums import (
     ViolenceType,
 )
 
-
 # ─── Value counts match ontology.py ─────────────────────────────────────────
+
 
 def test_actor_type_values():
     assert len(ActorType) == 5
@@ -177,7 +177,16 @@ def test_durability_values():
 def test_primary_emotion_values():
     assert len(PrimaryEmotion) == 8
     vals = {e.value for e in PrimaryEmotion}
-    assert vals == {"joy", "trust", "fear", "surprise", "sadness", "disgust", "anger", "anticipation"}
+    assert vals == {
+        "joy",
+        "trust",
+        "fear",
+        "surprise",
+        "sadness",
+        "disgust",
+        "anger",
+        "anticipation",
+    }
 
 
 def test_primary_emotion_opposites():

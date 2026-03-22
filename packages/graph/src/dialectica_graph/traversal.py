@@ -4,15 +4,15 @@ Graph Traversal — Traversal algorithms for DIALECTICA conflict graphs.
 Provides BFS, DFS, shortest path, and all-paths-between-actors algorithms
 that operate through the GraphClient interface.
 """
+
 from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field
 
+from dialectica_graph.interface import GraphClient
 from dialectica_ontology.primitives import ConflictNode
 from dialectica_ontology.relationships import ConflictRelationship
-
-from dialectica_graph.interface import GraphClient
 
 
 @dataclass
@@ -217,10 +217,12 @@ async def all_paths_between_actors(
         path_edges: list[ConflictRelationship],
     ) -> None:
         if current == target:
-            results.append(PathResult(
-                nodes=[],  # Resolved after DFS
-                edges=list(path_edges),
-            ))
+            results.append(
+                PathResult(
+                    nodes=[],  # Resolved after DFS
+                    edges=list(path_edges),
+                )
+            )
             # Store node IDs in metadata for later resolution
             results[-1]._path_ids = list(path_ids)  # type: ignore[attr-defined]
             return

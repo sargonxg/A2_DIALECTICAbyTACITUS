@@ -1,4 +1,5 @@
 """KGE Trainer — Train RotatE model on conflict graph triples via PyKEEN."""
+
 from __future__ import annotations
 
 import logging
@@ -53,8 +54,8 @@ class KGETrainer:
                 self._config.epochs,
             )
             return self._result
-        except ImportError:
-            raise ImportError("PyKEEN not installed")
+        except ImportError as err:
+            raise ImportError("PyKEEN not installed") from err
 
     def get_entity_embeddings(self) -> dict[str, list[float]]:
         """Extract entity embeddings from trained model.
@@ -72,9 +73,13 @@ class KGETrainer:
         entity_to_id = factory.entity_to_id
 
         for entity_label, entity_id in entity_to_id.items():
-            emb = model.entity_representations[0](
-                indices=None
-            )[entity_id].detach().cpu().numpy().tolist()
+            emb = (
+                model.entity_representations[0](indices=None)[entity_id]
+                .detach()
+                .cpu()
+                .numpy()
+                .tolist()
+            )
             embeddings[entity_label] = emb
 
         return embeddings

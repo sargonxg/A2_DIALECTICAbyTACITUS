@@ -1,6 +1,7 @@
 """
 Relationship Extraction Prompt — Edge extraction given validated entities.
 """
+
 from __future__ import annotations
 
 RELATIONSHIP_PROMPT = """\

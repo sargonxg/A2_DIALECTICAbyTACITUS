@@ -1,15 +1,18 @@
 """Tests for ConfliBERT event classifier."""
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 import pytest
 
+pytest.importorskip("transformers", reason="transformers not installed — skipping ConfliBERT tests")
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+from dialectica_extraction.conflibert import _CONFLIBERT_TO_ACO, ConfliBERTClassifier
 from dialectica_ontology.enums import EventType
-from dialectica_extraction.conflibert import ConfliBERTClassifier, _CONFLIBERT_TO_ACO
 
 
 class TestConfliBERTMapping:

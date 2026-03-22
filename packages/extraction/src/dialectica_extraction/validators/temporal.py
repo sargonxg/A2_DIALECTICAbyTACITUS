@@ -7,10 +7,10 @@ Checks:
 - Process start/end dates are consistent
 - Temporal overlaps and gaps
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 
 from dialectica_ontology.primitives import ConflictNode
 from dialectica_ontology.relationships import ConflictRelationship
@@ -82,16 +82,11 @@ def validate_temporal(
             started = getattr(node, "started_at", None)
             ended = getattr(node, "ended_at", None)
             if started and ended and started > ended:
-                result.errors.append(
-                    f"Conflict {node.id}: started_at after ended_at"
-                )
+                result.errors.append(f"Conflict {node.id}: started_at after ended_at")
 
     # Check edge temporal_start < temporal_end
     for edge in edges:
-        if edge.temporal_start and edge.temporal_end:
-            if edge.temporal_start > edge.temporal_end:
-                result.warnings.append(
-                    f"Edge {edge.id}: temporal_start after temporal_end"
-                )
+        if edge.temporal_start and edge.temporal_end and edge.temporal_start > edge.temporal_end:
+            result.warnings.append(f"Edge {edge.id}: temporal_start after temporal_end")
 
     return result

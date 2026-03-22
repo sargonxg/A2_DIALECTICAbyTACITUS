@@ -7,16 +7,17 @@ Full:     15 node types, 20 edge types — Complete neurosymbolic intelligence
 
 Includes TIER_CONFIGS dict and helper functions for tier-based access control.
 """
+
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import FrozenSet
-
 
 # ─── Tier Enum ─────────────────────────────────────────────────────────────────
 
+
 class OntologyTier(StrEnum):
     """Three-tier access model for progressive disclosure of ontology complexity."""
+
     ESSENTIAL = "essential"
     STANDARD = "standard"
     FULL = "full"
@@ -24,29 +25,35 @@ class OntologyTier(StrEnum):
 
 # ─── Node Tier Mappings ───────────────────────────────────────────────────────
 
-_ESSENTIAL_NODES: frozenset[str] = frozenset({
-    "Actor",
-    "Conflict",
-    "Event",
-    "Issue",
-    "Process",
-    "Outcome",
-    "Location",
-})
+_ESSENTIAL_NODES: frozenset[str] = frozenset(
+    {
+        "Actor",
+        "Conflict",
+        "Event",
+        "Issue",
+        "Process",
+        "Outcome",
+        "Location",
+    }
+)
 
-_STANDARD_NODES: frozenset[str] = _ESSENTIAL_NODES | frozenset({
-    "Interest",
-    "Norm",
-    "Narrative",
-    "Evidence",
-    "Role",
-})
+_STANDARD_NODES: frozenset[str] = _ESSENTIAL_NODES | frozenset(
+    {
+        "Interest",
+        "Norm",
+        "Narrative",
+        "Evidence",
+        "Role",
+    }
+)
 
-_FULL_NODES: frozenset[str] = _STANDARD_NODES | frozenset({
-    "EmotionalState",
-    "TrustState",
-    "PowerDynamic",
-})
+_FULL_NODES: frozenset[str] = _STANDARD_NODES | frozenset(
+    {
+        "EmotionalState",
+        "TrustState",
+        "PowerDynamic",
+    }
+)
 
 TIER_NODES: dict[OntologyTier, frozenset[str]] = {
     OntologyTier.ESSENTIAL: _ESSENTIAL_NODES,
@@ -57,34 +64,40 @@ TIER_NODES: dict[OntologyTier, frozenset[str]] = {
 
 # ─── Edge Tier Mappings ──────────────────────────────────────────────────────
 
-_ESSENTIAL_EDGES: frozenset[str] = frozenset({
-    "PARTY_TO",
-    "PARTICIPATES_IN",
-    "PART_OF",
-    "AT_LOCATION",
-    "RESOLVED_THROUGH",
-    "PRODUCES",
-})
+_ESSENTIAL_EDGES: frozenset[str] = frozenset(
+    {
+        "PARTY_TO",
+        "PARTICIPATES_IN",
+        "PART_OF",
+        "AT_LOCATION",
+        "RESOLVED_THROUGH",
+        "PRODUCES",
+    }
+)
 
-_STANDARD_EDGES: frozenset[str] = _ESSENTIAL_EDGES | frozenset({
-    "HAS_INTEREST",
-    "GOVERNED_BY",
-    "VIOLATES",
-    "ABOUT",
-    "EVIDENCED_BY",
-    "WITHIN",
-    "MEMBER_OF",
-})
+_STANDARD_EDGES: frozenset[str] = _ESSENTIAL_EDGES | frozenset(
+    {
+        "HAS_INTEREST",
+        "GOVERNED_BY",
+        "VIOLATES",
+        "ABOUT",
+        "EVIDENCED_BY",
+        "WITHIN",
+        "MEMBER_OF",
+    }
+)
 
-_FULL_EDGES: frozenset[str] = _STANDARD_EDGES | frozenset({
-    "EXPERIENCES",
-    "TRUSTS",
-    "PROMOTES",
-    "HAS_POWER_OVER",
-    "ALLIED_WITH",
-    "OPPOSED_TO",
-    "CAUSED",
-})
+_FULL_EDGES: frozenset[str] = _STANDARD_EDGES | frozenset(
+    {
+        "EXPERIENCES",
+        "TRUSTS",
+        "PROMOTES",
+        "HAS_POWER_OVER",
+        "ALLIED_WITH",
+        "OPPOSED_TO",
+        "CAUSED",
+    }
+)
 
 TIER_EDGES: dict[OntologyTier, frozenset[str]] = {
     OntologyTier.ESSENTIAL: _ESSENTIAL_EDGES,
@@ -95,36 +108,42 @@ TIER_EDGES: dict[OntologyTier, frozenset[str]] = {
 
 # ─── Feature Tier Mappings ───────────────────────────────────────────────────
 
-_ESSENTIAL_FEATURES: frozenset[str] = frozenset({
-    "conflict_mapping",
-    "event_timeline",
-    "actor_identification",
-    "spatial_mapping",
-    "process_tracking",
-    "outcome_recording",
-})
+_ESSENTIAL_FEATURES: frozenset[str] = frozenset(
+    {
+        "conflict_mapping",
+        "event_timeline",
+        "actor_identification",
+        "spatial_mapping",
+        "process_tracking",
+        "outcome_recording",
+    }
+)
 
-_STANDARD_FEATURES: frozenset[str] = _ESSENTIAL_FEATURES | frozenset({
-    "interest_analysis",
-    "norm_compliance",
-    "narrative_analysis",
-    "evidence_linking",
-    "role_assignment",
-    "glasl_escalation",
-    "kriesberg_lifecycle",
-})
+_STANDARD_FEATURES: frozenset[str] = _ESSENTIAL_FEATURES | frozenset(
+    {
+        "interest_analysis",
+        "norm_compliance",
+        "narrative_analysis",
+        "evidence_linking",
+        "role_assignment",
+        "glasl_escalation",
+        "kriesberg_lifecycle",
+    }
+)
 
-_FULL_FEATURES: frozenset[str] = _STANDARD_FEATURES | frozenset({
-    "emotion_tracking",
-    "trust_assessment",
-    "power_analysis",
-    "alliance_detection",
-    "causal_reasoning",
-    "neurosymbolic_inference",
-    "plutchik_wheel",
-    "french_raven_power",
-    "mayer_trust_model",
-})
+_FULL_FEATURES: frozenset[str] = _STANDARD_FEATURES | frozenset(
+    {
+        "emotion_tracking",
+        "trust_assessment",
+        "power_analysis",
+        "alliance_detection",
+        "causal_reasoning",
+        "neurosymbolic_inference",
+        "plutchik_wheel",
+        "french_raven_power",
+        "mayer_trust_model",
+    }
+)
 
 TIER_FEATURES: dict[OntologyTier, frozenset[str]] = {
     OntologyTier.ESSENTIAL: _ESSENTIAL_FEATURES,
@@ -138,7 +157,7 @@ TIER_FEATURES: dict[OntologyTier, frozenset[str]] = {
 TIER_CONFIGS: dict[OntologyTier, dict[str, int | str | frozenset[str]]] = {
     OntologyTier.ESSENTIAL: {
         "name": "Essential",
-        "description": "Core conflict mapping — actors, events, locations, and resolution processes",
+        "description": "Core conflict mapping — actors, events, locations, and resolution processes",  # noqa: E501
         "node_count": len(_ESSENTIAL_NODES),
         "edge_count": len(_ESSENTIAL_EDGES),
         "feature_count": len(_ESSENTIAL_FEATURES),
@@ -148,7 +167,7 @@ TIER_CONFIGS: dict[OntologyTier, dict[str, int | str | frozenset[str]]] = {
     },
     OntologyTier.STANDARD: {
         "name": "Standard",
-        "description": "Structured analysis — adds interests, norms, narratives, evidence, and roles",
+        "description": "Structured analysis — adds interests, norms, narratives, evidence, and roles",  # noqa: E501
         "node_count": len(_STANDARD_NODES),
         "edge_count": len(_STANDARD_EDGES),
         "feature_count": len(_STANDARD_FEATURES),
@@ -158,7 +177,7 @@ TIER_CONFIGS: dict[OntologyTier, dict[str, int | str | frozenset[str]]] = {
     },
     OntologyTier.FULL: {
         "name": "Full",
-        "description": "Complete neurosymbolic intelligence — emotions, trust, power dynamics, causal reasoning",
+        "description": "Complete neurosymbolic intelligence — emotions, trust, power dynamics, causal reasoning",  # noqa: E501
         "node_count": len(_FULL_NODES),
         "edge_count": len(_FULL_EDGES),
         "feature_count": len(_FULL_FEATURES),
@@ -170,6 +189,7 @@ TIER_CONFIGS: dict[OntologyTier, dict[str, int | str | frozenset[str]]] = {
 
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
+
 
 def get_available_nodes(tier: OntologyTier) -> set[str]:
     """Return the set of node type names available at the given tier.

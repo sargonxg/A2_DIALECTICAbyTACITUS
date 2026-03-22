@@ -4,13 +4,12 @@ Unit tests for dialectica_extraction.pipeline — step functions with mock data.
 Tests chunking, state dataclasses, and GLiNER prefilter fallback behavior.
 No external services (Gemini, Vertex AI, GLiNER model) required.
 """
+
 from __future__ import annotations
 
 import os
 import sys
 from unittest.mock import patch
-
-import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -23,7 +22,6 @@ from dialectica_extraction.pipeline import (
     chunk_document,
     gliner_prefilter,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  CHUNK_DOCUMENT TESTS
@@ -324,8 +322,7 @@ class TestGlinerPrefilterFallback:
 
     def _make_state(self, chunk_texts: list[str]) -> ExtractionState:
         chunks = [
-            {"text": t, "index": i, "start": 0, "end": len(t)}
-            for i, t in enumerate(chunk_texts)
+            {"text": t, "index": i, "start": 0, "end": len(t)} for i, t in enumerate(chunk_texts)
         ]
         return {
             "text": " ".join(chunk_texts),
@@ -337,11 +334,13 @@ class TestGlinerPrefilterFallback:
 
     def test_returns_result_for_every_chunk(self):
         """Prefilter should return one result per chunk."""
-        state = self._make_state([
-            "The conflict escalated between rebel forces and the government.",
-            "Talks began at the summit to negotiate a ceasefire.",
-            "Meanwhile the weather remained clear over the region.",
-        ])
+        state = self._make_state(
+            [
+                "The conflict escalated between rebel forces and the government.",
+                "Talks began at the summit to negotiate a ceasefire.",
+                "Meanwhile the weather remained clear over the region.",
+            ]
+        )
         with patch.dict(os.environ, {"GLINER_ENABLED": "false"}):
             result = gliner_prefilter(state)
 
@@ -349,9 +348,11 @@ class TestGlinerPrefilterFallback:
 
     def test_conflict_text_gets_entities(self):
         """Text with conflict keywords should have entity_count > 0."""
-        state = self._make_state([
-            "The rebel militia launched an attack on the government capital.",
-        ])
+        state = self._make_state(
+            [
+                "The rebel militia launched an attack on the government capital.",
+            ]
+        )
         with patch.dict(os.environ, {"GLINER_ENABLED": "false"}):
             result = gliner_prefilter(state)
 
@@ -361,9 +362,11 @@ class TestGlinerPrefilterFallback:
 
     def test_bland_text_gets_few_or_no_entities(self):
         """Bland text with no conflict keywords should have low entity count."""
-        state = self._make_state([
-            "The cat sat on the mat and looked out the window.",
-        ])
+        state = self._make_state(
+            [
+                "The cat sat on the mat and looked out the window.",
+            ]
+        )
         with patch.dict(os.environ, {"GLINER_ENABLED": "false"}):
             result = gliner_prefilter(state)
 
@@ -372,10 +375,12 @@ class TestGlinerPrefilterFallback:
 
     def test_conflict_chunk_higher_priority_than_bland(self):
         """Conflict-heavy chunk should have higher priority score than bland text."""
-        state = self._make_state([
-            "The conflict between rebel forces and the government escalated into violence.",
-            "The weather was sunny today with no clouds in the sky.",
-        ])
+        state = self._make_state(
+            [
+                "The conflict between rebel forces and the government escalated into violence.",
+                "The weather was sunny today with no clouds in the sky.",
+            ]
+        )
         with patch.dict(os.environ, {"GLINER_ENABLED": "false"}):
             result = gliner_prefilter(state)
 
@@ -407,9 +412,11 @@ class TestGlinerPrefilterFallback:
 
     def test_result_fields_present(self):
         """Each prefilter result dict should contain expected keys."""
-        state = self._make_state([
-            "The UN mediator brokered a ceasefire agreement.",
-        ])
+        state = self._make_state(
+            [
+                "The UN mediator brokered a ceasefire agreement.",
+            ]
+        )
         with patch.dict(os.environ, {"GLINER_ENABLED": "false"}):
             result = gliner_prefilter(state)
 
@@ -422,10 +429,12 @@ class TestGlinerPrefilterFallback:
 
     def test_gliner_exception_passes_all_chunks(self):
         """If GLiNERPreFilter() raises, all chunks pass with default scores."""
-        state = self._make_state([
-            "Some chunk.",
-            "Another chunk.",
-        ])
+        state = self._make_state(
+            [
+                "Some chunk.",
+                "Another chunk.",
+            ]
+        )
         with patch(
             "dialectica_extraction.pipeline.GLiNERPreFilter",
             side_effect=RuntimeError("model load failed"),

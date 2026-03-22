@@ -5,6 +5,7 @@ Morton Deutsch's theory of cooperation and competition. Conflicts are
 shaped by whether parties perceive their goals as positively linked
 (cooperative) or negatively linked (competitive).
 """
+
 from __future__ import annotations
 
 from dialectica_ontology.theory.base import (
@@ -14,12 +15,12 @@ from dialectica_ontology.theory.base import (
 
 INTERACTION_TYPES: dict[str, dict[str, str]] = {
     "cooperative": {
-        "description": "Parties perceive their goals as positively linked; one's gain helps the other.",
+        "description": "Parties perceive their goals as positively linked; one's gain helps the other.",  # noqa: E501
         "dynamics": "Open communication, trust, mutual aid, shared problem-solving.",
         "outcomes": "Constructive conflict resolution, mutual benefit, stronger relationships.",
     },
     "competitive": {
-        "description": "Parties perceive their goals as negatively linked; one's gain is the other's loss.",
+        "description": "Parties perceive their goals as negatively linked; one's gain is the other's loss.",  # noqa: E501
         "dynamics": "Suspicion, deception, coercion, win-lose framing.",
         "outcomes": "Destructive conflict, escalation, damaged relationships.",
     },
@@ -91,7 +92,15 @@ class DeutschFramework(TheoryFramework):
         # Keyword-based scoring
         keywords = set(context.get("keywords", []))
         coop_kw = {"collaboration", "mutual", "shared", "trust", "joint", "together", "cooperation"}
-        comp_kw = {"rivalry", "zero_sum", "win_lose", "adversarial", "threat", "competition", "hostile"}
+        comp_kw = {
+            "rivalry",
+            "zero_sum",
+            "win_lose",
+            "adversarial",
+            "threat",
+            "competition",
+            "hostile",
+        }
 
         coop_signals += len(keywords & coop_kw)
         comp_signals += len(keywords & comp_kw)
@@ -180,13 +189,13 @@ class DeutschFramework(TheoryFramework):
     def get_diagnostic_questions(self) -> list[DiagnosticQuestion]:
         return [
             DiagnosticQuestion(
-                question="Do the parties see their goals as linked (one benefits when the other does)?",
+                question="Do the parties see their goals as linked (one benefits when the other does)?",  # noqa: E501
                 framework=self.name,
                 purpose="Assess goal interdependence type",
                 response_type="open",
             ),
             DiagnosticQuestion(
-                question="How would you characterise the communication between parties: open, guarded, or hostile?",
+                question="How would you characterise the communication between parties: open, guarded, or hostile?",  # noqa: E501
                 framework=self.name,
                 purpose="Assess interaction quality",
                 response_type="choice",

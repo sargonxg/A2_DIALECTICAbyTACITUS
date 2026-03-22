@@ -4,52 +4,42 @@ Tests for dialectica_extraction.pipeline — LangGraph extraction DAG.
 Tests chunking, validation, coreference, review interrupt checks,
 Instructor integration, and the full pipeline flow using mocked calls.
 """
+
 from __future__ import annotations
 
-import sys
 import os
-import json
+import sys
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from dialectica_ontology.primitives import Actor, Conflict, Event, ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from dialectica_ontology.tiers import OntologyTier
-
-from dialectica_extraction.pipeline import (
-    ExtractionState,
-    chunk_document,
-    gliner_prefilter,
-    validate_schema,
-    resolve_coreference,
-    validate_structural_step,
-    check_review_needed,
-    write_to_graph,
-    should_repair,
-    should_interrupt,
-    ExtractionPipeline,
-    CHUNK_SIZE,
-    CHUNK_OVERLAP,
-    LOW_CONFIDENCE_THRESHOLD,
-)
-from dialectica_extraction.validators.schema import validate_raw_nodes, validate_raw_edges
-from dialectica_extraction.validators.structural import validate_structural
-from dialectica_extraction.validators.temporal import validate_temporal
-from dialectica_extraction.validators.symbolic import validate_symbolic
-from dialectica_extraction.extractors.entity import enrich_actors, deduplicate_nodes
+from dialectica_extraction.extractors.causal import detect_causal_signals, has_causal_language
 from dialectica_extraction.extractors.coreference import (
     find_coreferences,
-    merge_coreferent_nodes,
     token_sort_ratio,
 )
-from dialectica_extraction.extractors.causal import detect_causal_signals, has_causal_language
-from dialectica_extraction.extractors.narrative import analyze_frame
 from dialectica_extraction.extractors.emotion import detect_emotions
+from dialectica_extraction.extractors.entity import deduplicate_nodes, enrich_actors
+from dialectica_extraction.extractors.narrative import analyze_frame
 from dialectica_extraction.extractors.temporal import parse_date
+from dialectica_extraction.pipeline import (
+    ExtractionState,
+    check_review_needed,
+    chunk_document,
+    gliner_prefilter,
+    should_interrupt,
+    should_repair,
+)
+from dialectica_extraction.validators.schema import validate_raw_edges, validate_raw_nodes
+from dialectica_extraction.validators.structural import validate_structural
+from dialectica_extraction.validators.symbolic import validate_symbolic
+from dialectica_extraction.validators.temporal import validate_temporal
+from dialectica_ontology.primitives import Actor, Conflict, Event
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
+from dialectica_ontology.tiers import OntologyTier
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -79,7 +69,7 @@ class TestChunkDocument:
 
     def test_chunks_have_overlap(self):
         # Create text with clear sentence boundaries
-        sentences = ["This is sentence number %d. " % i for i in range(100)]
+        sentences = [f"This is sentence number {i}. " for i in range(100)]
         text = "".join(sentences)
         state: ExtractionState = {"text": text, "tier": "essential"}
         result = chunk_document(state)
@@ -120,8 +110,18 @@ class TestGlinerPrefilter:
             "text": "Test",
             "tier": "essential",
             "chunks": [
-                {"text": "The conflict between rebel forces and the government escalated.", "index": 0, "start": 0, "end": 60},
-                {"text": "The weather was sunny today with no clouds.", "index": 1, "start": 60, "end": 100},
+                {
+                    "text": "The conflict between rebel forces and the government escalated.",
+                    "index": 0,
+                    "start": 0,
+                    "end": 60,
+                },
+                {
+                    "text": "The weather was sunny today with no clouds.",
+                    "index": 1,
+                    "start": 60,
+                    "end": 100,
+                },
             ],
             "processing_time": {},
             "errors": [],
@@ -132,7 +132,7 @@ class TestGlinerPrefilter:
         assert len(result["prefilter_results"]) == 2
         # Conflict text should have higher priority
         r0 = result["prefilter_results"][0]
-        r1 = result["prefilter_results"][1]
+        result["prefilter_results"][1]
         assert r0["entity_density"] >= 0
 
 
@@ -171,30 +171,42 @@ class TestSchemaValidation:
         assert len(result.valid_nodes) == 1
 
     def test_validate_conflict(self):
-        raw = [{"label": "Conflict", "name": "Test", "scale": "micro", "domain": "workplace", "status": "active"}]
+        raw = [
+            {
+                "label": "Conflict",
+                "name": "Test",
+                "scale": "micro",
+                "domain": "workplace",
+                "status": "active",
+            }
+        ]
         result = validate_raw_nodes(raw, OntologyTier.ESSENTIAL)
         assert len(result.valid_nodes) == 1
 
     def test_validate_edges(self):
-        raw_edges = [{
-            "type": "PARTY_TO",
-            "source_id": "a1",
-            "target_id": "c1",
-            "source_label": "Actor",
-            "target_label": "Conflict",
-            "confidence": 0.9,
-        }]
+        raw_edges = [
+            {
+                "type": "PARTY_TO",
+                "source_id": "a1",
+                "target_id": "c1",
+                "source_label": "Actor",
+                "target_label": "Conflict",
+                "confidence": 0.9,
+            }
+        ]
         result = validate_raw_edges(raw_edges, OntologyTier.ESSENTIAL)
         assert len(result.valid_edges) == 1
 
     def test_validate_edge_wrong_type(self):
-        raw_edges = [{
-            "type": "PARTY_TO",
-            "source_id": "c1",
-            "target_id": "a1",
-            "source_label": "Conflict",  # Wrong! Should be Actor
-            "target_label": "Actor",
-        }]
+        raw_edges = [
+            {
+                "type": "PARTY_TO",
+                "source_id": "c1",
+                "target_id": "a1",
+                "source_label": "Conflict",  # Wrong! Should be Actor
+                "target_label": "Actor",
+            }
+        ]
         result = validate_raw_edges(raw_edges, OntologyTier.ESSENTIAL)
         assert len(result.valid_edges) == 0
         assert len(result.errors) > 0
@@ -289,8 +301,20 @@ class TestSymbolicValidation:
         a2 = Actor(name="A2", actor_type="person")
         c1 = Conflict(name="C1", scale="micro", domain="workplace", status="active")
         edges = [
-            ConflictRelationship(type=EdgeType.PARTY_TO, source_id=a1.id, target_id=c1.id, source_label="Actor", target_label="Conflict"),
-            ConflictRelationship(type=EdgeType.PARTY_TO, source_id=a2.id, target_id=c1.id, source_label="Actor", target_label="Conflict"),
+            ConflictRelationship(
+                type=EdgeType.PARTY_TO,
+                source_id=a1.id,
+                target_id=c1.id,
+                source_label="Actor",
+                target_label="Conflict",
+            ),
+            ConflictRelationship(
+                type=EdgeType.PARTY_TO,
+                source_id=a2.id,
+                target_id=c1.id,
+                source_label="Actor",
+                target_label="Conflict",
+            ),
         ]
         result = validate_symbolic([a1, a2, c1], edges)
         # Should not warn about parties
@@ -456,6 +480,7 @@ class TestCheckReviewNeeded:
 class TestPrompts:
     def test_system_prompt_builds(self):
         from dialectica_extraction.prompts.system import build_system_prompt
+
         prompt = build_system_prompt(OntologyTier.ESSENTIAL)
         assert "DIALECTICA" in prompt
         assert "Actor" in prompt
@@ -463,17 +488,22 @@ class TestPrompts:
     def test_tier_prompts_exist(self):
         from dialectica_extraction.prompts import (
             EXTRACTION_ESSENTIAL_PROMPT,
-            EXTRACTION_STANDARD_PROMPT,
             EXTRACTION_FULL_PROMPT,
+            EXTRACTION_STANDARD_PROMPT,
             RELATIONSHIP_PROMPT,
         )
-        assert "ESSENTIAL" in EXTRACTION_ESSENTIAL_PROMPT or "essential" in EXTRACTION_ESSENTIAL_PROMPT.lower()
+
+        assert (
+            "ESSENTIAL" in EXTRACTION_ESSENTIAL_PROMPT
+            or "essential" in EXTRACTION_ESSENTIAL_PROMPT.lower()
+        )
         assert len(EXTRACTION_STANDARD_PROMPT) > 100
         assert len(EXTRACTION_FULL_PROMPT) > 100
         assert "edges" in RELATIONSHIP_PROMPT
 
     def test_node_type_descriptions(self):
         from dialectica_extraction.prompts.system import get_node_type_descriptions
+
         desc = get_node_type_descriptions(OntologyTier.ESSENTIAL)
         assert "Actor" in desc
         assert "Conflict" in desc
@@ -482,6 +512,7 @@ class TestPrompts:
 
     def test_edge_type_descriptions(self):
         from dialectica_extraction.prompts.system import get_edge_type_descriptions
+
         desc = get_edge_type_descriptions(OntologyTier.ESSENTIAL)
         assert "PARTY_TO" in desc
 
@@ -495,8 +526,8 @@ class TestInstructorExtractors:
     def test_response_models_valid(self):
         """Verify response models can be instantiated."""
         from dialectica_extraction.instructor_extractors import (
-            ExtractedEntity,
             EntityExtractionResult,
+            ExtractedEntity,
             ExtractedRelationship,
             RelationshipExtractionResult,
         )
@@ -526,5 +557,6 @@ class TestInstructorExtractors:
 
     def test_entity_extraction_result_default(self):
         from dialectica_extraction.instructor_extractors import EntityExtractionResult
+
         result = EntityExtractionResult()
         assert result.entities == []

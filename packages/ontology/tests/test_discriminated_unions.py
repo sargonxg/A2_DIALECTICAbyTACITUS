@@ -1,17 +1,16 @@
 """
 Tests for Pydantic discriminated union dispatch across all 15 node types.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-import pytest
-from pydantic import ValidationError
+from datetime import UTC, datetime
 
 from dialectica_ontology.primitives import (
-    Actor, Conflict, Event, Issue, Interest, Norm, Process, Outcome,
-    Narrative, EmotionalState, TrustState, PowerDynamic, Location, Evidence, Role,
     NODE_TYPES,
+    Actor,
+    Conflict,
+    Event,
 )
 
 
@@ -27,17 +26,28 @@ class TestDiscriminatedUnionDispatch:
         assert c.label == "Conflict"
 
     def test_event_label(self):
-        e = Event(event_type="protest", severity=0.5, occurred_at=datetime.now(timezone.utc))
+        e = Event(event_type="protest", severity=0.5, occurred_at=datetime.now(UTC))
         assert e.label == "Event"
 
     def test_all_15_node_types_have_labels(self):
         assert len(NODE_TYPES) == 15
         labels = set(NODE_TYPES.keys())
         expected = {
-            "Actor", "Conflict", "Event", "Issue", "Interest",
-            "Norm", "Process", "Outcome", "Narrative",
-            "EmotionalState", "TrustState", "PowerDynamic",
-            "Location", "Evidence", "Role",
+            "Actor",
+            "Conflict",
+            "Event",
+            "Issue",
+            "Interest",
+            "Norm",
+            "Process",
+            "Outcome",
+            "Narrative",
+            "EmotionalState",
+            "TrustState",
+            "PowerDynamic",
+            "Location",
+            "Evidence",
+            "Role",
         }
         assert labels == expected
 
@@ -63,7 +73,7 @@ class TestNodeTypeIds:
         nodes = [
             Actor(name="A", actor_type="person"),
             Conflict(name="C", scale="micro", domain="workplace", status="active"),
-            Event(event_type="protest", severity=0.5, occurred_at=datetime.now(timezone.utc)),
+            Event(event_type="protest", severity=0.5, occurred_at=datetime.now(UTC)),
         ]
         for node in nodes:
             assert node.id

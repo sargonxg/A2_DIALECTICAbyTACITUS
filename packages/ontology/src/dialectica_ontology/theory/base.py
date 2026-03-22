@@ -11,6 +11,7 @@ Defines:
 
 All 15 theory modules inherit from TheoryFramework and implement real analytical logic.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -84,7 +85,7 @@ class TheoryFramework(ABC):
     author: str = ""
     key_concepts: list[str] = []
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # noqa: B027
         """Initialize the framework. Subclasses should set name, author, key_concepts."""
 
     @abstractmethod

@@ -1,6 +1,7 @@
 """
 Graph Router — Graph traversal, search, and stats endpoints.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from dialectica_api.deps import get_graph_client, get_current_tenant, require_admin
+from dialectica_api.deps import get_current_tenant, get_graph_client, require_admin
 
 router = APIRouter(prefix="/v1/workspaces/{workspace_id}/graph", tags=["graph"])
 
@@ -39,8 +40,8 @@ class SearchResult(BaseModel):
 async def get_full_graph(
     workspace_id: str,
     limit: int = Query(200, le=1000),
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Return full workspace graph (nodes + edges)."""
     if graph_client is None:
@@ -74,8 +75,8 @@ async def get_full_graph(
 @router.get("/stats", response_model=GraphStatsResponse)
 async def get_graph_stats(
     workspace_id: str,
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> GraphStatsResponse:
     """Get workspace graph statistics."""
     if graph_client is None:
@@ -99,8 +100,8 @@ async def get_subgraph(
     workspace_id: str,
     center_id: str = Query(...),
     hops: int = Query(2, ge=1, le=4),
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> SubgraphResponse:
     """Get N-hop subgraph centered on a node."""
     if graph_client is None:
@@ -126,8 +127,8 @@ async def search_graph(
     workspace_id: str,
     q: str = Query(..., min_length=1),
     limit: int = Query(20, le=100),
-    tenant_id: str = Depends(get_current_tenant),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> list[SearchResult]:
     """Semantic/keyword search in the workspace graph."""
     if graph_client is None:
@@ -144,12 +145,14 @@ async def search_graph(
             for s in scored:
                 node = getattr(s, "node", None)
                 if node:
-                    results.append(SearchResult(
-                        node_id=node.id,
-                        label=getattr(node, "label", ""),
-                        name=getattr(node, "name", node.id),
-                        score=float(getattr(s, "score", 0.5)),
-                    ))
+                    results.append(
+                        SearchResult(
+                            node_id=node.id,
+                            label=getattr(node, "label", ""),
+                            name=getattr(node, "name", node.id),
+                            score=float(getattr(s, "score", 0.5)),
+                        )
+                    )
     except Exception:
         pass
 
@@ -160,12 +163,14 @@ async def search_graph(
         for n in nodes:
             name = getattr(n, "name", "") or ""
             if q_lower in name.lower():
-                results.append(SearchResult(
-                    node_id=n.id,
-                    label=getattr(n, "label", ""),
-                    name=name,
-                    score=0.7,
-                ))
+                results.append(
+                    SearchResult(
+                        node_id=n.id,
+                        label=getattr(n, "label", ""),
+                        name=name,
+                        score=0.7,
+                    )
+                )
         results = results[:limit]
 
     return results
@@ -175,9 +180,9 @@ async def search_graph(
 async def raw_query(
     workspace_id: str,
     body: dict[str, Any],
-    tenant_id: str = Depends(get_current_tenant),
-    _admin: None = Depends(require_admin),
-    graph_client: Any = Depends(get_graph_client),
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    _admin: None = Depends(require_admin),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
 ) -> dict[str, Any]:
     """Execute raw GQL/Cypher query (admin only)."""
     if graph_client is None:

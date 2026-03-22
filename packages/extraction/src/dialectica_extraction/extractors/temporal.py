@@ -1,22 +1,35 @@
 """
 Temporal Normalization — Parse dates, durations, and sequences.
 """
+
 from __future__ import annotations
 
 import re
 from datetime import datetime, timedelta
-from typing import Any
-
 
 # Common date patterns
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
-_MONTH_YEAR = re.compile(r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})", re.IGNORECASE)
-_RELATIVE = re.compile(r"(\d+)\s+(days?|weeks?|months?|years?)\s+(ago|later|before|after)", re.IGNORECASE)
+_MONTH_YEAR = re.compile(
+    r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})",
+    re.IGNORECASE,
+)
+_RELATIVE = re.compile(
+    r"(\d+)\s+(days?|weeks?|months?|years?)\s+(ago|later|before|after)", re.IGNORECASE
+)
 
 _MONTHS = {
-    "january": 1, "february": 2, "march": 3, "april": 4,
-    "may": 5, "june": 6, "july": 7, "august": 8,
-    "september": 9, "october": 10, "november": 11, "december": 12,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
 }
 
 

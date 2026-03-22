@@ -8,11 +8,11 @@ Provides:
 - Admin and tenant auth header fixtures
 - Workspace creation helper
 """
+
 from __future__ import annotations
 
 import json
 import os
-import uuid
 from datetime import datetime
 from typing import Any
 
@@ -20,8 +20,6 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from dialectica_ontology.primitives import ConflictNode, Actor
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 from dialectica_graph.models import (
     ActorNetworkResult,
     EscalationResult,
@@ -30,7 +28,8 @@ from dialectica_graph.models import (
     SubgraphResult,
     WorkspaceStats,
 )
-
+from dialectica_ontology.primitives import Actor, ConflictNode
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 # ---------------------------------------------------------------------------
 # Auth keys — set env vars BEFORE any app import
@@ -45,20 +44,23 @@ READONLY_KEY = "test-readonly-key"
 
 # Configure env vars so the auth middleware picks them up
 os.environ["ADMIN_API_KEY"] = ADMIN_KEY
-os.environ["API_KEYS_JSON"] = json.dumps([
-    {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
-    {"key": TENANT_KEY, "level": "standard", "tenant_id": "testuser"},
-    {"key": TENANT_ALPHA_KEY, "level": "standard", "tenant_id": "alpha"},
-    {"key": TENANT_BETA_KEY, "level": "standard", "tenant_id": "beta"},
-    {"key": TENANT_OTHER_KEY, "level": "standard", "tenant_id": "other"},
-    {"key": READONLY_KEY, "level": "readonly", "tenant_id": "reader"},
-])
+os.environ["API_KEYS_JSON"] = json.dumps(
+    [
+        {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
+        {"key": TENANT_KEY, "level": "standard", "tenant_id": "testuser"},
+        {"key": TENANT_ALPHA_KEY, "level": "standard", "tenant_id": "alpha"},
+        {"key": TENANT_BETA_KEY, "level": "standard", "tenant_id": "beta"},
+        {"key": TENANT_OTHER_KEY, "level": "standard", "tenant_id": "other"},
+        {"key": READONLY_KEY, "level": "readonly", "tenant_id": "reader"},
+    ]
+)
 os.environ["ENVIRONMENT"] = "development"
 
 
 # ---------------------------------------------------------------------------
 # Mock Graph Client — in-memory implementation
 # ---------------------------------------------------------------------------
+
 
 class MockGraphClient:
     """In-memory mock implementing the GraphClient abstract interface."""
@@ -71,26 +73,20 @@ class MockGraphClient:
     async def initialize_schema(self) -> None:
         self.schema_initialized = True
 
-    async def upsert_node(
-        self, node: ConflictNode, workspace_id: str, tenant_id: str
-    ) -> str:
+    async def upsert_node(self, node: ConflictNode, workspace_id: str, tenant_id: str) -> str:
         if workspace_id not in self.nodes:
             self.nodes[workspace_id] = {}
         self.nodes[workspace_id][node.id] = node
         return node.id
 
-    async def delete_node(
-        self, node_id: str, workspace_id: str, hard: bool = False
-    ) -> bool:
+    async def delete_node(self, node_id: str, workspace_id: str, hard: bool = False) -> bool:
         ws_nodes = self.nodes.get(workspace_id, {})
         if node_id in ws_nodes:
             del ws_nodes[node_id]
             return True
         return False
 
-    async def get_node(
-        self, node_id: str, workspace_id: str
-    ) -> ConflictNode | None:
+    async def get_node(self, node_id: str, workspace_id: str) -> ConflictNode | None:
         return self.nodes.get(workspace_id, {}).get(node_id)
 
     async def get_nodes(
@@ -175,9 +171,7 @@ class MockGraphClient:
             total_edges=len(ws_edges),
         )
 
-    async def get_actor_network(
-        self, actor_id: str, workspace_id: str
-    ) -> ActorNetworkResult:
+    async def get_actor_network(self, actor_id: str, workspace_id: str) -> ActorNetworkResult:
         node = self.nodes.get(workspace_id, {}).get(actor_id)
         if not node:
             node = Actor(
@@ -202,9 +196,7 @@ class MockGraphClient:
     ) -> list[ConflictNode]:
         return list(self.nodes.get(workspace_id, {}).values())
 
-    async def get_escalation_trajectory(
-        self, workspace_id: str
-    ) -> EscalationResult:
+    async def get_escalation_trajectory(self, workspace_id: str) -> EscalationResult:
         return EscalationResult(
             trajectory=[
                 EscalationTrajectoryPoint(
@@ -277,11 +269,12 @@ async def client(mock_graph: MockGraphClient) -> AsyncClient:
     The admin API key header bypasses auth middleware, and
     get_graph_client is overridden to return the mock.
     """
-    from dialectica_api.main import create_app
     from dialectica_api.deps import get_graph_client
+    from dialectica_api.main import create_app
 
     # Reset rate limiter before creating the app to avoid cross-test pollution
-    from dialectica_api.middleware.rate_limit import set_rate_limit_backend, InMemoryBackend
+    from dialectica_api.middleware.rate_limit import InMemoryBackend, set_rate_limit_backend
+
     set_rate_limit_backend(InMemoryBackend())
 
     test_app = create_app()
@@ -305,15 +298,17 @@ async def client(mock_graph: MockGraphClient) -> AsyncClient:
     # Clean up overrides and in-memory stores
     test_app.dependency_overrides.clear()
 
-    from dialectica_api.routers.workspaces import _workspaces
-    from dialectica_api.routers.extraction import _jobs
     from dialectica_api.routers.developers import _api_keys
+    from dialectica_api.routers.extraction import _jobs
+    from dialectica_api.routers.workspaces import _workspaces
+
     _workspaces.clear()
     _jobs.clear()
     _api_keys.clear()
 
     # Reset rate limit backend so tests don't accumulate hits
-    from dialectica_api.middleware.rate_limit import set_rate_limit_backend, InMemoryBackend
+    from dialectica_api.middleware.rate_limit import InMemoryBackend, set_rate_limit_backend
+
     set_rate_limit_backend(InMemoryBackend())
 
 
@@ -343,12 +338,20 @@ async def seeded_client(
 
     # Seed some nodes into the mock graph
     actor1 = Actor(
-        id="actor-1", name="Party A", actor_type="person",
-        workspace_id=ws_id, tenant_id="admin", label="Actor",
+        id="actor-1",
+        name="Party A",
+        actor_type="person",
+        workspace_id=ws_id,
+        tenant_id="admin",
+        label="Actor",
     )
     actor2 = Actor(
-        id="actor-2", name="Party B", actor_type="organization",
-        workspace_id=ws_id, tenant_id="admin", label="Actor",
+        id="actor-2",
+        name="Party B",
+        actor_type="organization",
+        workspace_id=ws_id,
+        tenant_id="admin",
+        label="Actor",
     )
     await mock_graph.upsert_node(actor1, ws_id, "admin")
     await mock_graph.upsert_node(actor2, ws_id, "admin")

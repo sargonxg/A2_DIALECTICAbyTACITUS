@@ -3,22 +3,20 @@ Parametric tests for all 9 symbolic reasoning modules.
 
 Uses JCPOA and HR mediation fixtures for realistic test data.
 """
+
 from __future__ import annotations
 
-import sys
 import os
-from datetime import datetime
-from unittest.mock import MagicMock, AsyncMock
+import sys
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from dialectica_ontology.primitives import Actor, Conflict, Event, Issue
-from dialectica_ontology.relationships import ConflictRelationship, EdgeType
-from dialectica_ontology.enums import GlaslStage, KriesbergPhase
 from dialectica_ontology.confidence import Conclusion, ConfidenceType
-
+from dialectica_ontology.enums import GlaslStage
+from dialectica_ontology.primitives import Actor, Conflict
+from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  ESCALATION DETECTION
@@ -26,35 +24,43 @@ from dialectica_ontology.confidence import Conclusion, ConfidenceType
 
 
 class TestEscalationDetection:
-    @pytest.mark.parametrize("stage,expected_level", [
-        (GlaslStage.HARDENING, "win_win"),
-        (GlaslStage.DEBATE, "win_win"),
-        (GlaslStage.ACTIONS_NOT_WORDS, "win_win"),
-        (GlaslStage.IMAGES_COALITIONS, "win_lose"),
-        (GlaslStage.LOSS_OF_FACE, "win_lose"),
-        (GlaslStage.STRATEGIES_OF_THREAT, "win_lose"),
-        (GlaslStage.LIMITED_DESTRUCTION, "lose_lose"),
-        (GlaslStage.FRAGMENTATION, "lose_lose"),
-        (GlaslStage.TOGETHER_INTO_ABYSS, "lose_lose"),
-    ])
+    @pytest.mark.parametrize(
+        "stage,expected_level",
+        [
+            (GlaslStage.HARDENING, "win_win"),
+            (GlaslStage.DEBATE_AND_POLEMICS, "win_win"),
+            (GlaslStage.ACTIONS_NOT_WORDS, "win_win"),
+            (GlaslStage.IMAGES_AND_COALITIONS, "win_lose"),
+            (GlaslStage.LOSS_OF_FACE, "win_lose"),
+            (GlaslStage.STRATEGIES_OF_THREATS, "win_lose"),
+            (GlaslStage.LIMITED_DESTRUCTIVE_BLOWS, "lose_lose"),
+            (GlaslStage.FRAGMENTATION, "lose_lose"),
+            (GlaslStage.TOGETHER_INTO_THE_ABYSS, "lose_lose"),
+        ],
+    )
     def test_glasl_stage_to_level(self, stage, expected_level):
         """Each Glasl stage maps to the correct win/lose level."""
         from dialectica_reasoning.symbolic.escalation import _glasl_level
+
         assert _glasl_level(stage) == expected_level
 
-    @pytest.mark.parametrize("stage,expected_intervention", [
-        (GlaslStage.HARDENING, "moderation"),
-        (GlaslStage.DEBATE, "moderation"),
-        (GlaslStage.ACTIONS_NOT_WORDS, "moderation"),
-        (GlaslStage.IMAGES_COALITIONS, "mediation"),
-        (GlaslStage.LOSS_OF_FACE, "mediation"),
-        (GlaslStage.STRATEGIES_OF_THREAT, "arbitration"),
-        (GlaslStage.LIMITED_DESTRUCTION, "power_intervention"),
-        (GlaslStage.FRAGMENTATION, "power_intervention"),
-        (GlaslStage.TOGETHER_INTO_ABYSS, "power_intervention"),
-    ])
+    @pytest.mark.parametrize(
+        "stage,expected_intervention",
+        [
+            (GlaslStage.HARDENING, "moderation"),
+            (GlaslStage.DEBATE_AND_POLEMICS, "moderation"),
+            (GlaslStage.ACTIONS_NOT_WORDS, "moderation"),
+            (GlaslStage.IMAGES_AND_COALITIONS, "mediation"),
+            (GlaslStage.LOSS_OF_FACE, "mediation"),
+            (GlaslStage.STRATEGIES_OF_THREATS, "arbitration"),
+            (GlaslStage.LIMITED_DESTRUCTIVE_BLOWS, "power_intervention"),
+            (GlaslStage.FRAGMENTATION, "power_intervention"),
+            (GlaslStage.TOGETHER_INTO_THE_ABYSS, "power_intervention"),
+        ],
+    )
     def test_glasl_intervention_type(self, stage, expected_intervention):
         from dialectica_reasoning.symbolic.escalation import _intervention_type
+
         assert _intervention_type(stage) == expected_intervention
 
 
@@ -98,12 +104,15 @@ class TestInferenceOrdering:
 
 
 class TestTrustAnalysis:
-    @pytest.mark.parametrize("ability,benevolence,integrity,expected_alert", [
-        (0.8, 0.7, 0.3, True),   # Integrity drop > 0.3 from high baseline
-        (0.8, 0.8, 0.8, False),  # All high, no alert
-        (0.5, 0.5, 0.5, False),  # All medium, no alert
-        (0.9, 0.2, 0.9, False),  # Low benevolence but not integrity
-    ])
+    @pytest.mark.parametrize(
+        "ability,benevolence,integrity,expected_alert",
+        [
+            (0.8, 0.7, 0.3, True),  # Integrity drop > 0.3 from high baseline
+            (0.8, 0.8, 0.8, False),  # All high, no alert
+            (0.5, 0.5, 0.5, False),  # All medium, no alert
+            (0.9, 0.2, 0.9, False),  # Low benevolence but not integrity
+        ],
+    )
     def test_trust_alert_on_integrity_drop(self, ability, benevolence, integrity, expected_alert):
         """Alert when integrity drops significantly."""
         # Integrity < 0.4 triggers alert
@@ -122,12 +131,18 @@ class TestCausalAnalysis:
         e1, e2, e3, e4 = jcpoa_events
         edges = [
             ConflictRelationship(
-                type=EdgeType.CAUSED, source_id=e2.id, target_id=e3.id,
-                source_label="Event", target_label="Event",
+                type=EdgeType.CAUSED,
+                source_id=e2.id,
+                target_id=e3.id,
+                source_label="Event",
+                target_label="Event",
             ),
             ConflictRelationship(
-                type=EdgeType.CAUSED, source_id=e3.id, target_id=e4.id,
-                source_label="Event", target_label="Event",
+                type=EdgeType.CAUSED,
+                source_id=e3.id,
+                target_id=e4.id,
+                source_label="Event",
+                target_label="Event",
             ),
         ]
         caused_edges = [e for e in edges if e.type == EdgeType.CAUSED]
@@ -146,13 +161,16 @@ class TestCausalAnalysis:
 
 
 class TestPowerAnalysis:
-    @pytest.mark.parametrize("power_type,expected_domain", [
-        ("military", "coercive"),
-        ("economic", "reward"),
-        ("legal", "legitimate"),
-        ("informational", "expert"),
-        ("diplomatic", "referent"),
-    ])
+    @pytest.mark.parametrize(
+        "power_type,expected_domain",
+        [
+            ("military", "coercive"),
+            ("economic", "reward"),
+            ("legal", "legitimate"),
+            ("informational", "expert"),
+            ("diplomatic", "referent"),
+        ],
+    )
     def test_power_base_classification(self, power_type, expected_domain):
         """French/Raven power bases map to correct domains."""
         mapping = {
@@ -171,12 +189,15 @@ class TestPowerAnalysis:
 
 
 class TestRipenessAnalysis:
-    @pytest.mark.parametrize("mhs,way_out,ripe", [
-        (True, True, True),    # Both conditions = ripe
-        (True, False, False),  # MHS but no way out
-        (False, True, False),  # Way out but no MHS
-        (False, False, False), # Neither
-    ])
+    @pytest.mark.parametrize(
+        "mhs,way_out,ripe",
+        [
+            (True, True, True),  # Both conditions = ripe
+            (True, False, False),  # MHS but no way out
+            (False, True, False),  # Way out but no MHS
+            (False, False, False),  # Neither
+        ],
+    )
     def test_zartman_ripeness_conditions(self, mhs, way_out, ripe):
         """Zartman: ripe = mutually hurting stalemate + perceived way out."""
         is_ripe = mhs and way_out

@@ -6,6 +6,7 @@ Fallback: FastEmbed BAAI/bge-small-en-v1.5 for offline/dev (384-dim, padded to 7
 
 Configure via EMBEDDING_BACKEND env var: "vertex" or "fastembed".
 """
+
 from __future__ import annotations
 
 import logging
@@ -49,6 +50,7 @@ class GraphEmbeddingService:
         try:
             if self._vertex_model is None:
                 from vertexai.language_models import TextEmbeddingModel
+
                 self._vertex_model = TextEmbeddingModel.from_pretrained(VERTEX_MODEL)
 
             embeddings = self._vertex_model.get_embeddings(
@@ -65,6 +67,7 @@ class GraphEmbeddingService:
         try:
             if self._fastembed_model is None:
                 from fastembed import TextEmbedding
+
                 self._fastembed_model = TextEmbedding(model_name=FASTEMBED_MODEL)
 
             raw = list(self._fastembed_model.embed(texts))

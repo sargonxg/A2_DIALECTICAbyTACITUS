@@ -1,6 +1,7 @@
 """
 Logging Middleware — Structured JSON logging for GCP Cloud Logging.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,9 +18,7 @@ logger = logging.getLogger("dialectica.api")
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Logs every request as structured JSON compatible with GCP Cloud Logging."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = str(uuid.uuid4())[:8]
         start = time.perf_counter()
 

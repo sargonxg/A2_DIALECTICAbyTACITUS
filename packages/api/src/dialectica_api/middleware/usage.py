@@ -1,9 +1,9 @@
 """
 Usage Middleware — Track API calls per tenant per endpoint.
 """
+
 from __future__ import annotations
 
-import time
 from collections import defaultdict
 
 from fastapi import Request, Response
@@ -16,9 +16,7 @@ _usage_counters: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int
 class UsageMiddleware(BaseHTTPMiddleware):
     """Records API usage per tenant per endpoint for billing/analytics."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
         tenant_id = getattr(request.state, "tenant_id", "unknown")
         endpoint = f"{request.method} {request.url.path}"

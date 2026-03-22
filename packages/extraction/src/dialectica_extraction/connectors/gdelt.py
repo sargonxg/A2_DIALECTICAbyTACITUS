@@ -4,14 +4,16 @@ GDELT Connector — Global Database of Events, Language, and Tone via BigQuery.
 Queries gdelt-bq:gdeltv2.events filtering event_root_code for conflict events.
 Maps Goldstein scale to ACO severity.
 """
+
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 from datetime import datetime
 from typing import Any
 
-from dialectica_ontology.primitives import Actor, Event, ConflictNode
+from dialectica_ontology.primitives import Actor, ConflictNode, Event
 from dialectica_ontology.relationships import ConflictRelationship, EdgeType
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ class GDELTConnector:
 
     def _get_bq_client(self) -> Any:
         from google.cloud import bigquery
+
         return bigquery.Client(project=self._project_id)
 
     async def fetch_events(
@@ -110,15 +113,16 @@ class GDELTConnector:
             occurred_at = None
             sqldate = str(raw.get("SQLDATE", ""))
             if len(sqldate) == 8:
-                try:
+                with contextlib.suppress(ValueError):
                     occurred_at = datetime.strptime(sqldate, "%Y%m%d")
-                except ValueError:
-                    pass
 
             event = Event(
                 event_type=self._map_event_code(raw.get("EventRootCode", "")),
                 severity=severity,
-                description=f"GDELT event {raw.get('GLOBALEVENTID', '')} at {raw.get('ActionGeo_FullName', '')}",
+                description=(
+                    f"GDELT event {raw.get('GLOBALEVENTID', '')} "
+                    f"at {raw.get('ActionGeo_FullName', '')}"
+                ),
                 occurred_at=occurred_at,
                 workspace_id=workspace_id,
                 tenant_id=tenant_id,
@@ -130,14 +134,16 @@ class GDELTConnector:
             for actor_field in ["Actor1Name", "Actor2Name"]:
                 name = raw.get(actor_field, "") or ""
                 if name and name in actor_cache:
-                    edges.append(ConflictRelationship(
-                        type=EdgeType.PARTICIPATED_IN,
-                        source_id=actor_cache[name].id,
-                        target_id=event.id,
-                        source_label="Actor",
-                        target_label="Event",
-                        workspace_id=workspace_id,
-                    ))
+                    edges.append(
+                        ConflictRelationship(
+                            type=EdgeType.PARTICIPATED_IN,
+                            source_id=actor_cache[name].id,
+                            target_id=event.id,
+                            source_label="Actor",
+                            target_label="Event",
+                            workspace_id=workspace_id,
+                        )
+                    )
 
         return nodes, edges
 
@@ -163,8 +169,6 @@ class GDELTConnector:
             return "state"
         elif code in ("REB", "OPP", "INS"):
             return "armed_group"
-        elif code in ("IGO",):
-            return "organization"
-        elif code in ("NGO", "MED"):
+        elif code in ("IGO",) or code in ("NGO", "MED"):
             return "organization"
         return "other"

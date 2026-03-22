@@ -3,6 +3,7 @@ Custom Prometheus Metrics for DIALECTICA API.
 
 Provides domain-specific metrics beyond the automatic HTTP instrumentation.
 """
+
 from __future__ import annotations
 
 from prometheus_client import Counter, Gauge, Histogram

@@ -8,6 +8,7 @@ Provides a swappable GraphClient interface implemented by:
 
 Configure via GRAPH_BACKEND env var: "neo4j" (default), "spanner", or "falkordb".
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -98,11 +99,14 @@ def __getattr__(name: str) -> Any:
     """Lazy import for client classes to avoid importing heavy SDKs at module level."""
     if name == "SpannerGraphClient":
         from dialectica_graph.spanner_client import SpannerGraphClient
+
         return SpannerGraphClient
     if name == "Neo4jGraphClient":
         from dialectica_graph.neo4j_client import Neo4jGraphClient
+
         return Neo4jGraphClient
     if name == "FalkorDBGraphClient":
         from dialectica_graph.falkordb_client import FalkorDBGraphClient
+
         return FalkorDBGraphClient
     raise AttributeError(f"module 'dialectica_graph' has no attribute {name!r}")

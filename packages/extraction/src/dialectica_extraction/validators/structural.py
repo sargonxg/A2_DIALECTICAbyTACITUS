@@ -7,12 +7,13 @@ Checks:
 - Required properties present for each node type
 - Graph connectivity
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from dialectica_ontology.primitives import ConflictNode
-from dialectica_ontology.relationships import ConflictRelationship, EDGE_SCHEMA, EdgeType
+from dialectica_ontology.relationships import EDGE_SCHEMA, ConflictRelationship, EdgeType
 
 
 @dataclass
@@ -79,8 +80,7 @@ def validate_structural(
         if node.id not in connected_ids:
             result.orphan_nodes.append(node.id)
             result.warnings.append(
-                f"Orphan node: {node.label} '{getattr(node, 'name', node.id)}' "
-                f"has no edges"
+                f"Orphan node: {node.label} '{getattr(node, 'name', node.id)}' has no edges"
             )
 
     return result

@@ -10,37 +10,24 @@ Pydantic node and edge definitions:
   - generate_json_schema()  -> Combined JSON Schema for API validation
   - generate_turtle()       -> OWL/Turtle for RDF interoperability
 """
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, get_args, get_origin
 
-from dialectica_ontology.primitives import (
-    NODE_TYPES,
-    ConflictNode,
-    Actor,
-    Conflict,
-    Event,
-    Issue,
-    Interest,
-    Norm,
-    Process,
-    Outcome,
-    Narrative,
-    EmotionalState,
-    TrustState,
-    PowerDynamic,
-    Location,
-    Evidence,
-    Role,
-)
-from dialectica_ontology.relationships import EdgeType, EDGE_SCHEMA
+import dialectica_ontology.primitives as _primitives_mod
 
 # QuadClass is referenced by Event but not imported in primitives.py, leaving
 # a dangling forward reference.  Inject it into the primitives module namespace
 # so that model_rebuild() can resolve it.
 from dialectica_ontology.enums import QuadClass as _QuadClass  # noqa: F401
-import dialectica_ontology.primitives as _primitives_mod
+from dialectica_ontology.primitives import (
+    NODE_TYPES,
+    ConflictNode,
+    Event,
+)
+from dialectica_ontology.relationships import EDGE_SCHEMA
 
 if not hasattr(_primitives_mod, "QuadClass"):
     _primitives_mod.QuadClass = _QuadClass  # type: ignore[attr-defined]
@@ -90,15 +77,15 @@ def _python_type_to_spanner(annotation: Any) -> str:
         if inner:
             return _python_type_to_spanner(inner[0])
 
-    if annotation is str or annotation == str:
+    if annotation is str:
         return "STRING(MAX)"
-    if annotation is float or annotation == float:
+    if annotation is float:
         return "FLOAT64"
-    if annotation is int or annotation == int:
+    if annotation is int:
         return "INT64"
-    if annotation is bool or annotation == bool:
+    if annotation is bool:
         return "BOOL"
-    if annotation is datetime or annotation == datetime:
+    if annotation is datetime:
         return "TIMESTAMP"
 
     # list[X]
@@ -136,6 +123,7 @@ def _get_model_fields(model_cls: type[ConflictNode]) -> list[tuple[str, Any]]:
 # 1. Cypher DDL (Neo4j / FalkorDB)
 # ---------------------------------------------------------------------------
 
+
 def generate_cypher_ddl() -> str:
     """Return Cypher CREATE CONSTRAINT and CREATE INDEX statements.
 
@@ -147,9 +135,7 @@ def generate_cypher_ddl() -> str:
 
     # Uniqueness constraints
     for label in NODE_TYPES:
-        lines.append(
-            f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;"
-        )
+        lines.append(f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;")
 
     lines.append("")
 
@@ -158,9 +144,7 @@ def generate_cypher_ddl() -> str:
         for props in index_defs:
             prop_list = ", ".join(f"n.{p}" for p in props)
             idx_name = f"idx_{label.lower()}_{'_'.join(props)}"
-            lines.append(
-                f"CREATE INDEX {idx_name} IF NOT EXISTS FOR (n:{label}) ON ({prop_list});"
-            )
+            lines.append(f"CREATE INDEX {idx_name} IF NOT EXISTS FOR (n:{label}) ON ({prop_list});")
 
     return "\n".join(lines) + "\n"
 
@@ -168,6 +152,7 @@ def generate_cypher_ddl() -> str:
 # ---------------------------------------------------------------------------
 # 2. Google Cloud Spanner SQL DDL
 # ---------------------------------------------------------------------------
+
 
 def generate_spanner_ddl() -> str:
     """Return CREATE TABLE statements for Google Cloud Spanner.
@@ -183,9 +168,7 @@ def generate_spanner_ddl() -> str:
             spanner_type = _python_type_to_spanner(annotation)
             cols.append(f"  {name} {spanner_type}")
         col_block = ",\n".join(cols)
-        statements.append(
-            f"CREATE TABLE {label} (\n{col_block}\n) PRIMARY KEY (id);"
-        )
+        statements.append(f"CREATE TABLE {label} (\n{col_block}\n) PRIMARY KEY (id);")
 
     # Edge table
     statements.append(
@@ -213,6 +196,7 @@ def generate_spanner_ddl() -> str:
 # ---------------------------------------------------------------------------
 # 3. GQL Graph Schema (Spanner Graph)
 # ---------------------------------------------------------------------------
+
 
 def generate_gql_schema() -> str:
     """Return a GQL graph schema suitable for Spanner Graph.
@@ -253,6 +237,7 @@ def generate_gql_schema() -> str:
 # ---------------------------------------------------------------------------
 # 4. JSON Schema (API validation)
 # ---------------------------------------------------------------------------
+
 
 def generate_json_schema() -> dict[str, Any]:
     """Return a combined JSON Schema with definitions for all node types.

@@ -1,21 +1,22 @@
 """Tests for Pub/Sub extraction worker."""
+
 from __future__ import annotations
 
 import json
-import sys
 import os
-from unittest.mock import MagicMock, patch, AsyncMock
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+from dialectica_extraction.gcs_loader import _parse_gcs_uri, extract_text
 from dialectica_extraction.pubsub_worker import (
-    PubSubExtractionWorker,
-    ExtractionMessage,
     MAX_RETRIES,
+    ExtractionMessage,
+    PubSubExtractionWorker,
 )
-from dialectica_extraction.gcs_loader import extract_text, _parse_gcs_uri
 
 
 class TestExtractionMessage:
@@ -56,14 +57,16 @@ class TestWorkerProcessMessage:
 
     @pytest.mark.asyncio
     async def test_process_empty_document_retries(self, worker):
-        message_data = json.dumps({
-            "document_id": "doc-1",
-            "tenant_id": "t-1",
-            "workspace_id": "ws-1",
-            "gcs_uri": "gs://bucket/empty.txt",
-            "tier": "essential",
-            "retry_count": 0,
-        }).encode("utf-8")
+        message_data = json.dumps(
+            {
+                "document_id": "doc-1",
+                "tenant_id": "t-1",
+                "workspace_id": "ws-1",
+                "gcs_uri": "gs://bucket/empty.txt",
+                "tier": "essential",
+                "retry_count": 0,
+            }
+        ).encode("utf-8")
 
         # Mock the document loader to return empty
         with patch.object(worker, "_load_document", new_callable=AsyncMock, return_value=""):
@@ -73,14 +76,16 @@ class TestWorkerProcessMessage:
 
     @pytest.mark.asyncio
     async def test_process_max_retries_sends_to_dlq(self, worker):
-        message_data = json.dumps({
-            "document_id": "doc-1",
-            "tenant_id": "t-1",
-            "workspace_id": "ws-1",
-            "gcs_uri": "gs://bucket/bad.txt",
-            "tier": "essential",
-            "retry_count": MAX_RETRIES,
-        }).encode("utf-8")
+        message_data = json.dumps(
+            {
+                "document_id": "doc-1",
+                "tenant_id": "t-1",
+                "workspace_id": "ws-1",
+                "gcs_uri": "gs://bucket/bad.txt",
+                "tier": "essential",
+                "retry_count": MAX_RETRIES,
+            }
+        ).encode("utf-8")
 
         with patch.object(worker, "_load_document", new_callable=AsyncMock, return_value=""):
             result = await worker.process_message(message_data)

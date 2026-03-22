@@ -2,18 +2,17 @@
 Tests for production hardening: rate limiting, Prometheus metrics,
 auth permission levels, key expiration, and production safety checks.
 """
+
 from __future__ import annotations
 
 import json
 import os
-import time
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -22,17 +21,19 @@ STANDARD_KEY = "test-standard-key"
 READONLY_KEY = "test-readonly-key"
 EXPIRED_KEY = "test-expired-key"
 
-_KEYS_JSON = json.dumps([
-    {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
-    {"key": STANDARD_KEY, "level": "standard", "tenant_id": "tenant-1"},
-    {"key": READONLY_KEY, "level": "readonly", "tenant_id": "tenant-2"},
-    {
-        "key": EXPIRED_KEY,
-        "level": "standard",
-        "tenant_id": "tenant-3",
-        "expires_at": "2020-01-01T00:00:00Z",
-    },
-])
+_KEYS_JSON = json.dumps(
+    [
+        {"key": ADMIN_KEY, "level": "admin", "tenant_id": "admin"},
+        {"key": STANDARD_KEY, "level": "standard", "tenant_id": "tenant-1"},
+        {"key": READONLY_KEY, "level": "readonly", "tenant_id": "tenant-2"},
+        {
+            "key": EXPIRED_KEY,
+            "level": "standard",
+            "tenant_id": "tenant-3",
+            "expires_at": "2020-01-01T00:00:00Z",
+        },
+    ]
+)
 
 _ENV_OVERRIDES = {
     "ADMIN_API_KEY": ADMIN_KEY,
@@ -47,10 +48,12 @@ def _make_app():
     """Create a fresh app with test env vars."""
     # Reset rate-limit backend singleton between tests
     import dialectica_api.middleware.rate_limit as rl_mod
+
     rl_mod._backend = None
 
     # Reset auth key cache
     from dialectica_api.main import create_app
+
     app = create_app()
     return app
 
@@ -63,6 +66,7 @@ async def hardened_client():
 
         # Override graph client so tests don't require Spanner/Neo4j
         from dialectica_api.deps import get_graph_client
+
         app.dependency_overrides[get_graph_client] = lambda: None
 
         transport = ASGITransport(app=app)
@@ -87,7 +91,7 @@ class TestRateLimiting:
         for i in range(100):
             resp = await hardened_client.get("/health", headers=headers)
             # /health is public so status should be 200
-            assert resp.status_code == 200, f"Request {i+1} failed unexpectedly"
+            assert resp.status_code == 200, f"Request {i + 1} failed unexpectedly"
 
         # The 101st request from the same key should be rate-limited.
         # Note: /health skips rate limiting, so we hit a protected endpoint.
@@ -106,7 +110,7 @@ class TestRateLimiting:
 
         # We need 101 requests. The first 100 succeed; the 101st returns 429.
         got_429 = False
-        for i in range(105):
+        for _i in range(105):
             resp = await hardened_client.get("/v1/workspaces", headers=headers)
             if resp.status_code == 429:
                 got_429 = True
@@ -265,6 +269,7 @@ class TestProductionSafety:
         }
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import validate_production_config
+
             with pytest.raises(RuntimeError, match="PRODUCTION SAFETY"):
                 validate_production_config()
 
@@ -277,6 +282,7 @@ class TestProductionSafety:
         }
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import validate_production_config
+
             with pytest.raises(RuntimeError, match="PRODUCTION SAFETY"):
                 validate_production_config()
 
@@ -289,14 +295,13 @@ class TestProductionSafety:
         }
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import validate_production_config
+
             # Should not raise
             validate_production_config()
 
     def test_production_starts_with_api_keys_json(self):
         """ENVIRONMENT=production + API_KEYS_JSON with admin key => no error."""
-        keys = json.dumps([
-            {"key": "sk-prod-admin", "level": "admin", "tenant_id": "admin"}
-        ])
+        keys = json.dumps([{"key": "sk-prod-admin", "level": "admin", "tenant_id": "admin"}])
         env = {
             "ENVIRONMENT": "production",
             "ADMIN_API_KEY": "",
@@ -304,6 +309,7 @@ class TestProductionSafety:
         }
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import validate_production_config
+
             # Should not raise
             validate_production_config()
 
@@ -316,6 +322,7 @@ class TestProductionSafety:
         }
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import validate_production_config
+
             # Should not raise
             validate_production_config()
 
@@ -329,6 +336,7 @@ class TestInMemoryBackend:
     @pytest.mark.asyncio
     async def test_allows_within_limit(self):
         from dialectica_api.middleware.rate_limit import InMemoryBackend
+
         backend = InMemoryBackend()
         allowed, remaining, reset_at = await backend.check_rate_limit("key1", 5, 60)
         assert allowed is True
@@ -337,6 +345,7 @@ class TestInMemoryBackend:
     @pytest.mark.asyncio
     async def test_blocks_over_limit(self):
         from dialectica_api.middleware.rate_limit import InMemoryBackend
+
         backend = InMemoryBackend()
         for _ in range(5):
             await backend.check_rate_limit("key1", 5, 60)
@@ -356,6 +365,7 @@ class TestAPIKeyLoading:
         env = {"ADMIN_API_KEY": "sk-my-admin", "API_KEYS_JSON": "[]"}
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import load_api_keys
+
             keys = load_api_keys()
             assert "sk-my-admin" in keys
             assert keys["sk-my-admin"].level == "admin"
@@ -363,13 +373,16 @@ class TestAPIKeyLoading:
 
     def test_load_from_api_keys_json(self):
         """API_KEYS_JSON with multiple keys loads correctly."""
-        payload = json.dumps([
-            {"key": "k1", "level": "admin", "tenant_id": "t1"},
-            {"key": "k2", "level": "readonly", "tenant_id": "t2"},
-        ])
+        payload = json.dumps(
+            [
+                {"key": "k1", "level": "admin", "tenant_id": "t1"},
+                {"key": "k2", "level": "readonly", "tenant_id": "t2"},
+            ]
+        )
         env = {"ADMIN_API_KEY": "", "API_KEYS_JSON": payload}
         with patch.dict(os.environ, env, clear=False):
             from dialectica_api.middleware.auth import load_api_keys
+
             keys = load_api_keys()
             assert len(keys) == 2
             assert keys["k1"].level == "admin"
@@ -380,8 +393,8 @@ class TestAPIKeyLoading:
         """APIKeyEntry correctly detects expired and valid keys."""
         from dialectica_api.middleware.auth import APIKeyEntry
 
-        past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
-        future = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
+        past = (datetime.now(UTC) - timedelta(days=1)).isoformat()
+        future = (datetime.now(UTC) + timedelta(days=365)).isoformat()
 
         expired = APIKeyEntry(key="e", level="standard", expires_at=past)
         valid = APIKeyEntry(key="v", level="standard", expires_at=future)

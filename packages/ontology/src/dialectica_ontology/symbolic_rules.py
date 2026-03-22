@@ -14,12 +14,14 @@ Implements deterministic rule functions for:
 Each rule is a Python function that takes graph state and returns findings/alerts.
 Rules fire deterministically BEFORE neural inference (neurosymbolic priority order).
 """
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any, Callable
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Type aliases
@@ -45,8 +47,10 @@ Expected GraphContext structure:
 # Finding — the output of every rule
 # ---------------------------------------------------------------------------
 
+
 class Severity(StrEnum):
     """Severity levels for rule findings."""
+
     INFO = "info"
     WARNING = "warning"
     ALERT = "alert"
@@ -55,6 +59,7 @@ class Severity(StrEnum):
 
 class RuleCategory(StrEnum):
     """Categories matching the ontology SYMBOLIC_RULES sections."""
+
     STRUCTURAL = "structural"
     ESCALATION = "escalation"
     RIPENESS = "ripeness"
@@ -68,6 +73,7 @@ class RuleCategory(StrEnum):
 @dataclass
 class Finding:
     """A single finding produced by a symbolic rule."""
+
     rule_id: str
     category: str
     severity: str
@@ -85,10 +91,7 @@ RuleFunction = Callable[[GraphContext], list[Finding]]
 
 def _nodes_by_label(ctx: GraphContext, label: str) -> dict[str, dict[str, Any]]:
     """Return all nodes whose 'label' matches *label*."""
-    return {
-        nid: n for nid, n in ctx.get("nodes", {}).items()
-        if n.get("label") == label
-    }
+    return {nid: n for nid, n in ctx.get("nodes", {}).items() if n.get("label") == label}
 
 
 def _edges_by_type(ctx: GraphContext, edge_type: str) -> list[dict[str, Any]]:
@@ -104,6 +107,7 @@ def _get_node(ctx: GraphContext, node_id: str) -> dict[str, Any] | None:
 #  STRUCTURAL RULES — Basic graph structure validation
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 def rule_conflict_has_parties(ctx: GraphContext) -> list[Finding]:
     """Every Conflict node must have at least 2 PARTY_TO edges (actors)."""
     findings: list[Finding] = []
@@ -113,17 +117,19 @@ def rule_conflict_has_parties(ctx: GraphContext) -> list[Finding]:
     for cid, conflict in conflicts.items():
         party_count = sum(1 for e in party_edges if e.get("target_id") == cid)
         if party_count < 2:
-            findings.append(Finding(
-                rule_id="STRUCT-001",
-                category=RuleCategory.STRUCTURAL,
-                severity=Severity.WARNING,
-                message=(
-                    f"Conflict '{conflict.get('name', cid)}' has {party_count} "
-                    f"party/parties — expected at least 2."
-                ),
-                affected_entities=[cid],
-                details={"party_count": party_count},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="STRUCT-001",
+                    category=RuleCategory.STRUCTURAL,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Conflict '{conflict.get('name', cid)}' has {party_count} "
+                        f"party/parties — expected at least 2."
+                    ),
+                    affected_entities=[cid],
+                    details={"party_count": party_count},
+                )
+            )
     return findings
 
 
@@ -133,13 +139,15 @@ def rule_event_has_timestamp(ctx: GraphContext) -> list[Finding]:
     events = _nodes_by_label(ctx, "Event")
     for eid, event in events.items():
         if not event.get("occurred_at"):
-            findings.append(Finding(
-                rule_id="STRUCT-002",
-                category=RuleCategory.STRUCTURAL,
-                severity=Severity.WARNING,
-                message=f"Event '{eid}' is missing 'occurred_at' timestamp.",
-                affected_entities=[eid],
-            ))
+            findings.append(
+                Finding(
+                    rule_id="STRUCT-002",
+                    category=RuleCategory.STRUCTURAL,
+                    severity=Severity.WARNING,
+                    message=f"Event '{eid}' is missing 'occurred_at' timestamp.",
+                    affected_entities=[eid],
+                )
+            )
     return findings
 
 
@@ -156,17 +164,19 @@ def rule_edge_endpoints_exist(ctx: GraphContext) -> list[Finding]:
         if tgt and tgt not in nodes:
             missing.append(f"target '{tgt}'")
         if missing:
-            findings.append(Finding(
-                rule_id="STRUCT-003",
-                category=RuleCategory.STRUCTURAL,
-                severity=Severity.WARNING,
-                message=(
-                    f"Edge '{edge.get('type', '?')}' references missing node(s): "
-                    f"{', '.join(missing)}."
-                ),
-                affected_entities=[src or "", tgt or ""],
-                details={"edge": edge},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="STRUCT-003",
+                    category=RuleCategory.STRUCTURAL,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Edge '{edge.get('type', '?')}' references missing node(s): "
+                        f"{', '.join(missing)}."
+                    ),
+                    affected_entities=[src or "", tgt or ""],
+                    details={"edge": edge},
+                )
+            )
     return findings
 
 
@@ -179,13 +189,15 @@ def rule_process_has_conflict(ctx: GraphContext) -> list[Finding]:
 
     for pid in processes:
         if pid not in linked_process_ids:
-            findings.append(Finding(
-                rule_id="STRUCT-004",
-                category=RuleCategory.STRUCTURAL,
-                severity=Severity.INFO,
-                message=f"Process '{pid}' is not linked to any Conflict via RESOLVED_THROUGH.",
-                affected_entities=[pid],
-            ))
+            findings.append(
+                Finding(
+                    rule_id="STRUCT-004",
+                    category=RuleCategory.STRUCTURAL,
+                    severity=Severity.INFO,
+                    message=f"Process '{pid}' is not linked to any Conflict via RESOLVED_THROUGH.",
+                    affected_entities=[pid],
+                )
+            )
     return findings
 
 
@@ -198,19 +210,22 @@ def rule_outcome_has_process(ctx: GraphContext) -> list[Finding]:
 
     for oid in outcomes:
         if oid not in linked_outcome_ids:
-            findings.append(Finding(
-                rule_id="STRUCT-005",
-                category=RuleCategory.STRUCTURAL,
-                severity=Severity.INFO,
-                message=f"Outcome '{oid}' is not linked to any Process via PRODUCES.",
-                affected_entities=[oid],
-            ))
+            findings.append(
+                Finding(
+                    rule_id="STRUCT-005",
+                    category=RuleCategory.STRUCTURAL,
+                    severity=Severity.INFO,
+                    message=f"Outcome '{oid}' is not linked to any Process via PRODUCES.",
+                    affected_entities=[oid],
+                )
+            )
     return findings
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  CONFLICT RULES — Glasl level derivation
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 def rule_glasl_level_derivation(ctx: GraphContext) -> list[Finding]:
     """
@@ -231,13 +246,15 @@ def rule_glasl_level_derivation(ctx: GraphContext) -> list[Finding]:
         try:
             stage_int = int(stage)
         except (TypeError, ValueError):
-            findings.append(Finding(
-                rule_id="CONFLICT-001",
-                category=RuleCategory.CONFLICT,
-                severity=Severity.WARNING,
-                message=f"Conflict '{cid}' has non-integer glasl_stage: {stage!r}.",
-                affected_entities=[cid],
-            ))
+            findings.append(
+                Finding(
+                    rule_id="CONFLICT-001",
+                    category=RuleCategory.CONFLICT,
+                    severity=Severity.WARNING,
+                    message=f"Conflict '{cid}' has non-integer glasl_stage: {stage!r}.",
+                    affected_entities=[cid],
+                )
+            )
             continue
 
         if stage_int <= 3:
@@ -249,32 +266,39 @@ def rule_glasl_level_derivation(ctx: GraphContext) -> list[Finding]:
 
         stored_level = conflict.get("glasl_level")
         if stored_level and stored_level != derived_level:
-            findings.append(Finding(
-                rule_id="CONFLICT-002",
-                category=RuleCategory.CONFLICT,
-                severity=Severity.WARNING,
-                message=(
-                    f"Conflict '{conflict.get('name', cid)}': glasl_level is "
-                    f"'{stored_level}' but stage {stage_int} implies '{derived_level}'."
-                ),
-                affected_entities=[cid],
-                details={"glasl_stage": stage_int, "stored_level": stored_level,
-                         "derived_level": derived_level},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="CONFLICT-002",
+                    category=RuleCategory.CONFLICT,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Conflict '{conflict.get('name', cid)}': glasl_level is "
+                        f"'{stored_level}' but stage {stage_int} implies '{derived_level}'."
+                    ),
+                    affected_entities=[cid],
+                    details={
+                        "glasl_stage": stage_int,
+                        "stored_level": stored_level,
+                        "derived_level": derived_level,
+                    },
+                )
+            )
 
         # Also flag lose-lose as critical situation
         if derived_level == "lose_lose":
-            findings.append(Finding(
-                rule_id="CONFLICT-003",
-                category=RuleCategory.CONFLICT,
-                severity=Severity.CRITICAL,
-                message=(
-                    f"Conflict '{conflict.get('name', cid)}' is at Glasl stage "
-                    f"{stage_int} (lose-lose). Destructive dynamics likely."
-                ),
-                affected_entities=[cid],
-                details={"glasl_stage": stage_int, "glasl_level": derived_level},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="CONFLICT-003",
+                    category=RuleCategory.CONFLICT,
+                    severity=Severity.CRITICAL,
+                    message=(
+                        f"Conflict '{conflict.get('name', cid)}' is at Glasl stage "
+                        f"{stage_int} (lose-lose). Destructive dynamics likely."
+                    ),
+                    affected_entities=[cid],
+                    details={"glasl_stage": stage_int, "glasl_level": derived_level},
+                )
+            )
 
     return findings
 
@@ -282,6 +306,7 @@ def rule_glasl_level_derivation(ctx: GraphContext) -> list[Finding]:
 # ═══════════════════════════════════════════════════════════════════════════
 #  ESCALATION RULES — Glasl stage transition detection
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 def rule_rapid_escalation(ctx: GraphContext) -> list[Finding]:
     """
@@ -322,25 +347,27 @@ def rule_rapid_escalation(ctx: GraphContext) -> list[Finding]:
 
             if stage_jump >= 2 and elapsed <= timedelta(days=30):
                 conflict = _get_node(ctx, cid)
-                findings.append(Finding(
-                    rule_id="ESCAL-001",
-                    category=RuleCategory.ESCALATION,
-                    severity=Severity.ALERT,
-                    message=(
-                        f"RAPID ESCALATION: Conflict "
-                        f"'{conflict.get('name', cid) if conflict else cid}' "
-                        f"jumped from Glasl stage {prev_stage} to {curr_stage} "
-                        f"in {elapsed.days} days (threshold: 2+ stages in 30 days)."
-                    ),
-                    affected_entities=[cid],
-                    details={
-                        "previous_stage": prev_stage,
-                        "current_stage": curr_stage,
-                        "days_elapsed": elapsed.days,
-                        "previous_timestamp": prev["timestamp"],
-                        "current_timestamp": curr["timestamp"],
-                    },
-                ))
+                findings.append(
+                    Finding(
+                        rule_id="ESCAL-001",
+                        category=RuleCategory.ESCALATION,
+                        severity=Severity.ALERT,
+                        message=(
+                            f"RAPID ESCALATION: Conflict "
+                            f"'{conflict.get('name', cid) if conflict else cid}' "
+                            f"jumped from Glasl stage {prev_stage} to {curr_stage} "
+                            f"in {elapsed.days} days (threshold: 2+ stages in 30 days)."
+                        ),
+                        affected_entities=[cid],
+                        details={
+                            "previous_stage": prev_stage,
+                            "current_stage": curr_stage,
+                            "days_elapsed": elapsed.days,
+                            "previous_timestamp": prev["timestamp"],
+                            "current_timestamp": curr["timestamp"],
+                        },
+                    )
+                )
 
     return findings
 
@@ -375,20 +402,24 @@ def rule_escalation_trajectory(ctx: GraphContext) -> list[Finding]:
 
         if consecutive_increases >= 2:
             conflict = _get_node(ctx, cid)
-            findings.append(Finding(
-                rule_id="ESCAL-002",
-                category=RuleCategory.ESCALATION,
-                severity=Severity.WARNING,
-                message=(
-                    f"Escalation trajectory: Conflict "
-                    f"'{conflict.get('name', cid) if conflict else cid}' "
-                    f"has {consecutive_increases + 1} consecutive stage increases "
-                    f"({stages[-consecutive_increases - 1]} -> {stages[-1]})."
-                ),
-                affected_entities=[cid],
-                details={"stage_history": stages,
-                         "consecutive_increases": consecutive_increases},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="ESCAL-002",
+                    category=RuleCategory.ESCALATION,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Escalation trajectory: Conflict "
+                        f"'{conflict.get('name', cid) if conflict else cid}' "
+                        f"has {consecutive_increases + 1} consecutive stage increases "
+                        f"({stages[-consecutive_increases - 1]} -> {stages[-1]})."
+                    ),
+                    affected_entities=[cid],
+                    details={
+                        "stage_history": stages,
+                        "consecutive_increases": consecutive_increases,
+                    },
+                )
+            )
 
     return findings
 
@@ -415,18 +446,20 @@ def rule_stage_regression_alert(ctx: GraphContext) -> list[Finding]:
 
         if curr_stage < prev_stage:
             conflict = _get_node(ctx, cid)
-            findings.append(Finding(
-                rule_id="ESCAL-003",
-                category=RuleCategory.ESCALATION,
-                severity=Severity.INFO,
-                message=(
-                    f"De-escalation detected: Conflict "
-                    f"'{conflict.get('name', cid) if conflict else cid}' "
-                    f"moved from stage {prev_stage} to {curr_stage}."
-                ),
-                affected_entities=[cid],
-                details={"previous_stage": prev_stage, "current_stage": curr_stage},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="ESCAL-003",
+                    category=RuleCategory.ESCALATION,
+                    severity=Severity.INFO,
+                    message=(
+                        f"De-escalation detected: Conflict "
+                        f"'{conflict.get('name', cid) if conflict else cid}' "
+                        f"moved from stage {prev_stage} to {curr_stage}."
+                    ),
+                    affected_entities=[cid],
+                    details={"previous_stage": prev_stage, "current_stage": curr_stage},
+                )
+            )
 
     return findings
 
@@ -434,6 +467,7 @@ def rule_stage_regression_alert(ctx: GraphContext) -> list[Finding]:
 # ═══════════════════════════════════════════════════════════════════════════
 #  RIPENESS RULES — Zartman ripeness theory
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 def rule_mutually_hurting_stalemate(ctx: GraphContext) -> list[Finding]:
     """
@@ -458,8 +492,7 @@ def rule_mutually_hurting_stalemate(ctx: GraphContext) -> list[Finding]:
 
         # Check for active resolution processes
         active_processes = [
-            e for e in resolved_edges
-            if e.get("target_id") == cid or e.get("source_id") == cid
+            e for e in resolved_edges if e.get("target_id") == cid or e.get("source_id") == cid
         ]
         has_active_process = False
         for pe in active_processes:
@@ -477,9 +510,7 @@ def rule_mutually_hurting_stalemate(ctx: GraphContext) -> list[Finding]:
         negative_emotions = {"anger", "fear", "sadness", "disgust"}
         parties_hurting = 0
         for actor_id in parties:
-            actor_emotions = [
-                e for e in experience_edges if e.get("source_id") == actor_id
-            ]
+            actor_emotions = [e for e in experience_edges if e.get("source_id") == actor_id]
             for em_edge in actor_emotions:
                 em_node = _get_node(ctx, em_edge.get("target_id", ""))
                 if em_node and em_node.get("primary_emotion") in negative_emotions:
@@ -487,25 +518,27 @@ def rule_mutually_hurting_stalemate(ctx: GraphContext) -> list[Finding]:
                     break
 
         if parties_hurting >= 2 or (is_stalemate and len(parties) >= 2):
-            findings.append(Finding(
-                rule_id="RIPE-001",
-                category=RuleCategory.RIPENESS,
-                severity=Severity.ALERT,
-                message=(
-                    f"Mutually Hurting Stalemate detected for conflict "
-                    f"'{conflict.get('name', cid)}': "
-                    f"{'stalemate phase' if is_stalemate else 'high intensity'}, "
-                    f"{parties_hurting}/{len(parties)} parties in negative emotional state, "
-                    f"no active resolution process."
-                ),
-                affected_entities=[cid] + parties,
-                details={
-                    "kriesberg_phase": conflict.get("kriesberg_phase"),
-                    "intensity": conflict.get("intensity"),
-                    "parties_hurting": parties_hurting,
-                    "total_parties": len(parties),
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="RIPE-001",
+                    category=RuleCategory.RIPENESS,
+                    severity=Severity.ALERT,
+                    message=(
+                        f"Mutually Hurting Stalemate detected for conflict "
+                        f"'{conflict.get('name', cid)}': "
+                        f"{'stalemate phase' if is_stalemate else 'high intensity'}, "
+                        f"{parties_hurting}/{len(parties)} parties in negative emotional state, "
+                        f"no active resolution process."
+                    ),
+                    affected_entities=[cid] + parties,
+                    details={
+                        "kriesberg_phase": conflict.get("kriesberg_phase"),
+                        "intensity": conflict.get("intensity"),
+                        "parties_hurting": parties_hurting,
+                        "total_parties": len(parties),
+                    },
+                )
+            )
 
     return findings
 
@@ -547,33 +580,33 @@ def rule_mutually_enticing_opportunity(ctx: GraphContext) -> list[Finding]:
         shared = set.intersection(*all_interests) if len(all_interests) >= 2 else set()
 
         # Check for recent cooperative events in this conflict
-        conflict_event_ids = {
-            e.get("source_id") for e in event_edges if e.get("target_id") == cid
-        }
+        conflict_event_ids = {e.get("source_id") for e in event_edges if e.get("target_id") == cid}
         cooperative_events = [
-            eid for eid, ev in events.items()
-            if eid in conflict_event_ids
-            and ev.get("event_type") in cooperative_event_types
+            eid
+            for eid, ev in events.items()
+            if eid in conflict_event_ids and ev.get("event_type") in cooperative_event_types
         ]
 
         if shared or cooperative_events:
-            findings.append(Finding(
-                rule_id="RIPE-002",
-                category=RuleCategory.RIPENESS,
-                severity=Severity.INFO,
-                message=(
-                    f"Mutually Enticing Opportunity detected for conflict "
-                    f"'{conflict.get('name', cid)}': "
-                    f"{len(shared)} shared interest(s), "
-                    f"{len(cooperative_events)} cooperative event(s). "
-                    f"Window for resolution may exist."
-                ),
-                affected_entities=[cid] + parties,
-                details={
-                    "shared_interest_ids": list(shared),
-                    "cooperative_event_ids": cooperative_events,
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="RIPE-002",
+                    category=RuleCategory.RIPENESS,
+                    severity=Severity.INFO,
+                    message=(
+                        f"Mutually Enticing Opportunity detected for conflict "
+                        f"'{conflict.get('name', cid)}': "
+                        f"{len(shared)} shared interest(s), "
+                        f"{len(cooperative_events)} cooperative event(s). "
+                        f"Window for resolution may exist."
+                    ),
+                    affected_entities=[cid] + parties,
+                    details={
+                        "shared_interest_ids": list(shared),
+                        "cooperative_event_ids": cooperative_events,
+                    },
+                )
+            )
 
     return findings
 
@@ -586,29 +619,27 @@ def rule_ripeness_window(ctx: GraphContext) -> list[Finding]:
     mhs_findings = rule_mutually_hurting_stalemate(ctx)
     meo_findings = rule_mutually_enticing_opportunity(ctx)
 
-    mhs_conflicts = {
-        f.affected_entities[0] for f in mhs_findings if f.affected_entities
-    }
-    meo_conflicts = {
-        f.affected_entities[0] for f in meo_findings if f.affected_entities
-    }
+    mhs_conflicts = {f.affected_entities[0] for f in mhs_findings if f.affected_entities}
+    meo_conflicts = {f.affected_entities[0] for f in meo_findings if f.affected_entities}
 
     ripe = mhs_conflicts & meo_conflicts
     findings: list[Finding] = []
     for cid in ripe:
         conflict = _get_node(ctx, cid) if ctx.get("nodes") else None  # type: ignore[redundant-expr]
-        findings.append(Finding(
-            rule_id="RIPE-003",
-            category=RuleCategory.RIPENESS,
-            severity=Severity.CRITICAL,
-            message=(
-                f"RIPE FOR INTERVENTION: Conflict "
-                f"'{conflict.get('name', cid) if conflict else cid}' shows both "
-                f"Mutually Hurting Stalemate AND Mutually Enticing Opportunity. "
-                f"Zartman ripeness conditions met."
-            ),
-            affected_entities=[cid],
-        ))
+        findings.append(
+            Finding(
+                rule_id="RIPE-003",
+                category=RuleCategory.RIPENESS,
+                severity=Severity.CRITICAL,
+                message=(
+                    f"RIPE FOR INTERVENTION: Conflict "
+                    f"'{conflict.get('name', cid) if conflict else cid}' shows both "
+                    f"Mutually Hurting Stalemate AND Mutually Enticing Opportunity. "
+                    f"Zartman ripeness conditions met."
+                ),
+                affected_entities=[cid],
+            )
+        )
 
     return findings
 
@@ -666,29 +697,33 @@ def rule_trust_deficit(ctx: GraphContext) -> list[Finding]:
             for edge in trusts_edges:
                 edge_trust_id = edge.get("properties", {}).get("trust_state_id")
                 if edge_trust_id == tsid:
-                    involved_actors.extend([
-                        edge.get("source_id", ""),
-                        edge.get("target_id", ""),
-                    ])
+                    involved_actors.extend(
+                        [
+                            edge.get("source_id", ""),
+                            edge.get("target_id", ""),
+                        ]
+                    )
 
-            findings.append(Finding(
-                rule_id="TRUST-001",
-                category=RuleCategory.TRUST,
-                severity=Severity.ALERT,
-                message=(
-                    f"TRUST DEFICIT: TrustState '{tsid}' has overall_trust = "
-                    f"{trust_val:.2f} (below threshold {_TRUST_DEFICIT_THRESHOLD}). "
-                    f"Meaningful cooperation unlikely without trust-building."
-                ),
-                affected_entities=[tsid] + involved_actors,
-                details={
-                    "overall_trust": trust_val,
-                    "threshold": _TRUST_DEFICIT_THRESHOLD,
-                    "ability": ts.get("perceived_ability"),
-                    "benevolence": ts.get("perceived_benevolence"),
-                    "integrity": ts.get("perceived_integrity"),
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="TRUST-001",
+                    category=RuleCategory.TRUST,
+                    severity=Severity.ALERT,
+                    message=(
+                        f"TRUST DEFICIT: TrustState '{tsid}' has overall_trust = "
+                        f"{trust_val:.2f} (below threshold {_TRUST_DEFICIT_THRESHOLD}). "
+                        f"Meaningful cooperation unlikely without trust-building."
+                    ),
+                    affected_entities=[tsid] + involved_actors,
+                    details={
+                        "overall_trust": trust_val,
+                        "threshold": _TRUST_DEFICIT_THRESHOLD,
+                        "ability": ts.get("perceived_ability"),
+                        "benevolence": ts.get("perceived_benevolence"),
+                        "integrity": ts.get("perceived_integrity"),
+                    },
+                )
+            )
 
     return findings
 
@@ -727,26 +762,28 @@ def rule_trust_breach_event(ctx: GraphContext) -> list[Finding]:
             drop = prev_integrity - curr_integrity
 
             if drop > _TRUST_BREACH_INTEGRITY_DROP:
-                findings.append(Finding(
-                    rule_id="TRUST-002",
-                    category=RuleCategory.TRUST,
-                    severity=Severity.CRITICAL,
-                    message=(
-                        f"TRUST BREACH EVENT: TrustState '{tsid}' — perceived_integrity "
-                        f"dropped from {prev_integrity:.2f} to {curr_integrity:.2f} "
-                        f"(delta: {drop:.2f}, threshold: {_TRUST_BREACH_INTEGRITY_DROP}). "
-                        f"Likely breach of trust event."
-                    ),
-                    affected_entities=[tsid],
-                    details={
-                        "previous_integrity": prev_integrity,
-                        "current_integrity": curr_integrity,
-                        "integrity_drop": drop,
-                        "threshold": _TRUST_BREACH_INTEGRITY_DROP,
-                        "previous_timestamp": prev.get("timestamp"),
-                        "current_timestamp": curr.get("timestamp"),
-                    },
-                ))
+                findings.append(
+                    Finding(
+                        rule_id="TRUST-002",
+                        category=RuleCategory.TRUST,
+                        severity=Severity.CRITICAL,
+                        message=(
+                            f"TRUST BREACH EVENT: TrustState '{tsid}' — perceived_integrity "
+                            f"dropped from {prev_integrity:.2f} to {curr_integrity:.2f} "
+                            f"(delta: {drop:.2f}, threshold: {_TRUST_BREACH_INTEGRITY_DROP}). "
+                            f"Likely breach of trust event."
+                        ),
+                        affected_entities=[tsid],
+                        details={
+                            "previous_integrity": prev_integrity,
+                            "current_integrity": curr_integrity,
+                            "integrity_drop": drop,
+                            "threshold": _TRUST_BREACH_INTEGRITY_DROP,
+                            "previous_timestamp": prev.get("timestamp"),
+                            "current_timestamp": curr.get("timestamp"),
+                        },
+                    )
+                )
 
     return findings
 
@@ -773,33 +810,37 @@ def rule_trust_formula_validation(ctx: GraphContext) -> list[Finding]:
 
         try:
             computed = compute_overall_trust(
-                float(propensity), float(ability),
-                float(benevolence), float(integrity),
+                float(propensity),
+                float(ability),
+                float(benevolence),
+                float(integrity),
             )
             stored = float(stored_overall)
         except (TypeError, ValueError):
             continue
 
         if abs(computed - stored) > 0.1:
-            findings.append(Finding(
-                rule_id="TRUST-003",
-                category=RuleCategory.TRUST,
-                severity=Severity.WARNING,
-                message=(
-                    f"TrustState '{tsid}': stored overall_trust ({stored:.2f}) differs "
-                    f"from Mayer formula result ({computed:.2f}) by "
-                    f"{abs(computed - stored):.2f}."
-                ),
-                affected_entities=[tsid],
-                details={
-                    "stored_overall_trust": stored,
-                    "computed_overall_trust": computed,
-                    "propensity_to_trust": float(propensity),
-                    "ability": float(ability),
-                    "benevolence": float(benevolence),
-                    "integrity": float(integrity),
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="TRUST-003",
+                    category=RuleCategory.TRUST,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"TrustState '{tsid}': stored overall_trust ({stored:.2f}) differs "
+                        f"from Mayer formula result ({computed:.2f}) by "
+                        f"{abs(computed - stored):.2f}."
+                    ),
+                    affected_entities=[tsid],
+                    details={
+                        "stored_overall_trust": stored,
+                        "computed_overall_trust": computed,
+                        "propensity_to_trust": float(propensity),
+                        "ability": float(ability),
+                        "benevolence": float(benevolence),
+                        "integrity": float(integrity),
+                    },
+                )
+            )
 
     return findings
 
@@ -862,43 +903,47 @@ def rule_power_asymmetry(ctx: GraphContext) -> list[Finding]:
         for shared_cid in shared_conflicts:
             src_node = _get_node(ctx, src)
             tgt_node = _get_node(ctx, tgt)
-            findings.append(Finding(
-                rule_id="POWER-001",
-                category=RuleCategory.POWER,
-                severity=Severity.WARNING,
-                message=(
-                    f"Power asymmetry in conflict "
-                    f"'{conflicts.get(shared_cid, {}).get('name', shared_cid)}': "
-                    f"'{src_node.get('name', src) if src_node else src}' has "
-                    f"{domain} power over "
-                    f"'{tgt_node.get('name', tgt) if tgt_node else tgt}' "
-                    f"(magnitude: {mag_val:.2f}). "
-                    f"Power-based dynamics may impede interest-based resolution."
-                ),
-                affected_entities=[shared_cid, src, tgt],
-                details={
-                    "domain": domain,
-                    "magnitude": mag_val,
-                    "source_actor": src,
-                    "target_actor": tgt,
-                    "threshold": _POWER_ASYMMETRY_THRESHOLD,
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="POWER-001",
+                    category=RuleCategory.POWER,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Power asymmetry in conflict "
+                        f"'{conflicts.get(shared_cid, {}).get('name', shared_cid)}': "
+                        f"'{src_node.get('name', src) if src_node else src}' has "
+                        f"{domain} power over "
+                        f"'{tgt_node.get('name', tgt) if tgt_node else tgt}' "
+                        f"(magnitude: {mag_val:.2f}). "
+                        f"Power-based dynamics may impede interest-based resolution."
+                    ),
+                    affected_entities=[shared_cid, src, tgt],
+                    details={
+                        "domain": domain,
+                        "magnitude": mag_val,
+                        "source_actor": src,
+                        "target_actor": tgt,
+                        "threshold": _POWER_ASYMMETRY_THRESHOLD,
+                    },
+                )
+            )
 
         # Also flag even without shared conflict context
         if not shared_conflicts:
-            findings.append(Finding(
-                rule_id="POWER-002",
-                category=RuleCategory.POWER,
-                severity=Severity.INFO,
-                message=(
-                    f"Significant power relationship detected: "
-                    f"'{src}' has {domain} power over '{tgt}' "
-                    f"(magnitude: {mag_val:.2f})."
-                ),
-                affected_entities=[src, tgt],
-                details={"domain": domain, "magnitude": mag_val},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="POWER-002",
+                    category=RuleCategory.POWER,
+                    severity=Severity.INFO,
+                    message=(
+                        f"Significant power relationship detected: "
+                        f"'{src}' has {domain} power over '{tgt}' "
+                        f"(magnitude: {mag_val:.2f})."
+                    ),
+                    affected_entities=[src, tgt],
+                    details={"domain": domain, "magnitude": mag_val},
+                )
+            )
 
     return findings
 
@@ -923,19 +968,21 @@ def rule_multi_domain_power_concentration(ctx: GraphContext) -> list[Finding]:
         if len(domains) >= 2:
             src_node = _get_node(ctx, src)
             tgt_node = _get_node(ctx, tgt)
-            findings.append(Finding(
-                rule_id="POWER-003",
-                category=RuleCategory.POWER,
-                severity=Severity.WARNING,
-                message=(
-                    f"Multi-domain power concentration: "
-                    f"'{src_node.get('name', src) if src_node else src}' holds "
-                    f"power over '{tgt_node.get('name', tgt) if tgt_node else tgt}' "
-                    f"across {len(domains)} domains: {', '.join(domains)}."
-                ),
-                affected_entities=[src, tgt],
-                details={"domains": domains, "domain_count": len(domains)},
-            ))
+            findings.append(
+                Finding(
+                    rule_id="POWER-003",
+                    category=RuleCategory.POWER,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Multi-domain power concentration: "
+                        f"'{src_node.get('name', src) if src_node else src}' holds "
+                        f"power over '{tgt_node.get('name', tgt) if tgt_node else tgt}' "
+                        f"across {len(domains)} domains: {', '.join(domains)}."
+                    ),
+                    affected_entities=[src, tgt],
+                    details={"domains": domains, "domain_count": len(domains)},
+                )
+            )
 
     return findings
 
@@ -943,6 +990,7 @@ def rule_multi_domain_power_concentration(ctx: GraphContext) -> list[Finding]:
 # ═══════════════════════════════════════════════════════════════════════════
 #  CAUSAL RULES — Causal chain analysis
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 def rule_causal_chain_length(ctx: GraphContext) -> list[Finding]:
     """
@@ -992,18 +1040,20 @@ def rule_causal_chain_length(ctx: GraphContext) -> list[Finding]:
         chains = _find_chains(root)
         for chain in chains:
             if len(chain) >= 3:
-                findings.append(Finding(
-                    rule_id="CAUSAL-001",
-                    category=RuleCategory.CAUSAL,
-                    severity=Severity.WARNING if len(chain) < 5 else Severity.ALERT,
-                    message=(
-                        f"Causal chain of length {len(chain)} detected: "
-                        f"{' -> '.join(chain)}. "
-                        f"May indicate escalation spiral or systemic pattern."
-                    ),
-                    affected_entities=chain,
-                    details={"chain_length": len(chain), "chain": chain},
-                ))
+                findings.append(
+                    Finding(
+                        rule_id="CAUSAL-001",
+                        category=RuleCategory.CAUSAL,
+                        severity=Severity.WARNING if len(chain) < 5 else Severity.ALERT,
+                        message=(
+                            f"Causal chain of length {len(chain)} detected: "
+                            f"{' -> '.join(chain)}. "
+                            f"May indicate escalation spiral or systemic pattern."
+                        ),
+                        affected_entities=chain,
+                        details={"chain_length": len(chain), "chain": chain},
+                    )
+                )
 
     return findings
 
@@ -1023,43 +1073,45 @@ def rule_causal_cycles(ctx: GraphContext) -> list[Finding]:
         adj.setdefault(src, []).append(tgt)
 
     # Standard DFS cycle detection
-    WHITE, GRAY, BLACK = 0, 1, 2
+    white, gray, black = 0, 1, 2
     all_nodes = set(adj.keys())
     for edges in adj.values():
         all_nodes.update(edges)
 
-    color: dict[str, int] = {n: WHITE for n in all_nodes}
-    parent: dict[str, str | None] = {n: None for n in all_nodes}
+    color: dict[str, int] = dict.fromkeys(all_nodes, white)
+    parent: dict[str, str | None] = dict.fromkeys(all_nodes)
     cycles_found: list[list[str]] = []
 
     def _dfs(node: str, path: list[str]) -> None:
-        color[node] = GRAY
+        color[node] = gray
         for neighbor in adj.get(node, []):
-            if color[neighbor] == GRAY and neighbor in path:
+            if color[neighbor] == gray and neighbor in path:
                 cycle_start = path.index(neighbor)
                 cycle = path[cycle_start:] + [neighbor]
                 cycles_found.append(cycle)
-            elif color[neighbor] == WHITE:
+            elif color[neighbor] == white:
                 parent[neighbor] = node
                 _dfs(neighbor, path + [neighbor])
-        color[node] = BLACK
+        color[node] = black
 
     for node in all_nodes:
-        if color[node] == WHITE:
+        if color[node] == white:
             _dfs(node, [node])
 
     for cycle in cycles_found:
-        findings.append(Finding(
-            rule_id="CAUSAL-002",
-            category=RuleCategory.CAUSAL,
-            severity=Severity.ALERT,
-            message=(
-                f"Causal feedback loop detected: {' -> '.join(cycle)}. "
-                f"Self-reinforcing conflict dynamics may be present."
-            ),
-            affected_entities=cycle,
-            details={"cycle": cycle, "cycle_length": len(cycle) - 1},
-        ))
+        findings.append(
+            Finding(
+                rule_id="CAUSAL-002",
+                category=RuleCategory.CAUSAL,
+                severity=Severity.ALERT,
+                message=(
+                    f"Causal feedback loop detected: {' -> '.join(cycle)}. "
+                    f"Self-reinforcing conflict dynamics may be present."
+                ),
+                affected_entities=cycle,
+                details={"cycle": cycle, "cycle_length": len(cycle) - 1},
+            )
+        )
 
     return findings
 
@@ -1086,27 +1138,29 @@ def rule_escalation_retaliation_pattern(ctx: GraphContext) -> list[Finding]:
             affected.add(e.get("source_id", ""))
             affected.add(e.get("target_id", ""))
 
-        findings.append(Finding(
-            rule_id="CAUSAL-003",
-            category=RuleCategory.CAUSAL,
-            severity=Severity.ALERT,
-            message=(
-                f"Escalation/retaliation pattern: {len(escalation_chains)} causal "
-                f"links with escalation or retaliation mechanism detected. "
-                f"Tit-for-tat dynamics likely."
-            ),
-            affected_entities=list(affected),
-            details={
-                "mechanism_edges": [
-                    {
-                        "source": e.get("source_id"),
-                        "target": e.get("target_id"),
-                        "mechanism": e.get("properties", {}).get("mechanism"),
-                    }
-                    for e in escalation_chains
-                ]
-            },
-        ))
+        findings.append(
+            Finding(
+                rule_id="CAUSAL-003",
+                category=RuleCategory.CAUSAL,
+                severity=Severity.ALERT,
+                message=(
+                    f"Escalation/retaliation pattern: {len(escalation_chains)} causal "
+                    f"links with escalation or retaliation mechanism detected. "
+                    f"Tit-for-tat dynamics likely."
+                ),
+                affected_entities=list(affected),
+                details={
+                    "mechanism_edges": [
+                        {
+                            "source": e.get("source_id"),
+                            "target": e.get("target_id"),
+                            "mechanism": e.get("properties", {}).get("mechanism"),
+                        }
+                        for e in escalation_chains
+                    ]
+                },
+            )
+        )
 
     return findings
 
@@ -1134,8 +1188,10 @@ INTERVENTION_PROCESS_MAP: dict[str, list[str]] = {
     "facilitation": ["mediation_facilitative", "conciliation"],
     "process_consultation": ["mediation_facilitative", "mediation_transformative", "ombuds"],
     "mediation": [
-        "mediation_facilitative", "mediation_evaluative",
-        "mediation_transformative", "mediation_narrative",
+        "mediation_facilitative",
+        "mediation_evaluative",
+        "mediation_transformative",
+        "mediation_narrative",
     ],
     "arbitration": ["arbitration", "adjudication", "early_neutral_evaluation"],
     "power_intervention": ["arbitration", "adjudication"],
@@ -1157,33 +1213,33 @@ def rule_power_based_no_resolution(ctx: GraphContext) -> list[Finding]:
             continue
 
         # Find outcomes produced by this process
-        process_outcomes = [
-            e.get("target_id") for e in produces_edges
-            if e.get("source_id") == pid
-        ]
+        process_outcomes = [e.get("target_id") for e in produces_edges if e.get("source_id") == pid]
 
         for oid in process_outcomes:
             outcome = outcomes.get(oid) if oid else None
             if outcome and outcome.get("outcome_type") == "no_resolution":
-                findings.append(Finding(
-                    rule_id="PROC-001",
-                    category=RuleCategory.PROCESS,
-                    severity=Severity.ALERT,
-                    message=(
-                        f"Power-based process '{pid}' produced 'no_resolution' "
-                        f"outcome. Recommend switching to interest-based approach "
-                        f"(e.g., facilitative mediation, negotiation)."
-                    ),
-                    affected_entities=[pid, oid],
-                    details={
-                        "current_approach": "power_based",
-                        "recommended_approach": "interest_based",
-                        "recommended_process_types": [
-                            "negotiation", "mediation_facilitative",
-                            "mediation_transformative",
-                        ],
-                    },
-                ))
+                findings.append(
+                    Finding(
+                        rule_id="PROC-001",
+                        category=RuleCategory.PROCESS,
+                        severity=Severity.ALERT,
+                        message=(
+                            f"Power-based process '{pid}' produced 'no_resolution' "
+                            f"outcome. Recommend switching to interest-based approach "
+                            f"(e.g., facilitative mediation, negotiation)."
+                        ),
+                        affected_entities=[pid, oid],
+                        details={
+                            "current_approach": "power_based",
+                            "recommended_approach": "interest_based",
+                            "recommended_process_types": [
+                                "negotiation",
+                                "mediation_facilitative",
+                                "mediation_transformative",
+                            ],
+                        },
+                    )
+                )
 
     return findings
 
@@ -1217,8 +1273,7 @@ def rule_glasl_process_recommendation(ctx: GraphContext) -> list[Finding]:
 
         # Check current active processes for this conflict
         linked_process_ids = [
-            e.get("target_id") for e in resolved_edges
-            if e.get("source_id") == cid
+            e.get("target_id") for e in resolved_edges if e.get("source_id") == cid
         ]
 
         active_types: list[str] = []
@@ -1231,42 +1286,46 @@ def rule_glasl_process_recommendation(ctx: GraphContext) -> list[Finding]:
         type_match = any(at in recommended_types for at in active_types)
 
         if active_types and not type_match:
-            findings.append(Finding(
-                rule_id="PROC-002",
-                category=RuleCategory.PROCESS,
-                severity=Severity.WARNING,
-                message=(
-                    f"Conflict '{conflict.get('name', cid)}' is at Glasl stage "
-                    f"{stage_int} (recommended intervention: {intervention}). "
-                    f"Active process type(s) {active_types} may not be appropriate. "
-                    f"Consider: {recommended_types}."
-                ),
-                affected_entities=[cid] + linked_process_ids,
-                details={
-                    "glasl_stage": stage_int,
-                    "intervention_type": intervention,
-                    "recommended_process_types": recommended_types,
-                    "active_process_types": active_types,
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="PROC-002",
+                    category=RuleCategory.PROCESS,
+                    severity=Severity.WARNING,
+                    message=(
+                        f"Conflict '{conflict.get('name', cid)}' is at Glasl stage "
+                        f"{stage_int} (recommended intervention: {intervention}). "
+                        f"Active process type(s) {active_types} may not be appropriate. "
+                        f"Consider: {recommended_types}."
+                    ),
+                    affected_entities=[cid] + linked_process_ids,
+                    details={
+                        "glasl_stage": stage_int,
+                        "intervention_type": intervention,
+                        "recommended_process_types": recommended_types,
+                        "active_process_types": active_types,
+                    },
+                )
+            )
         elif not active_types:
-            findings.append(Finding(
-                rule_id="PROC-003",
-                category=RuleCategory.PROCESS,
-                severity=Severity.INFO,
-                message=(
-                    f"Conflict '{conflict.get('name', cid)}' at Glasl stage "
-                    f"{stage_int} has no active resolution process. "
-                    f"Recommended intervention: {intervention}. "
-                    f"Suggested process types: {recommended_types}."
-                ),
-                affected_entities=[cid],
-                details={
-                    "glasl_stage": stage_int,
-                    "intervention_type": intervention,
-                    "recommended_process_types": recommended_types,
-                },
-            ))
+            findings.append(
+                Finding(
+                    rule_id="PROC-003",
+                    category=RuleCategory.PROCESS,
+                    severity=Severity.INFO,
+                    message=(
+                        f"Conflict '{conflict.get('name', cid)}' at Glasl stage "
+                        f"{stage_int} has no active resolution process. "
+                        f"Recommended intervention: {intervention}. "
+                        f"Suggested process types: {recommended_types}."
+                    ),
+                    affected_entities=[cid],
+                    details={
+                        "glasl_stage": stage_int,
+                        "intervention_type": intervention,
+                        "recommended_process_types": recommended_types,
+                    },
+                )
+            )
 
     return findings
 
@@ -1296,30 +1355,31 @@ def rule_rights_based_escalation_warning(ctx: GraphContext) -> list[Finding]:
             continue
 
         linked_process_ids = [
-            e.get("target_id") for e in resolved_edges
-            if e.get("source_id") == cid
+            e.get("target_id") for e in resolved_edges if e.get("source_id") == cid
         ]
 
         for lpid in linked_process_ids:
             proc = processes.get(lpid) if lpid else None
             if proc and proc.get("resolution_approach") == "rights_based":
-                findings.append(Finding(
-                    rule_id="PROC-004",
-                    category=RuleCategory.PROCESS,
-                    severity=Severity.INFO,
-                    message=(
-                        f"Conflict '{conflict.get('name', cid)}' at Glasl stage "
-                        f"{stage_int} is using a rights-based process. "
-                        f"Interest-based approaches are typically more efficient "
-                        f"at lower escalation stages (Ury/Brett/Goldberg)."
-                    ),
-                    affected_entities=[cid, lpid],
-                    details={
-                        "glasl_stage": stage_int,
-                        "current_approach": "rights_based",
-                        "recommended_approach": "interest_based",
-                    },
-                ))
+                findings.append(
+                    Finding(
+                        rule_id="PROC-004",
+                        category=RuleCategory.PROCESS,
+                        severity=Severity.INFO,
+                        message=(
+                            f"Conflict '{conflict.get('name', cid)}' at Glasl stage "
+                            f"{stage_int} is using a rights-based process. "
+                            f"Interest-based approaches are typically more efficient "
+                            f"at lower escalation stages (Ury/Brett/Goldberg)."
+                        ),
+                        affected_entities=[cid, lpid],
+                        details={
+                            "glasl_stage": stage_int,
+                            "current_approach": "rights_based",
+                            "recommended_approach": "interest_based",
+                        },
+                    )
+                )
 
     return findings
 
@@ -1467,24 +1527,24 @@ class RuleEngine:
                     results = rule_fn(ctx)
                     all_findings.extend(results)
                 except Exception as exc:
-                    all_findings.append(Finding(
-                        rule_id="ENGINE-ERR",
-                        category=cat,
-                        severity=Severity.WARNING,
-                        message=(
-                            f"Rule '{rule_fn.__name__}' raised {type(exc).__name__}: "
-                            f"{exc}"
-                        ),
-                        affected_entities=[],
-                        details={"exception": str(exc), "rule": rule_fn.__name__},
-                    ))
+                    all_findings.append(
+                        Finding(
+                            rule_id="ENGINE-ERR",
+                            category=cat,
+                            severity=Severity.WARNING,
+                            message=(
+                                f"Rule '{rule_fn.__name__}' raised {type(exc).__name__}: {exc}"
+                            ),
+                            affected_entities=[],
+                            details={"exception": str(exc), "rule": rule_fn.__name__},
+                        )
+                    )
 
         # Apply severity filter
         if severity_filter:
             min_level = severity_order.get(severity_filter, 0)
             all_findings = [
-                f for f in all_findings
-                if severity_order.get(f.severity, 0) >= min_level
+                f for f in all_findings if severity_order.get(f.severity, 0) >= min_level
             ]
 
         # Sort by severity descending (critical first)

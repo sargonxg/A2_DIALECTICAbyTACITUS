@@ -3,6 +3,7 @@ Power Analysis — French/Raven 6-base power model.
 
 Computes power maps, detects asymmetries, and identifies leverage points.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -102,17 +103,19 @@ class PowerMapper:
             total = round(mean([reward, coercive, legitimate, referent, expert, informational]), 3)
             actor_power[e.source_id] = actor_power.get(e.source_id, 0.0) + total
 
-            dyads.append(PowerDyad(
-                actor_id=e.source_id,
-                target_id=e.target_id,
-                reward=round(reward, 3),
-                coercive=round(coercive, 3),
-                legitimate=round(legitimate, 3),
-                referent=round(referent, 3),
-                expert=round(expert, 3),
-                informational=round(informational, 3),
-                total_power=total,
-            ))
+            dyads.append(
+                PowerDyad(
+                    actor_id=e.source_id,
+                    target_id=e.target_id,
+                    reward=round(reward, 3),
+                    coercive=round(coercive, 3),
+                    legitimate=round(legitimate, 3),
+                    referent=round(referent, 3),
+                    expert=round(expert, 3),
+                    informational=round(informational, 3),
+                    total_power=total,
+                )
+            )
 
         # Compute asymmetry for each dyad
         power_by_pair: dict[tuple[str, str], float] = {
@@ -152,18 +155,20 @@ class PowerMapper:
                 bases.append("expert")
             if d.reward > 0.4:
                 bases.append("reward")
-            asymmetries.append(PowerAsymmetry(
-                actor_a=d.actor_id,
-                actor_b=d.target_id,
-                advantage_holder=advantage_holder,
-                asymmetry_score=round(abs(d.asymmetry), 3),
-                dominant_bases=bases,
-                recommendation=(
-                    "Consider power-balancing through coalition formation or third-party involvement."
-                    if abs(d.asymmetry) > 0.5 else
-                    "Monitor for escalating power differential."
-                ),
-            ))
+            asymmetries.append(
+                PowerAsymmetry(
+                    actor_a=d.actor_id,
+                    actor_b=d.target_id,
+                    advantage_holder=advantage_holder,
+                    asymmetry_score=round(abs(d.asymmetry), 3),
+                    dominant_bases=bases,
+                    recommendation=(
+                        "Consider power-balancing through coalition formation or third-party involvement."  # noqa: E501
+                        if abs(d.asymmetry) > 0.5
+                        else "Monitor for escalating power differential."
+                    ),
+                )
+            )
         return sorted(asymmetries, key=lambda a: a.asymmetry_score, reverse=True)
 
     async def identify_leverage_points(self, workspace_id: str) -> list[LeveragePoint]:
@@ -177,13 +182,15 @@ class PowerMapper:
             expert_actors[d.actor_id] = expert_actors.get(d.actor_id, 0) + d.expert
         for actor_id, exp_score in expert_actors.items():
             if exp_score > 0.6:
-                leverage.append(LeveragePoint(
-                    actor_id=actor_id,
-                    leverage_type="expert_knowledge",
-                    description="High expert power — potential information broker or technical authority.",
-                    target_actors=[d.target_id for d in pm.dyads if d.actor_id == actor_id],
-                    intervention_potential=round(min(1.0, exp_score), 3),
-                ))
+                leverage.append(
+                    LeveragePoint(
+                        actor_id=actor_id,
+                        leverage_type="expert_knowledge",
+                        description="High expert power — potential information broker or technical authority.",  # noqa: E501
+                        target_actors=[d.target_id for d in pm.dyads if d.actor_id == actor_id],
+                        intervention_potential=round(min(1.0, exp_score), 3),
+                    )
+                )
 
         # Actors with high legitimate power can convene
         legitimate_actors: dict[str, float] = {}
@@ -191,12 +198,14 @@ class PowerMapper:
             legitimate_actors[d.actor_id] = legitimate_actors.get(d.actor_id, 0) + d.legitimate
         for actor_id, leg_score in legitimate_actors.items():
             if leg_score > 0.5:
-                leverage.append(LeveragePoint(
-                    actor_id=actor_id,
-                    leverage_type="legitimate_authority",
-                    description="High legitimate power — can convene parties or impose framework.",
-                    target_actors=[d.target_id for d in pm.dyads if d.actor_id == actor_id],
-                    intervention_potential=round(min(1.0, leg_score), 3),
-                ))
+                leverage.append(
+                    LeveragePoint(
+                        actor_id=actor_id,
+                        leverage_type="legitimate_authority",
+                        description="High legitimate power — can convene parties or impose framework.",  # noqa: E501
+                        target_actors=[d.target_id for d in pm.dyads if d.actor_id == actor_id],
+                        intervention_potential=round(min(1.0, leg_score), 3),
+                    )
+                )
 
         return leverage

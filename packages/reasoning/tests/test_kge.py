@@ -1,8 +1,9 @@
 """Tests for KGE training pipeline."""
+
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 import pytest
 
@@ -78,8 +79,9 @@ class TestKGETrainer:
 class TestLinkPredictor:
     def test_predictor_construction(self):
         """LinkPredictor can be constructed with a mock result."""
-        from dialectica_reasoning.kge.predictor import LinkPredictor, PredictionResult
         from unittest.mock import MagicMock
+
+        from dialectica_reasoning.kge.predictor import LinkPredictor
 
         mock_result = MagicMock()
         predictor = LinkPredictor(mock_result)
@@ -87,5 +89,6 @@ class TestLinkPredictor:
 
     def test_prediction_result_dataclass(self):
         from dialectica_reasoning.kge.predictor import PredictionResult
+
         pr = PredictionResult(target_id="x", target_label="X", relation="R", score=0.95)
         assert pr.score == 0.95

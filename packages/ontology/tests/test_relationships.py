@@ -1,9 +1,9 @@
 """Tests for dialectica_ontology.relationships — All 20 edge type models."""
 
 from dialectica_ontology.relationships import (
+    EDGE_SCHEMA,
     ConflictRelationship,
     EdgeType,
-    EDGE_SCHEMA,
     validate_relationship,
 )
 
@@ -14,10 +14,26 @@ def test_edge_type_count():
 
 def test_edge_type_values():
     expected = {
-        "PARTY_TO", "PARTICIPATES_IN", "HAS_INTEREST", "PART_OF", "CAUSED",
-        "AT_LOCATION", "WITHIN", "ALLIED_WITH", "OPPOSED_TO", "HAS_POWER_OVER",
-        "MEMBER_OF", "GOVERNED_BY", "VIOLATES", "RESOLVED_THROUGH", "PRODUCES",
-        "EXPERIENCES", "TRUSTS", "PROMOTES", "ABOUT", "EVIDENCED_BY",
+        "PARTY_TO",
+        "PARTICIPATES_IN",
+        "HAS_INTEREST",
+        "PART_OF",
+        "CAUSED",
+        "AT_LOCATION",
+        "WITHIN",
+        "ALLIED_WITH",
+        "OPPOSED_TO",
+        "HAS_POWER_OVER",
+        "MEMBER_OF",
+        "GOVERNED_BY",
+        "VIOLATES",
+        "RESOLVED_THROUGH",
+        "PRODUCES",
+        "EXPERIENCES",
+        "TRUSTS",
+        "PROMOTES",
+        "ABOUT",
+        "EVIDENCED_BY",
     }
     assert {e.value for e in EdgeType} == expected
 

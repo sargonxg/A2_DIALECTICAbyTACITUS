@@ -1,11 +1,11 @@
 """
 Entity Enrichment — Add aliases, link to existing entities, enhance metadata.
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 from dialectica_ontology.primitives import ConflictNode
 

@@ -4,13 +4,13 @@ Rate Limit Middleware — Sliding window per API key.
 Default: 100 req/min. Backends: in-memory (dev) or Redis (production).
 Backend selected via RATE_LIMIT_BACKEND env var (memory|redis).
 """
+
 from __future__ import annotations
 
 import abc
 import logging
 import time
 from collections import defaultdict
-from typing import Tuple
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -28,9 +28,7 @@ class RateLimitBackend(abc.ABC):
     """Abstract rate-limit backend."""
 
     @abc.abstractmethod
-    async def check_rate_limit(
-        self, key: str, limit: int, window: int
-    ) -> Tuple[bool, int, float]:
+    async def check_rate_limit(self, key: str, limit: int, window: int) -> tuple[bool, int, float]:
         """Check whether *key* is within its rate limit.
 
         Returns:
@@ -54,9 +52,7 @@ class InMemoryBackend(RateLimitBackend):
     def __init__(self) -> None:
         self._buckets: dict[str, list[float]] = defaultdict(list)
 
-    async def check_rate_limit(
-        self, key: str, limit: int, window: int
-    ) -> Tuple[bool, int, float]:
+    async def check_rate_limit(self, key: str, limit: int, window: int) -> tuple[bool, int, float]:
         now = time.time()
         window_start = now - window
 
@@ -83,17 +79,14 @@ class RedisBackend(RateLimitBackend):
     def __init__(self, redis_url: str) -> None:
         try:
             import redis.asyncio as aioredis
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "redis package required for RedisBackend. "
                 "Install with: pip install 'redis[hiredis]'"
-            )
+            ) from err
         self._redis = aioredis.from_url(redis_url, decode_responses=True)
 
-    async def check_rate_limit(
-        self, key: str, limit: int, window: int
-    ) -> Tuple[bool, int, float]:
-        import redis.asyncio as aioredis  # noqa: F811
+    async def check_rate_limit(self, key: str, limit: int, window: int) -> tuple[bool, int, float]:
 
         now = time.time()
         window_start = now - window
@@ -168,9 +161,7 @@ def set_rate_limit_backend(backend: RateLimitBackend) -> None:
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Sliding-window rate limiting per API key."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Skip rate limiting for health/metrics endpoints
         path = request.url.path
         if path in {"/health", "/health/", "/metrics"}:

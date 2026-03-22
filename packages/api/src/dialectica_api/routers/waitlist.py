@@ -1,12 +1,13 @@
 """
 Waitlist Router — Email capture for early access.
 """
+
 from __future__ import annotations
 
 import logging
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -49,7 +50,7 @@ async def join_waitlist(req: WaitlistRequest) -> WaitlistResponse:
         "id": entry_id,
         "email": email,
         "source": req.source,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
 
     logger.info("waitlist_signup email=%s source=%s id=%s", email, req.source, entry_id)
