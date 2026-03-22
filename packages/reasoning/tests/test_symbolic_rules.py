@@ -40,17 +40,15 @@ class TestEscalationDetection:
     )
     def test_glasl_stage_to_level(self, stage, expected_level):
         """Each Glasl stage maps to the correct win/lose level."""
-        from dialectica_reasoning.symbolic.escalation import _glasl_level
-
-        assert _glasl_level(stage) == expected_level
+        assert stage.level == expected_level
 
     @pytest.mark.parametrize(
         "stage,expected_intervention",
         [
             (GlaslStage.HARDENING, "moderation"),
             (GlaslStage.DEBATE_AND_POLEMICS, "moderation"),
-            (GlaslStage.ACTIONS_NOT_WORDS, "moderation"),
-            (GlaslStage.IMAGES_AND_COALITIONS, "mediation"),
+            (GlaslStage.ACTIONS_NOT_WORDS, "facilitation"),
+            (GlaslStage.IMAGES_AND_COALITIONS, "process_consultation"),
             (GlaslStage.LOSS_OF_FACE, "mediation"),
             (GlaslStage.STRATEGIES_OF_THREATS, "arbitration"),
             (GlaslStage.LIMITED_DESTRUCTIVE_BLOWS, "power_intervention"),
@@ -59,9 +57,7 @@ class TestEscalationDetection:
         ],
     )
     def test_glasl_intervention_type(self, stage, expected_intervention):
-        from dialectica_reasoning.symbolic.escalation import _intervention_type
-
-        assert _intervention_type(stage) == expected_intervention
+        assert stage.intervention_type == expected_intervention
 
 
 # ═══════════════════════════════════════════════════════════════════════════
