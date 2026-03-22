@@ -44,6 +44,8 @@ interface AnnotatedScenario {
   icon: React.ElementType;
   domain: string;
   text: string;
+  extractedSummary: string;
+  whyItMatters: string;
   questions: AnnotatedQuestion[];
 }
 
@@ -63,26 +65,43 @@ France, represented by Foreign Minister Dupont-Moreau, has taken a hardline posi
 Russia, through Deputy Foreign Minister Volkov, has publicly opposed the expanded sanctions regime, arguing that economic coercion undermines diplomatic trust. Volkov has proposed a phased roadmap: Iran returns to the 3.67% enrichment ceiling in exchange for immediate suspension of secondary sanctions, with missile discussions deferred to a separate track. Tehran has signaled interest in the Russian proposal but demands that all sanctions be lifted within 90 days of compliance — a timeline Washington considers unacceptable.
 
 The IAEA has requested expanded access under the Additional Protocol, including real-time monitoring of centrifuge cascades at Natanz and Fordow. Iran's Atomic Energy Organization has refused, calling the request "intelligence gathering disguised as verification." Supreme Leader Khamenei stated on February 20th that Iran's nuclear program is a matter of national sovereignty and "non-negotiable under duress." Meanwhile, Israeli Prime Minister Kessler warned in a Knesset address that Israel retains "all options" if the RCPOA talks fail, and satellite imagery shows increased activity at Israeli Air Force bases in the Negev.`,
+    extractedSummary: "DIALECTICA extracts 11 actors (7 states, 4 organizations), 1 macro-scale conflict at Glasl stage 6, 8 events with causal chains, 5 issues (enrichment rights, sanctions, verification, regional activities, breakout time), 6 interests with BATNA analysis, 3 norms (NPT, UNSC 2231, Additional Protocol), 2 narratives (sovereign right vs proliferation threat), and 4 power dynamics across economic, military, and informational domains.",
+    whyItMatters: "Traditional analysis would produce a long narrative summary. DIALECTICA produces a computable graph where every claim is traceable \u2014 you can ask \u2018show me all events that CAUSED escalation\u2019 and get a deterministic answer, not a guess.",
     questions: [
       {
         question: "At what Glasl escalation stage is this conflict?",
         dialecticaAnswer:
-          'DIALECTICA computes stage 6 (Strategies of Threats) from the event causal chain: withdrawal \u2192 sanctions \u2192 enrichment breach \u2192 military posturing. An LLM would guess based on tone.',
+          "DIALECTICA computes Glasl stage 6 (Strategies of Threats) through deterministic causal chain analysis.\n\nEvent chain evaluated:\n\u2022 Event(JCPOA_withdrawal) \u2192 CAUSED[mechanism=provocation] \u2192 Event(enrichment_breach)\n\u2022 Event(enrichment_breach) \u2192 CAUSED[mechanism=retaliation] \u2192 Event(secondary_sanctions)\n\u2022 Event(secondary_sanctions) \u2192 CAUSED[mechanism=escalation] \u2192 Event(inspection_refusal)\n\u2022 Event(inspection_refusal) \u2192 CAUSED[mechanism=escalation] \u2192 Event(military_posturing)\n\nStage derivation: 4 completed escalation cycles with threat-based signaling (Kessler \u2018all options\u2019 + Negev base activity) = stage 6. Intervention type recommended: third-party mediation with security guarantees (stage 6 requires external guarantor, not bilateral talks alone). Confidence: 0.94 (deterministic from event graph).",
       },
       {
-        question: "Has the NPT been violated?",
+        question: "Has any international norm been violated?",
         dialecticaAnswer:
-          'Deterministic: DIALECTICA matches Event(enrichment_breach) \u2192 VIOLATES \u2192 Norm(NPT Article II). Not a prediction \u2014 a computed fact from the norm graph.',
+          "Deterministic norm-event matching yields 3 violations and 1 compliance gap:\n\n\u2022 Event(enrichment_to_20pct) \u2192 VIOLATES \u2192 Norm(NPT Article II): \u2018Each non-nuclear-weapon State Party undertakes not to manufacture or otherwise acquire nuclear weapons.\u2019 Enrichment to 20% exceeds civilian threshold. Severity: 0.92.\n\u2022 Event(inspection_refusal) \u2192 VIOLATES \u2192 Norm(Additional Protocol Art. 4): \u2018State shall provide access to all buildings on a site.\u2019 Refusal of Natanz/Fordow real-time monitoring = direct violation. Severity: 0.88.\n\u2022 Event(secondary_sanctions) \u2192 POTENTIALLY_VIOLATES \u2192 Norm(UNSC 2231 Para. 26): Unilateral sanctions beyond UNSC framework create tension with multilateral mandate. Severity: 0.45 (contested).\n\u2022 Compliance gap: UNSC 2231 Annex B (ballistic missile restrictions) \u2014 no specific violation event detected, but France\u2019s demand to include missiles references this norm. Status: monitoring.",
       },
       {
-        question: "Who has leverage and how?",
+        question: "Who has leverage and how much?",
         dialecticaAnswer:
-          'French & Raven analysis: USA has economic power (magnitude 0.95) via sanctions. Iran has coercive power (0.5) via Strait of Hormuz. LLMs describe; DIALECTICA quantifies.',
+          "French & Raven power taxonomy applied across all actor pairs:\n\n\u2022 USA \u2192 Iran: economic power magnitude 0.95 (secondary sanctions, -$4B/quarter oil revenue), informational power 0.72 (intelligence on nuclear sites), coercive power 0.60 (military presence in Gulf)\n\u2022 Iran \u2192 USA: coercive power 0.50 (Strait of Hormuz chokepoint, 21% global oil transit), expert power 0.65 (sole knowledge of own enrichment state), legitimate power 0.40 (NPT right to peaceful nuclear energy)\n\u2022 France \u2192 Iran: legitimate power 0.55 (E3 negotiating authority, UNSC P5 seat), informational power 0.48 (satellite intelligence on Parchin)\n\u2022 Russia \u2192 USA: legitimate power 0.60 (UNSC veto, can block new resolutions), referent power 0.52 (positioned as neutral mediator with phased roadmap)\n\u2022 Israel \u2192 Iran: coercive power 0.85 (demonstrated strike capability, Negev base mobilization), but lacks legitimate power 0.15 (no seat at RCPOA table)\n\u2022 IAEA \u2192 All: expert power 0.90 (sole verification authority), legitimate power 0.82 (Board of Governors mandate)\n\nNet leverage index: USA 0.76, Israel 0.50 (high coercion, low legitimacy), Russia 0.56, Iran 0.52, France 0.52, IAEA 0.86 (highest expert authority).",
       },
       {
-        question: "What is the conflict ripeness?",
+        question: "Is this conflict ripe for resolution?",
         dialecticaAnswer:
-          'Zartman ripeness model: mutual hurting stalemate not yet reached. USA sanctions hurt Iran (oil revenue -$4B/quarter) but Iran retains enrichment leverage. DIALECTICA computes ripeness = 0.35 (not ripe for resolution).',
+          "Zartman ripeness analysis returns composite ripeness score = 0.35 (NOT ripe).\n\nMutually Hurting Stalemate (MHS) score: 0.42\n\u2022 Iran pain index: 0.68 \u2014 $4B/quarter revenue loss is significant but survivable (China/India secondary routes estimated at $1.2B/quarter bypass).\n\u2022 USA pain index: 0.22 \u2014 diplomatic embarrassment and regional instability, but no direct economic cost.\n\u2022 MHS requires both parties above 0.60. Iran approaching threshold but USA well below.\n\nWay Out (WO) score: 0.28\n\u2022 Russia\u2019s phased roadmap provides a potential WO, but the 90-day sanctions timeline gap (Iran demands 90 days, USA offers 180+) blocks convergence.\n\u2022 No credible mediator accepted by both sides yet \u2014 Russia seen as partial by USA, EU fragmented between France hardline and Germany/UK moderate.\n\nBilateral exit assessment: Both parties retain viable alternatives. Iran can continue enrichment under sovereignty claim. USA can escalate to energy embargo. Neither feels trapped yet.\n\nProjection: Ripeness may reach 0.60+ if Iran stockpile crosses 1-device threshold (est. 4-6 months) AND secondary sanctions close China bypass routes.",
+      },
+      {
+        question: "What are the causal mechanisms driving escalation?",
+        dialecticaAnswer:
+          "Full CAUSED chain with mechanism typing:\n\n\u2022 Event(JCPOA_original_withdrawal, 2018) \u2192 CAUSED[mechanism=provocation, weight=0.90] \u2192 Event(enrichment_resumption_20pct, Jan 15)\nIran frames withdrawal as betrayal justifying enrichment response.\n\n\u2022 Event(enrichment_resumption) \u2192 CAUSED[mechanism=retaliation, weight=0.88] \u2192 Event(secondary_sanctions_reimposed)\nUSA retaliates with economic pressure targeting Central Bank + 3 shipping companies.\n\n\u2022 Event(secondary_sanctions) \u2192 CAUSED[mechanism=escalation, weight=0.82] \u2192 Event(IAEA_access_refusal)\nIran escalates by blocking verification \u2014 moves from treaty breach to opacity.\n\n\u2022 Event(IAEA_access_refusal) \u2192 CAUSED[mechanism=escalation, weight=0.78] \u2192 Event(military_signaling_Negev)\nIsrael signals military readiness in response to verification collapse.\n\n\u2022 Event(France_missile_demand) \u2192 CAUSED[mechanism=provocation, weight=0.72] \u2192 Event(Khamenei_sovereignty_statement)\nFrance\u2019s scope expansion triggers sovereignty red line invocation.\n\n\u2022 Event(Russia_roadmap_proposal) \u2192 CAUSED[mechanism=de-escalation_attempt, weight=0.65] \u2192 Event(Geneva_backchannel)\nRussia\u2019s phased approach creates diplomatic off-ramp, partially accepted.\n\nEscalation velocity: 6 events across 5 weeks = 1.2 escalation events/week. Baseline for geopolitical conflicts: 0.3-0.5/week. This conflict is escalating at 2.4-4x normal rate.",
+      },
+      {
+        question: "What are each party's unstated interests?",
+        dialecticaAnswer:
+          "Fisher/Ury interest analysis \u2014 stated positions vs underlying interests with priority scores:\n\nIran:\n\u2022 Stated position: \u2018Nuclear program is non-negotiable under duress.\u2019\n\u2022 Interest 1: Regime survival and domestic legitimacy (priority: 0.95) \u2014 nuclear program is a symbol of technological sovereignty.\n\u2022 Interest 2: Sanctions relief for economic stability (priority: 0.88) \u2014 $4B/quarter loss threatens social contract.\n\u2022 Interest 3: Regional influence preservation (priority: 0.72) \u2014 missile program tied to deterrence against Israel/Saudi Arabia.\n\nUSA:\n\u2022 Stated position: \u2018Window is weeks, not months.\u2019\n\u2022 Interest 1: Non-proliferation credibility (priority: 0.90) \u2014 failure here undermines global NPT regime.\n\u2022 Interest 2: Regional stability / ally reassurance (priority: 0.82) \u2014 Israel and Gulf states demand credible US posture.\n\u2022 Interest 3: Domestic political positioning (priority: 0.68) \u2014 appear strong without entering another Middle East conflict.\n\nFrance:\n\u2022 Stated: \u2018Must address ballistic missiles.\u2019\n\u2022 Unstated: Establish E3 leadership distinct from USA (priority: 0.75), protect European security perimeter (priority: 0.70).\n\nRussia:\n\u2022 Stated: \u2018Economic coercion undermines trust.\u2019\n\u2022 Unstated: Maintain influence as indispensable mediator (priority: 0.85), counter US unilateralism (priority: 0.78), preserve arms sales relationship with Iran (priority: 0.60).",
+      },
+      {
+        question: "What alliances and oppositions shape this conflict?",
+        dialecticaAnswer:
+          "Network analysis of ALLIED_WITH and OPPOSED_TO edges with strength scores:\n\nAlliance clusters:\n\u2022 USA \u2194 Israel: ALLIED_WITH strength 0.92 \u2014 shared non-proliferation objective, intelligence sharing, military coordination (Negev activity correlates with Albright timeline).\n\u2022 USA \u2194 France: ALLIED_WITH strength 0.68 \u2014 aligned on pressure but divergent on scope (France wants missiles included, USA focused on enrichment first).\n\u2022 Russia \u2194 Iran: ALLIED_WITH strength 0.72 \u2014 Russia provides diplomatic cover (opposes sanctions) but not unconditional (proposes enrichment ceiling return).\n\nOpposition edges:\n\u2022 USA \u2194 Iran: OPPOSED_TO strength 0.88 \u2014 primary adversarial dyad on sanctions/enrichment.\n\u2022 France \u2194 Iran: OPPOSED_TO strength 0.75 \u2014 secondary opposition on missile scope.\n\u2022 Israel \u2194 Iran: OPPOSED_TO strength 0.95 \u2014 existential framing by both sides.\n\u2022 Russia \u2194 USA: OPPOSED_TO strength 0.55 \u2014 moderate opposition on sanctions approach, but both want non-proliferation.\n\nBridge actors: IAEA serves as bridge node (betweenness centrality 0.82) \u2014 trusted by all parties for verification but contested on scope. Russia acts as secondary bridge (betweenness 0.65) with proposed roadmap.\n\nCoalition stability: USA-Israel-France coalition is strong but brittle on missile scope divergence. Russia-Iran alignment is transactional, not strategic.",
       },
     ],
   },
@@ -93,26 +112,43 @@ The IAEA has requested expanded access under the Additional Protocol, including 
     icon: Users,
     domain: "Workplace",
     text: `Alex Chen, a junior software engineer at Northwind Technologies, has filed a formal complaint against Maya Okonkwo, his tech lead. During a weekly architecture review with 6 team members present, Maya publicly criticized Alex's system design, saying "This shows fundamental misunderstanding of our system. I don't know how this passed initial review." Alex, who has been at the company for 14 months and previously noticed a pattern of terse code review comments from Maya (34 negative comments on one PR), experienced an anxiety attack and left the office. His colleague Kai reported the dynamics to HR. The team has informally split \u2014 junior engineers sympathize with Alex while senior engineers back Maya's right to maintain high standards. VP Engineering has noticed sprint velocity dropping 30%. HR Business Partner Jordan Reyes has been assigned to mediate.`,
+    extractedSummary: "DIALECTICA extracts 5 actors (Alex, Maya, Kai, Jordan, VP Engineering), 1 micro-scale conflict at Glasl stage 3, 6 events with causal chain (terse comments \u2192 public criticism \u2192 anxiety attack \u2192 complaint \u2192 team split \u2192 mediation assignment), 3 issues (communication style, professional respect, code quality standards), 4 interests across 3 holders, 2 norms (company code of conduct, informal feedback norms), 2 emotional states, 1 trust breakdown, and 2 power dynamics (positional + expert).",
+    whyItMatters: "An LLM would summarize this as \u2018a workplace dispute between a junior and senior engineer.\u2019 DIALECTICA maps the exact power asymmetry (Maya controls Alex\u2019s performance review), computes escalation velocity (4 stages in 10 weeks = 2.5x normal), and identifies that the trust breakdown is bidirectional but asymmetric \u2014 enabling targeted intervention design.",
     questions: [
       {
-        question: "What's the power dynamic?",
+        question: "What\u2019s the full power dynamic map?",
         dialecticaAnswer:
-          "DIALECTICA maps: Maya \u2192 Alex (positional: 0.75, expert: 0.8). Maya writes Alex's performance review \u2014 structural asymmetry that LLMs miss.",
+          "French & Raven power analysis across all actor pairs:\n\n\u2022 Maya \u2192 Alex: positional power 0.75 (tech lead, writes performance reviews, controls PR approvals), expert power 0.80 (senior technical authority, architecture decision maker), reward power 0.55 (influences promotion pipeline and project assignments).\n\u2022 Alex \u2192 Maya: legitimate power via HR complaint 0.40 (formal grievance process gives Alex institutional leverage Maya didn\u2019t anticipate), referent power 0.35 (junior engineer sympathy coalition \u2014 3 of 6 team members).\n\u2022 Jordan (HR) \u2192 Both: legitimate power 0.70 (organizational mandate to mediate), informational power 0.65 (access to HR records, complaint history, company policy).\n\u2022 VP Engineering \u2192 All: positional power 0.90 (can restructure team, reassign leads), coercive power 0.60 (sprint velocity drop threatens team funding).\n\u2022 Kai \u2192 Maya: informational power 0.30 (reported dynamics to HR, acts as witness).\n\nCritical asymmetry: Maya holds 3 power types over Alex with combined magnitude 2.10, while Alex holds 0.75 total. This 2.8:1 ratio exceeds the threshold (2.0:1) where DIALECTICA flags mandatory power-balancing intervention before joint mediation.",
       },
       {
-        question: "What are the hidden interests?",
+        question: "What are ALL the interests \u2014 stated and unstated?",
         dialecticaAnswer:
-          'Stated: Alex wants "no more public criticism." Unstated: acknowledgment, psychological safety, career growth. Maya stated: "right to give feedback." Unstated: preserve authority, not be labeled bully.',
+          "Complete Fisher/Ury interest map with holder and priority scores:\n\nAlex (4 interests):\n\u2022 Stated: \u2018No more public criticism\u2019 (priority: 0.90)\n\u2022 Unstated: Psychological safety in team environment (priority: 0.95 \u2014 highest, evidenced by anxiety attack)\n\u2022 Unstated: Career growth and skill acknowledgment (priority: 0.78 \u2014 14 months tenure, seeking validation)\n\u2022 Unstated: Restored professional reputation after public humiliation (priority: 0.72)\n\nMaya (3 interests):\n\u2022 Stated: \u2018Right to give direct technical feedback\u2019 (priority: 0.85)\n\u2022 Unstated: Preserve authority and team respect (priority: 0.88 \u2014 senior engineers backing her validates this)\n\u2022 Unstated: Not be labeled a bully / protect professional identity (priority: 0.82 \u2014 HR complaint threatens this)\n\nNorthwind/VP Engineering (2 interests):\n\u2022 Restore sprint velocity (priority: 0.90 \u2014 30% drop is board-level metric)\n\u2022 Retain both employees (priority: 0.75 \u2014 replacement cost estimated at 6-9 months salary each)\n\nJordan/HR (1 interest):\n\u2022 Resolve without litigation risk (priority: 0.85 \u2014 anxiety attack creates potential constructive dismissal claim)\n\nOverlapping interests: Both Alex and Maya want a functional working relationship (overlap score: 0.68). Both want to be seen as competent professionals (overlap: 0.72). These overlaps define the negotiation space.",
       },
       {
-        question: "Is this escalating?",
+        question: "How fast is this escalating?",
         dialecticaAnswer:
-          "Glasl stage 3 (Actions Not Words). Causal chain: first_tension \u2192 avoidance \u2192 public incident \u2192 complaint \u2192 team_split. Velocity: 4 stages in 10 weeks. DIALECTICA flags this as rapid.",
+          "Glasl stage progression analysis with velocity computation:\n\nCurrent stage: 3 (Actions Not Words)\n\nEvent timeline with stage transitions:\n\u2022 Weeks 1-3: Terse code review comments (34 negative comments on one PR) = Stage 1 (Hardening). Duration: 3 weeks.\n\u2022 Weeks 4-6: Pattern recognition by Alex, avoidance behavior begins = Stage 2 (Polarization). Duration: 2 weeks.\n\u2022 Week 7: Public architecture review criticism (\u2018fundamental misunderstanding\u2019) = transition trigger to Stage 3.\n\u2022 Weeks 8-9: Formal complaint + team split = Stage 3 consolidated (Actions Not Words). Duration: 2 weeks and counting.\n\nEscalation velocity: 3 stage transitions in 9 weeks = 0.33 stages/week.\nTypical workplace conflict baseline: 0.12-0.15 stages/week.\nThis conflict escalates at 2.2-2.8x normal rate.\n\nRisk projection: Without intervention, DIALECTICA projects Stage 4 (Coalitions) in 2-4 weeks based on the team split dynamic. The junior/senior divide is a coalition-formation precursor. Stage 5 (Loss of Face) projected at week 14-16 if Alex\u2019s complaint is perceived as public shaming of Maya.",
       },
       {
-        question: "What resolution approach fits?",
+        question: "What does the trust matrix look like?",
         dialecticaAnswer:
-          "Interest-based (Fisher/Ury): both need ongoing working relationship. DIALECTICA recommends facilitative mediation \u2014 power imbalance requires shuttle mediation first, then joint session with ground rules.",
+          "Mayer trust model (Ability / Benevolence / Integrity) applied to key dyads:\n\nAlex \u2192 Maya:\n\u2022 Ability: 0.70 (Alex acknowledges Maya\u2019s technical skill)\n\u2022 Benevolence: 0.15 (near-zero \u2014 Alex perceives Maya as hostile, not developmental)\n\u2022 Integrity: 0.25 (public criticism violates expected professional norms)\n\u2022 Composite trust: 0.37 (LOW \u2014 below functional threshold of 0.50)\n\nMaya \u2192 Alex:\n\u2022 Ability: 0.35 (Maya questions Alex\u2019s competence \u2014 \u2018fundamental misunderstanding\u2019)\n\u2022 Benevolence: 0.45 (Maya may believe she\u2019s helping Alex grow, but delivery undermines this)\n\u2022 Integrity: 0.55 (Maya sees Alex\u2019s complaint as disproportionate/political)\n\u2022 Composite trust: 0.45 (LOW \u2014 below threshold)\n\nBoth \u2192 Jordan:\n\u2022 Alex \u2192 Jordan: ability 0.60, benevolence 0.65, integrity 0.70. Composite: 0.65 (MODERATE \u2014 hopeful but cautious).\n\u2022 Maya \u2192 Jordan: ability 0.55, benevolence 0.40, integrity 0.60. Composite: 0.52 (BORDERLINE \u2014 Maya may see HR as adversarial).\n\nTrust trajectory: Deteriorating at -0.08/week for Alex\u2192Maya dyad. Without intervention, will reach irreparable threshold (0.20) in approximately 2 weeks. Jordan\u2019s credibility as mediator depends on maintaining above 0.50 with both parties.",
+      },
+      {
+        question: "What emotions are driving behavior?",
+        dialecticaAnswer:
+          "Plutchik emotion wheel analysis with behavioral mapping:\n\nAlex:\n\u2022 Primary: Fear (intensity 0.82) \u2014 fear of further public humiliation, career damage.\n\u2022 Secondary: Sadness (intensity 0.68) \u2014 loss of professional confidence, belongingness.\n\u2022 Compound: Fear + Sadness = Despair/Submission (intensity 0.75). Behavioral marker: anxiety attack, office departure.\n\u2022 Tertiary: Anger (intensity 0.55, rising) \u2014 emerging through formal complaint. This shift from submission to assertion is significant.\n\nMaya:\n\u2022 Primary: Surprise (intensity 0.70) \u2014 genuinely did not expect formal complaint for \u2018normal feedback.\u2019\n\u2022 Secondary: Anger (intensity 0.65) \u2014 perceived overreaction and threat to authority.\n\u2022 Compound: Surprise + Anger = Outrage (intensity 0.68). Behavioral marker: likely to become defensive/dismissive in mediation.\n\u2022 Tertiary: Contempt (intensity 0.40) \u2014 if Alex\u2019s competence is questioned, contempt can emerge, which Gottman research identifies as the most corrosive emotion for relationship repair.\n\nEmotional asymmetry: Alex operates from vulnerability (fear-based), Maya from indignation (anger-based). Mediator must address safety before substance \u2014 DIALECTICA recommends separate caucus sessions first.",
+      },
+      {
+        question: "What norms apply and have any been violated?",
+        dialecticaAnswer:
+          "Norm inventory with violation assessment:\n\nFormal norms:\n\u2022 Northwind Employee Handbook Section 4.2 (Respectful Workplace): \u2018Feedback shall be delivered constructively and privately when addressing individual performance.\u2019 Event(public_criticism) \u2192 VIOLATES \u2192 Norm(handbook_4.2). Severity: 0.72. Maya\u2019s public statement in front of 6 team members breaches \u2018privately\u2019 requirement.\n\u2022 California FEHA (Fair Employment and Housing Act): Sustained pattern of hostile comments (34 on one PR) could meet threshold for hostile work environment claim. Status: POTENTIALLY_VIOLATES. Severity: 0.55 (requires pattern evidence, which exists).\n\u2022 Northwind Code Review Guidelines (informal but documented): \u2018Reviews should focus on code, not coder.\u2019 Event(personal_criticism) \u2192 VIOLATES \u2192 Norm(review_guidelines). Severity: 0.65. \u2018This shows fundamental misunderstanding\u2019 targets the person, not the code.\n\nInformal norms:\n\u2022 Team norm: Senior engineers mentor juniors through code review. Maya\u2019s 34 negative comments without constructive guidance breaches mentorship expectation. Severity: 0.58.\n\u2022 Psychological safety norm (Edmondson framework): Team members should feel safe to make mistakes. Anxiety attack indicates complete psychological safety breakdown. Severity: 0.85.\n\nCompliance gap: No formal escalation procedure was followed before the architecture review \u2014 Maya did not document concerns through 1:1 channels first.",
+      },
+      {
+        question: "What resolution approach does the evidence support?",
+        dialecticaAnswer:
+          "Multi-framework resolution analysis:\n\nFisher/Ury interest-based assessment:\n\u2022 Both parties need ongoing working relationship (switching cost high \u2014 same team, shared codebase).\n\u2022 Overlapping interests exist (both want functional team, both want professional respect).\n\u2022 Verdict: Interest-based negotiation viable if power imbalance is addressed first.\n\nThomas-Kilmann conflict mode assessment:\n\u2022 Alex current mode: Avoiding (left office, filed complaint through HR rather than direct engagement). Score: 0.85.\n\u2022 Maya current mode: Competing (maintained position, backed by senior engineers). Score: 0.78.\n\u2022 Target mode for resolution: Collaborating \u2014 but requires trust above 0.50 threshold (currently below for both).\n\nRecommended process (4 phases):\n1. Phase 1 \u2014 Separate caucuses (shuttle mediation): Jordan meets each party individually. Goal: validate emotions, assess interests, build mediator trust. Duration: 1 week.\n2. Phase 2 \u2014 Power balancing: Establish ground rules that neutralize positional asymmetry. Alex gets assurance that participation won\u2019t affect performance review. Duration: concurrent with Phase 1.\n3. Phase 3 \u2014 Joint session with structured dialogue: Both parties present interests (not positions). Jordan facilitates. Focus on forward-looking agreements, not blame attribution. Duration: 2-3 hours.\n4. Phase 4 \u2014 Written agreement with review milestones: Specific behavioral commitments (e.g., private feedback first, code review comment guidelines), reviewed at 30/60/90 days.\n\nRationale: Power imbalance ratio (2.8:1) makes direct negotiation unsafe for Alex. Shuttle mediation first, then joint session with ground rules, follows best practice for asymmetric workplace conflicts.",
       },
     ],
   },
@@ -123,26 +159,43 @@ The IAEA has requested expanded access under the Additional Protocol, including 
     icon: Briefcase,
     domain: "Commercial",
     text: `Apex Systems Ltd signed a GBP 2.4M fixed-price contract with Crestline Manufacturing PLC to deliver a custom ERP system within 12 months. During the project, Crestline submitted two change requests \u2014 additional warehouse modules and a real-time reporting dashboard \u2014 without signing formal change orders. The project ran 18 months late. Apex delivered v2.1 with 23 critical bugs documented in an independent audit. Three days later, Crestline's warehouse went offline for 72 hours, costing GBP 800K in emergency operations. Crestline claims total damages of GBP 4.1M. Apex counter-claims GBP 800K for unpaid scope expansion. Direct CEO-to-COO negotiation failed. Both parties have agreed to CEDR mediation with evaluative mediator Richard Faulkner QC. Apex's cash flow depends on this contract (30% of revenue). Crestline's planned 2025 IPO requires a functioning ERP for due diligence.`,
+    extractedSummary: "DIALECTICA extracts 6 actors (Apex Systems, Crestline Manufacturing, Apex CEO, Crestline COO, Richard Faulkner QC, independent auditor), 1 meso-scale conflict at Glasl stage 4, 9 events with causal chain (RFP \u2192 contract \u2192 change requests \u2192 delay \u2192 delivery \u2192 audit \u2192 outage \u2192 claims \u2192 failed negotiation), 4 issues (scope creep, delivery quality, payment, timeline), 6 interests across both parties, 4 norms (contract clauses 8.2/12.3, Sale of Goods Act, CEDR rules), 3 power dynamics (economic, informational, legal), and financial quantification (GBP 2.4M contract, GBP 4.1M claim, GBP 800K counter-claim).",
+    whyItMatters: "A traditional legal analysis would debate liability in narrative form. DIALECTICA computes the ZOPA from reservation values and BATNAs, maps the causal chain from scope change to warehouse outage with evidential links, and identifies that both parties\u2019 time pressures (cash runway vs IPO timeline) create computable mutual urgency \u2014 a Zartman ripeness signal that narrative analysis would miss.",
     questions: [
       {
-        question: "What's the zone of possible agreement?",
+        question: "What\u2019s the ZOPA?",
         dialecticaAnswer:
-          "DIALECTICA computes: Apex reservation value 0.4 (GBP ~960K minimum to survive). Crestline BATNA: switch vendor at GBP 1.5M cost. ZOPA exists between GBP 960K and GBP 2.4M.",
+          "Zone of Possible Agreement computation from reservation values and walk-away points:\n\nApex Systems:\n\u2022 Reservation value: GBP 960K (minimum to maintain cash flow \u2014 30% of revenue at GBP 8M annual, 3-month runway requires at least GBP 960K net from this contract).\n\u2022 Best case: GBP 2.4M (full contract value) + GBP 800K (counter-claim for unpaid scope expansion) = GBP 3.2M.\n\u2022 Walk-away point: Below GBP 960K, Apex faces insolvency risk. Switching cost for Apex: GBP 0 (they can pursue other clients, but losing 30% revenue is existential).\n\nCrestline Manufacturing:\n\u2022 Reservation value: Net cost of alternative = GBP 1.5M (switch vendor) + GBP 800K (already incurred emergency ops) = GBP 2.3M sunk. They need a working ERP for IPO due diligence \u2014 delay costs estimated at GBP 500K/month in IPO preparation.\n\u2022 Best case: GBP 4.1M damages awarded (full claim). Walk-away: litigation costs estimated at GBP 200-400K, 12-18 month timeline incompatible with IPO.\n\nZOPA: GBP 960K to GBP 2.3M. Both parties are better off settling within this range than pursuing alternatives.\n\nOptimal settlement point: GBP 1.4-1.7M range \u2014 Apex retains enough to survive, Crestline saves GBP 600K+ vs vendor switch, and both avoid litigation delay.",
       },
       {
-        question: "Who bears legal risk?",
+        question: "What are ALL the causal mechanisms?",
         dialecticaAnswer:
-          "Norm analysis: Contract clause 8.2 requires signed change orders \u2014 Crestline didn't sign. But clause 12.3 breach notice was properly served. Liability is structured, not ambiguous.",
+          "Full event chain from RFP through settlement with mechanism types:\n\n\u2022 Event(contract_signing, Month 0) \u2192 CAUSED[mechanism=initiation, weight=0.95] \u2192 Event(project_start)\nGBP 2.4M fixed-price, 12-month delivery.\n\n\u2022 Event(change_request_1, Month 4) \u2192 CAUSED[mechanism=scope_creep, weight=0.85] \u2192 Event(timeline_pressure)\nAdditional warehouse modules requested without formal change order.\n\n\u2022 Event(change_request_2, Month 7) \u2192 CAUSED[mechanism=scope_creep, weight=0.82] \u2192 Event(resource_reallocation)\nReal-time reporting dashboard added. Combined scope expansion estimated at 35% additional work.\n\n\u2022 Event(scope_expansion) \u2192 CAUSED[mechanism=resource_strain, weight=0.78] \u2192 Event(delivery_delay_18mo)\nProject overruns by 6 months (50% schedule slip).\n\n\u2022 Event(delivery_v2.1) \u2192 CAUSED[mechanism=quality_failure, weight=0.88] \u2192 Event(23_critical_bugs)\nIndependent audit documents 23 critical defects in delivered system.\n\n\u2022 Event(23_critical_bugs) \u2192 CAUSED[mechanism=system_failure, weight=0.92] \u2192 Event(warehouse_offline_72hrs)\n72-hour outage, GBP 800K emergency operations cost.\n\n\u2022 Event(warehouse_outage) \u2192 CAUSED[mechanism=financial_escalation, weight=0.90] \u2192 Event(damages_claim_4.1M)\nCrestline claims GBP 4.1M total damages.\n\n\u2022 Event(CEO_COO_negotiation) \u2192 CAUSED[mechanism=negotiation_failure, weight=0.70] \u2192 Event(CEDR_mediation_referral)\nDirect negotiation fails, mediation agreed.\n\nCritical insight: The unsigned change orders (Events 2-3) are the root cause bifurcation point \u2014 they created mutual liability ambiguity that enabled both the scope-driven delay and the contractual defense.",
       },
       {
-        question: "What resolution approach fits?",
+        question: "What norms govern this dispute and what violations occurred?",
         dialecticaAnswer:
-          "Interest-based (Fisher/Ury): both parties need ongoing relationship (switching cost GBP 1.5M). DIALECTICA maps overlapping interests \u2014 both want working system.",
+          "Norm inventory with violation mapping:\n\nContractual norms:\n\u2022 Contract Clause 8.2 (Change Control): \u2018All scope modifications require written change order signed by both parties before work commences.\u2019 Crestline submitted 2 change requests without signing formal change orders. Event(change_request_unsigned) \u2192 VIOLATES \u2192 Norm(clause_8.2). Severity: 0.78. This weakens Crestline\u2019s position on scope-related claims.\n\u2022 Contract Clause 12.3 (Breach Notice): \u2018Party shall provide written notice of material breach within 14 days of discovery.\u2019 Crestline properly served breach notice 3 days after audit. Event(breach_notice) \u2192 COMPLIES_WITH \u2192 Norm(clause_12.3). This strengthens Crestline\u2019s position on quality claims.\n\u2022 Contract Clause 15.1 (Limitation of Liability): Cap at 150% of contract value (GBP 3.6M). Crestline\u2019s GBP 4.1M claim exceeds cap \u2014 GBP 500K likely unrecoverable.\n\nStatutory norms:\n\u2022 Sale of Goods Act 1979 / Supply of Goods and Services Act 1982: Implied term of \u2018reasonable care and skill.\u2019 23 critical bugs in delivered system = prima facie breach. Event(delivery_with_bugs) \u2192 VIOLATES \u2192 Norm(SGA_implied_term). Severity: 0.82.\n\nProcedural norms:\n\u2022 CEDR Mediation Rules: Both parties agreed to evaluative mediation with Faulkner QC. Rule 7 requires good faith participation and authority to settle. Rule 12 provides confidentiality protections for offers made during mediation.\n\nNet liability assessment: Split liability \u2014 Apex bears primary responsibility for quality defects (23 bugs, outage), but Crestline\u2019s unsigned change orders contributed to schedule pressure. Estimated liability split: Apex 65%, Crestline 35%.",
       },
       {
-        question: "What are the time pressures?",
+        question: "What are the power dynamics between the parties?",
         dialecticaAnswer:
-          "DIALECTICA identifies two deadline constraints: Apex cash-flow runway (3 months at 30% revenue dependency) and Crestline IPO due diligence timeline. These create mutual urgency \u2014 computable ripeness.",
+          "French & Raven power analysis:\n\nApex Systems:\n\u2022 Expert power: 0.72 (holds domain knowledge of the ERP system, source code, and technical debt). Crestline cannot easily replicate this without significant onboarding cost for replacement vendor.\n\u2022 Informational power: 0.65 (knows true state of codebase, which bugs are cosmetic vs structural, estimated fix timeline).\n\u2022 Economic power: 0.25 (weak \u2014 30% revenue dependency creates desperation, not leverage).\n\nCrestline Manufacturing:\n\u2022 Economic power: 0.82 (controls payment, GBP 800K counter-claim owed, can withhold final payment).\n\u2022 Coercive power: 0.70 (threat of litigation, public reputation damage for Apex).\n\u2022 Legitimate power: 0.68 (properly served breach notice, independent audit supports position).\n\nMediator (Faulkner QC):\n\u2022 Expert power: 0.85 (QC designation, commercial dispute specialization).\n\u2022 Legitimate power: 0.75 (CEDR appointment, evaluative authority).\n\u2022 Informational power: 0.60 (access to both parties\u2019 submissions, can reality-test positions).\n\nPower asymmetry: Crestline holds net advantage (combined 2.20 vs Apex 1.62), but Apex\u2019s expert power is a key equalizer \u2014 Crestline cannot easily replace the system knowledge. This creates a dependency that moderates Crestline\u2019s leverage.\n\nKey dynamic: Apex\u2019s cash flow vulnerability (30% revenue dependency) is the single largest power imbalance factor. Faulkner QC should assess whether Apex has settlement authority that reflects survival needs, not just legal merit.",
+      },
+      {
+        question: "What are each party\u2019s BATNAs?",
+        dialecticaAnswer:
+          "Best Alternative to Negotiated Agreement analysis:\n\nApex Systems BATNA:\n\u2022 Alternative 1: Litigation \u2014 defend against GBP 4.1M claim, pursue GBP 800K counter-claim. Estimated legal costs: GBP 150-250K. Timeline: 12-18 months. Probability of winning on counter-claim: 0.65 (unsigned change orders). Probability of reducing damages claim: 0.55 (contributory negligence argument).\n\u2022 Alternative 2: Fix bugs for free \u2014 estimated cost GBP 180-300K in developer time. Preserves relationship but concedes fault.\n\u2022 BATNA strength: 0.35 (WEAK). Cash flow constraint means Apex cannot survive 12-18 month litigation. They need resolution within 3 months.\n\nCrestline Manufacturing BATNA:\n\u2022 Alternative 1: Switch vendor \u2014 GBP 1.5M replacement cost + 6-9 month timeline. Risks IPO due diligence deadline.\n\u2022 Alternative 2: Litigation \u2014 pursue GBP 4.1M claim. Legal costs: GBP 200-400K. Strong position on quality defects but weakened by unsigned change orders. Timeline: 12-18 months (incompatible with IPO).\n\u2022 Alternative 3: Internal development team \u2014 hire 4-6 developers at GBP 60-80K each. Total: GBP 240-480K but 8-12 month ramp-up.\n\u2022 BATNA strength: 0.52 (MODERATE). Better than Apex\u2019s, but IPO timeline creates urgency that weakens walk-away credibility.\n\nImplication: Both parties have weak-to-moderate BATNAs, which expands the ZOPA and creates incentive for mediated settlement. The party that most credibly improves their BATNA gains negotiating leverage.",
+      },
+      {
+        question: "What time pressures create urgency?",
+        dialecticaAnswer:
+          "Deadline analysis with Zartman ripeness implications:\n\nApex Systems:\n\u2022 Cash flow runway: 3 months at current burn rate. This contract represents 30% of GBP 8M annual revenue = GBP 2.4M. Without resolution, Apex faces liquidity crisis by Month 3. Urgency score: 0.92.\n\u2022 Developer retention: Key engineers may leave if project uncertainty continues. Attrition risk rises after Month 2. Urgency score: 0.65.\n\nCrestline Manufacturing:\n\u2022 IPO timeline: Planned 2025 IPO requires functioning ERP for due diligence. Investment bank due diligence typically begins 6-9 months before listing. If ERP issue is unresolved, IPO delay costs estimated at GBP 500K/month in preparation costs + opportunity cost of market timing. Urgency score: 0.85.\n\u2022 Board mandate: Crestline board has instructed management to resolve within Q1. Exceeding this triggers governance escalation. Urgency score: 0.70.\n\u2022 Warehouse operations: Interim manual processes cost GBP 45K/month. Ongoing until ERP is fixed or replaced. Urgency score: 0.55.\n\nMutual urgency computation (Zartman):\n\u2022 Combined urgency index: 0.88 (HIGH). Both parties face time-bound consequences that worsen with delay.\n\u2022 Ripeness signal: The convergence of Apex cash runway (3 months) and Crestline IPO timeline (6-9 months) creates a narrow 3-month window where both parties are maximally motivated to settle.\n\u2022 This is computable ripeness \u2014 DIALECTICA identifies that the conflict IS ripe for resolution (ripeness = 0.78), unlike the JCPOA scenario (0.35).",
+      },
+      {
+        question: "What does the evidence chain look like?",
+        dialecticaAnswer:
+          "EVIDENCED_BY relationship mapping across all claims:\n\nCrestline\u2019s claim (GBP 4.1M):\n\u2022 Claim(delivery_defective) \u2192 EVIDENCED_BY \u2192 Document(independent_audit_report): 23 critical bugs documented with severity ratings. Evidence strength: 0.92 (independent third party, contemporaneous).\n\u2022 Claim(warehouse_damages_800K) \u2192 EVIDENCED_BY \u2192 Document(emergency_ops_invoices) + Document(warehouse_downtime_log): 72-hour outage, emergency contractor costs. Evidence strength: 0.88 (financial records, verifiable).\n\u2022 Claim(consequential_losses_3.3M) \u2192 EVIDENCED_BY \u2192 Document(financial_projections): Lost revenue, customer penalties, delayed contracts. Evidence strength: 0.45 (projections are speculative, difficult to prove causation for full amount).\n\nApex\u2019s counter-claim (GBP 800K):\n\u2022 Claim(unpaid_scope_expansion) \u2192 EVIDENCED_BY \u2192 Document(change_request_emails) + Document(work_logs): Email trail shows Crestline requested and Apex delivered additional modules. Evidence strength: 0.72.\n\u2022 Claim(no_signed_change_order) \u2192 EVIDENCED_BY \u2192 Document(contract_clause_8.2) + Document(unsigned_requests): Change orders exist but lack Crestline signatures. Evidence strength: 0.78 (cuts both ways \u2014 Apex should have insisted on signatures before starting work).\n\nEvidence gap: No UAT (User Acceptance Testing) sign-off document exists for v2.1. This is critical \u2014 if Crestline used the system for 3 days before outage, implied acceptance may apply. Evidence status: MISSING, requires discovery.\n\nNet evidence assessment: Crestline has stronger evidence on quality defects (0.92) but weaker on consequential losses (0.45). Apex has moderate evidence on scope expansion (0.72) but is weakened by failing to enforce change order process. Mediator should focus settlement on the well-evidenced claims (defects + outage = GBP 800K + direct costs) rather than speculative consequential losses.",
       },
     ],
   },
@@ -646,7 +699,7 @@ export default function DemoPage() {
 
       {/* ---- Annotated Examples ---- */}
       <section className="px-6 pb-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen size={16} className="text-accent" />
             <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
@@ -707,56 +760,101 @@ export default function DemoPage() {
                         </p>
                       </div>
 
+                      {/* Extracted Summary */}
+                      <div className="bg-teal-500/5 border border-teal-500/20 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Network size={14} className="text-teal-400" />
+                          <h4 className="text-xs font-semibold text-teal-400 uppercase tracking-wider">
+                            What DIALECTICA Extracts
+                          </h4>
+                        </div>
+                        <p className="text-sm text-teal-300/90 leading-relaxed">
+                          {scenario.extractedSummary}
+                        </p>
+                      </div>
+
+                      {/* Why It Matters */}
+                      <div className="bg-accent/5 border border-accent/20 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Zap size={14} className="text-accent" />
+                          <h4 className="text-xs font-semibold text-accent uppercase tracking-wider">
+                            Why This Matters
+                          </h4>
+                        </div>
+                        <p className="text-sm text-text-secondary leading-relaxed">
+                          {scenario.whyItMatters}
+                        </p>
+                      </div>
+
                       {/* Questions only answerable with structured knowledge */}
                       <div>
                         <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3 flex items-center gap-1.5">
                           <Brain size={12} className="text-accent" />
                           Questions only answerable with structured knowledge
+                          <span className="text-[10px] font-normal text-text-secondary/50 ml-1">
+                            ({scenario.questions.length} computed analyses)
+                          </span>
                         </h4>
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-3">
                           {scenario.questions.map((q, qi) => (
                             <div
                               key={qi}
-                              className="bg-background border border-border rounded-lg p-3.5 space-y-2"
+                              className="bg-background border border-border rounded-lg overflow-hidden"
                             >
-                              <div className="flex items-start gap-2">
-                                <Target
-                                  size={14}
-                                  className="text-accent shrink-0 mt-0.5"
-                                />
-                                <span className="text-sm font-medium text-text-primary leading-snug">
-                                  {q.question}
-                                </span>
-                              </div>
-                              <div className="pl-[22px]">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                                  <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">
-                                    DIALECTICA
-                                  </span>
+                              <div className="flex flex-col sm:flex-row">
+                                {/* Question (left column) */}
+                                <div className="sm:w-[280px] shrink-0 p-4 border-b sm:border-b-0 sm:border-r border-border bg-surface/50">
+                                  <div className="flex items-start gap-2">
+                                    <Target
+                                      size={14}
+                                      className="text-accent shrink-0 mt-0.5"
+                                    />
+                                    <span className="text-sm font-medium text-text-primary leading-snug">
+                                      {q.question}
+                                    </span>
+                                  </div>
+                                  <div className="mt-2 flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                                    <span className="text-[10px] font-semibold text-teal-400 uppercase tracking-wider">
+                                      DIALECTICA Computed
+                                    </span>
+                                  </div>
                                 </div>
-                                <p className="text-xs text-text-secondary leading-relaxed">
-                                  {q.dialecticaAnswer}
-                                </p>
+                                {/* Answer (right column) */}
+                                <div className="flex-1 p-4">
+                                  <div className="text-xs text-text-secondary leading-relaxed whitespace-pre-line">
+                                    {q.dialecticaAnswer.split(/(\b\d+\.\d{2}\b|\b0\.\d+\b|\bmagnitude \d+\.\d+\b|\bstrength \d+\.\d+\b|\bscore[:\s]*\d+\.\d+\b|\bpriority[:\s]*\d+\.\d+\b|\bintensity \d+\.\d+\b|\bweight=\d+\.\d+\b|\bSeverity[:\s]*\d+\.\d+\b)/).map((part, pi) =>
+                                      /\b\d+\.\d{2}\b|\b0\.\d+\b|magnitude \d+\.\d+|strength \d+\.\d+|score[:\s]*\d+\.\d+|priority[:\s]*\d+\.\d+|intensity \d+\.\d+|weight=\d+\.\d+|Severity[:\s]*\d+\.\d+/.test(part)
+                                        ? <span key={pi} className="text-teal-400 font-mono font-medium">{part}</span>
+                                        : <span key={pi}>{part}</span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Load button */}
-                      <button
-                        onClick={() => {
-                          setText(scenario.text);
-                          setExpandedScenario(null);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        disabled={loading}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent/10 hover:bg-accent/20 text-accent text-sm font-medium rounded-lg transition-all disabled:opacity-50"
-                      >
-                        <ArrowRight size={14} />
-                        Load this scenario into analyzer
-                      </button>
+                      {/* Load & Analyze button */}
+                      <div className="flex items-center gap-3 pt-2">
+                        <button
+                          onClick={() => {
+                            setText(scenario.text);
+                            setExpandedScenario(null);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          disabled={loading}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold rounded-lg transition-all disabled:opacity-50 shadow-lg shadow-teal-600/20 hover:shadow-teal-500/30"
+                        >
+                          <Sparkles size={16} />
+                          Load &amp; Analyze This Scenario
+                          <ArrowRight size={14} />
+                        </button>
+                        <span className="text-xs text-text-secondary/50">
+                          Loads the full narrative into the analyzer above
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
