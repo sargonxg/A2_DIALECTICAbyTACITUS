@@ -29,7 +29,7 @@ def jcpoa_conflict():
     return Conflict(
         name="JCPOA Nuclear Agreement",
         scale="macro",
-        domain="geopolitical",
+        domain="political",
         status="active",
     )
 
