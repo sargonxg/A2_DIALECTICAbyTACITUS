@@ -76,8 +76,8 @@ export default function HomePage() {
       <section className="border-t border-zinc-800">
         <div className="mx-auto max-w-4xl px-6 py-6 text-center">
           <p className="text-sm text-zinc-500 leading-relaxed">
-            Built by a former UN Political Affairs Officer &middot; 8 years on the
-            Syria desk &middot; 600+ intelligence products authored
+            Neurosymbolic conflict intelligence &middot; Grounded in 15 conflict resolution theories &middot; Built by{" "}
+            <a href="https://tacitus.me" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:text-teal-300 transition-colors">TACITUS</a>
           </p>
         </div>
       </section>
@@ -291,8 +291,7 @@ export default function HomePage() {
       <footer className="border-t border-zinc-800 bg-zinc-900/50">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-10 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-white">TACITUS</span>
-            <span className="text-xs text-zinc-600">&copy; {new Date().getFullYear()}</span>
+            <a href="https://tacitus.me" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-white hover:text-teal-400 transition-colors">TACITUS</a>
           </div>
           <div className="flex items-center gap-6">
             <Link href="/demo" className="text-sm text-zinc-500 hover:text-white transition-colors">
@@ -301,6 +300,14 @@ export default function HomePage() {
             <Link href="/developers" className="text-sm text-zinc-500 hover:text-white transition-colors">
               API Docs
             </Link>
+            <a
+              href="https://tacitus.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-zinc-500 hover:text-white transition-colors"
+            >
+              tacitus.me
+            </a>
             <a
               href="https://github.com/tacitus-io"
               target="_blank"

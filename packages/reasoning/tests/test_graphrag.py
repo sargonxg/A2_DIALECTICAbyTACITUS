@@ -86,7 +86,7 @@ class TestContextBuilder:
     def _make_result(self) -> RetrievalResult:
         a1 = Actor(name="Iran", actor_type="state")
         a2 = Actor(name="USA", actor_type="state")
-        c1 = Conflict(name="JCPOA", scale="macro", domain="geopolitical", status="active")
+        c1 = Conflict(name="JCPOA", scale="macro", domain="political", status="active")
         e1 = Event(event_type="protest", severity=0.7, occurred_at=datetime(2024, 1, 15))
         return RetrievalResult(
             query="nuclear program",
