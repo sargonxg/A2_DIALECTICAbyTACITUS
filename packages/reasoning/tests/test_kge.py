@@ -45,8 +45,11 @@ class TestGraphToTriples:
             pytest.skip("PyKEEN not installed")
 
     def test_empty_triples_raises(self):
-        with pytest.raises(ValueError, match="No triples"):
-            triples_to_pykeen_factory([])
+        try:
+            with pytest.raises(ValueError, match="No triples"):
+                triples_to_pykeen_factory([])
+        except ImportError:
+            pytest.skip("PyKEEN not installed")
 
 
 class TestKGETrainer:
