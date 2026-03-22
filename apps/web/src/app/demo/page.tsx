@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Users,
   Globe,
@@ -22,11 +22,18 @@ import {
   TrendingUp,
   Lock,
   ExternalLink,
+  Clock,
+  Eye,
+  Heart,
+  MessageSquare,
+  FileText,
+  Handshake,
+  Activity,
+  CircleDot,
 } from "lucide-react";
-import ForceGraph from "@/components/graph/ForceGraph";
 import { NODE_COLORS, glaslLevel, GLASL_COLORS } from "@/lib/utils";
 import type { GraphData, GraphNode, GraphLink } from "@/types/graph";
-import type { NodeType } from "@/types/ontology";
+
 
 /* ------------------------------------------------------------------ */
 /*  Annotated example scenario data                                    */
@@ -780,27 +787,8 @@ export default function DemoPage() {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [isFallback, setIsFallback] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const graphContainerRef = useRef<HTMLDivElement>(null);
-  const [graphSize, setGraphSize] = useState({ width: 800, height: 600 });
   const resultsRef = useRef<HTMLDivElement>(null);
   const [expandedScenario, setExpandedScenario] = useState<string | null>(null);
-
-  /* Responsive graph sizing */
-  useEffect(() => {
-    function updateSize() {
-      if (graphContainerRef.current) {
-        const rect = graphContainerRef.current.getBoundingClientRect();
-        setGraphSize({
-          width: Math.max(400, Math.floor(rect.width)),
-          height: Math.max(400, Math.floor(rect.height)),
-        });
-      }
-    }
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, [graphData]);
 
   /* Advance loading step trace */
   const advanceStep = useCallback(
@@ -848,7 +836,6 @@ export default function DemoPage() {
     setLoading(true);
     setGraphData(null);
     setIsFallback(false);
-    setSelectedNode(null);
     setSteps(INITIAL_STEPS.map((s) => ({ ...s, status: "pending" })));
 
     let usedFallback = false;
@@ -1217,405 +1204,57 @@ export default function DemoPage() {
         </section>
       )}
 
-      {/* ---- Results Section ---- */}
-      {graphData && (
-        <section ref={resultsRef} className="px-6 pb-8 animate-fade-in">
-          {/* Fallback Banner */}
-          {isFallback && (
-            <div className="max-w-7xl mx-auto mb-4">
+      {/* ---- Structured Analysis Dashboard ---- */}
+      {graphData && analysis && stats && (
+        <section ref={resultsRef} className="px-6 pb-12 animate-fade-in">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Fallback Banner */}
+            {isFallback && (
               <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm text-amber-400">
                 <AlertTriangle size={16} className="shrink-0" />
                 <span>
-                  Demo mode &mdash; API offline. Showing sample HR mediation
-                  data.
+                  Demo mode &mdash; API offline. Showing sample HR mediation data.
                 </span>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
-            {/* Graph (60%) */}
-            <div
-              ref={graphContainerRef}
-              className="lg:w-[60%] w-full bg-surface border border-border rounded-lg overflow-hidden relative"
-              style={{ minHeight: 500 }}
-            >
-              {/* Legend */}
-              <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-2">
-                {Object.entries(
-                  computeStats(graphData).typeCount,
-                ).map(([type, count]) => (
-                  <span
-                    key={type}
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-background/80 backdrop-blur-sm rounded text-[10px] font-medium text-text-secondary border border-border"
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: NODE_COLORS[type] || "#94a3b8" }}
-                    />
-                    {type.replace(/_/g, " ")} ({count})
-                  </span>
-                ))}
-              </div>
-              <ForceGraph
-                data={graphData}
-                width={graphSize.width}
-                height={graphSize.height}
-                onNodeClick={(node) => setSelectedNode(node)}
-                selectedNodeId={selectedNode?.id ?? null}
-              />
+            {/* Dashboard Header */}
+            <div className="flex items-center gap-3">
+              <Brain size={20} className="text-teal-400" />
+              <h2 className="text-xl font-bold text-text-primary">
+                Structured Analysis Dashboard
+              </h2>
+              <span className="text-xs text-text-secondary/60 ml-1">
+                Deterministic symbolic reasoning + structured extraction
+              </span>
             </div>
 
-            {/* Sidebar (40%) */}
-            <div className="lg:w-[40%] w-full space-y-4">
-              {/* Quick Stats */}
-              <div className="bg-surface border border-border rounded-lg p-5">
-                <h3 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
-                  <Network size={16} className="text-accent" />
-                  Graph Statistics
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <StatCard label="Nodes" value={graphData.nodes.length} />
-                  <StatCard label="Edges" value={graphData.links.length} />
-                  <StatCard
-                    label="Avg Confidence"
-                    value={`${Math.round((stats?.avgConfidence ?? 0) * 100)}%`}
-                  />
-                  <StatCard
-                    label="Node Types"
-                    value={Object.keys(stats?.typeCount ?? {}).length}
-                  />
-                </div>
-              </div>
+            {/* ============ PANEL 1: Conflict Overview (full width) ============ */}
+            <ConflictOverviewPanel graphData={graphData} analysis={analysis} stats={stats} />
 
-              {/* Node Type Breakdown */}
-              <div className="bg-surface border border-border rounded-lg p-5">
-                <h3 className="text-sm font-semibold text-text-primary mb-3">
-                  Entity Breakdown
-                </h3>
-                <div className="space-y-2">
-                  {stats &&
-                    Object.entries(stats.typeCount)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([type, count]) => (
-                        <div key={type} className="flex items-center gap-3">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{
-                              backgroundColor:
-                                NODE_COLORS[type as NodeType] || "#94a3b8",
-                            }}
-                          />
-                          <span className="text-sm text-text-secondary flex-1 capitalize">
-                            {type.replace(/_/g, " ")}
-                          </span>
-                          <span className="text-sm font-mono text-text-primary">
-                            {count}
-                          </span>
-                          <div className="w-16 h-1.5 bg-surface-active rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${(count / graphData.nodes.length) * 100}%`,
-                                backgroundColor:
-                                  NODE_COLORS[type as NodeType] || "#94a3b8",
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                </div>
-              </div>
+            {/* ============ 2-column grid for paired panels ============ */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* PANEL 2: Actors & Power Map */}
+              <ActorsPowerPanel graphData={graphData} />
 
-              {/* Edge Type Breakdown */}
-              <div className="bg-surface border border-border rounded-lg p-5">
-                <h3 className="text-sm font-semibold text-text-primary mb-3">
-                  Relationship Types
-                </h3>
-                <div className="space-y-1.5">
-                  {stats &&
-                    Object.entries(stats.edgeTypeCount)
-                      .sort((a, b) => b[1] - a[1])
-                      .map(([type, count]) => (
-                        <div
-                          key={type}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span className="text-text-secondary font-mono text-xs">
-                            {type}
-                          </span>
-                          <span className="text-text-primary font-mono">
-                            {count}
-                          </span>
-                        </div>
-                      ))}
-                </div>
-              </div>
+              {/* PANEL 3: Event Timeline & Causal Chain */}
+              <EventTimelinePanel graphData={graphData} />
 
-              {/* Selected Node Detail */}
-              {selectedNode && (
-                <div className="bg-surface border border-accent/30 rounded-lg p-5 animate-fade-in">
-                  <h3 className="text-sm font-semibold text-accent mb-3 flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        backgroundColor:
-                          NODE_COLORS[selectedNode.node_type] || "#94a3b8",
-                      }}
-                    />
-                    {selectedNode.name}
-                  </h3>
-                  <dl className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <dt className="text-text-secondary">Type</dt>
-                      <dd className="text-text-primary capitalize">
-                        {selectedNode.node_type.replace(/_/g, " ")}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-text-secondary">Confidence</dt>
-                      <dd className="text-text-primary">
-                        {Math.round(selectedNode.confidence * 100)}%
-                      </dd>
-                    </div>
-                    {Object.entries(selectedNode.properties)
-                      .filter(([k]) => k !== "centrality")
-                      .map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <dt className="text-text-secondary capitalize">
-                            {key.replace(/_/g, " ")}
-                          </dt>
-                          <dd className="text-text-primary text-right max-w-[60%] truncate">
-                            {String(value)}
-                          </dd>
-                        </div>
-                      ))}
-                    <div className="flex justify-between">
-                      <dt className="text-text-secondary">Connections</dt>
-                      <dd className="text-text-primary">
-                        {graphData.links.filter(
-                          (l) =>
-                            (typeof l.source === "string"
-                              ? l.source
-                              : l.source.id) === selectedNode.id ||
-                            (typeof l.target === "string"
-                              ? l.target
-                              : l.target.id) === selectedNode.id,
-                        ).length}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              )}
+              {/* PANEL 4: Interests & Issues */}
+              <InterestsIssuesPanel graphData={graphData} />
+
+              {/* PANEL 5: Emotional & Trust State */}
+              <EmotionalTrustPanel graphData={graphData} />
+
+              {/* PANEL 6: Norms & Compliance */}
+              <NormsCompliancePanel graphData={graphData} />
+
+              {/* PANEL 7: Narratives & Frames */}
+              <NarrativesFramesPanel graphData={graphData} />
             </div>
-          </div>
-        </section>
-      )}
 
-      {/* ---- What DIALECTICA Computed Panel ---- */}
-      {graphData && analysis && (
-        <section className="px-6 pb-12 animate-fade-in">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-surface border border-border rounded-lg p-6 space-y-6">
-              <div className="flex items-center gap-2">
-                <Brain size={18} className="text-accent" />
-                <h2 className="text-lg font-bold text-text-primary">
-                  What DIALECTICA Computed
-                </h2>
-                <span className="text-xs text-text-secondary/60 ml-2">
-                  Deterministic symbolic reasoning + structured extraction
-                </span>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Glasl Escalation Stage */}
-                <div className="bg-background border border-border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp size={14} className="text-text-secondary" />
-                    <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      Glasl Escalation
-                    </h3>
-                  </div>
-                  {analysis.glaslStage > 0 ? (
-                    <div className="space-y-2">
-                      <div className="flex items-end gap-2">
-                        <span
-                          className="text-3xl font-bold font-mono"
-                          style={{
-                            color:
-                              GLASL_COLORS[glaslLevel(analysis.glaslStage)],
-                          }}
-                        >
-                          {analysis.glaslStage}
-                        </span>
-                        <span className="text-xs text-text-secondary pb-1">
-                          / 9
-                        </span>
-                      </div>
-                      <p className="text-sm text-text-secondary">
-                        {analysis.glaslLabel}
-                      </p>
-                      {/* Stage indicator bar */}
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 9 }, (_, i) => {
-                          const stage = i + 1;
-                          const level = glaslLevel(stage);
-                          const isActive = stage <= analysis.glaslStage;
-                          return (
-                            <div
-                              key={stage}
-                              className="h-2 flex-1 rounded-sm transition-all"
-                              style={{
-                                backgroundColor: isActive
-                                  ? GLASL_COLORS[level]
-                                  : "rgba(148,163,184,0.15)",
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                      <div className="flex justify-between text-[9px] text-text-secondary/50 uppercase tracking-wider">
-                        <span>win-win</span>
-                        <span>win-lose</span>
-                        <span>lose-lose</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-text-secondary/50">
-                      No conflict node with Glasl stage detected
-                    </p>
-                  )}
-                </div>
-
-                {/* Deterministic vs Probabilistic */}
-                <div className="bg-background border border-border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Shield size={14} className="text-text-secondary" />
-                    <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      Conclusion Types
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                        <Lock size={14} className="text-green-500" />
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold font-mono text-green-500">
-                          {analysis.deterministicCount}
-                        </div>
-                        <div className="text-[10px] text-text-secondary uppercase tracking-wider">
-                          Deterministic
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                        <Sparkles size={14} className="text-blue-500" />
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold font-mono text-blue-500">
-                          {analysis.probabilisticCount}
-                        </div>
-                        <div className="text-[10px] text-text-secondary uppercase tracking-wider">
-                          Probabilistic
-                        </div>
-                      </div>
-                    </div>
-                    {/* Ratio bar */}
-                    <div className="flex gap-0 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-green-500 transition-all"
-                        style={{
-                          width: `${(analysis.deterministicCount / (analysis.deterministicCount + analysis.probabilisticCount)) * 100}%`,
-                        }}
-                      />
-                      <div
-                        className="bg-blue-500 transition-all"
-                        style={{
-                          width: `${(analysis.probabilisticCount / (analysis.deterministicCount + analysis.probabilisticCount)) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Theory Frameworks */}
-                <div className="bg-background border border-border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Scale size={14} className="text-text-secondary" />
-                    <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      Theory Frameworks
-                    </h3>
-                  </div>
-                  <div className="space-y-1.5">
-                    {analysis.theoryFrameworks.map((tf) => (
-                      <div
-                        key={tf.name}
-                        className="flex items-center gap-2 group"
-                        title={tf.description}
-                      >
-                        {tf.fired ? (
-                          <CheckCircle2
-                            size={12}
-                            className="text-green-500 shrink-0"
-                          />
-                        ) : (
-                          <div className="w-3 h-3 rounded-full border border-surface-active shrink-0" />
-                        )}
-                        <span
-                          className={`text-xs ${tf.fired ? "text-text-primary" : "text-text-secondary/40"}`}
-                        >
-                          {tf.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Confidence Distribution */}
-                <div className="bg-background border border-border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Target size={14} className="text-text-secondary" />
-                    <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                      Confidence Distribution
-                    </h3>
-                  </div>
-                  <div className="space-y-2.5">
-                    {analysis.confidenceBuckets.map((bucket) => {
-                      const maxCount = Math.max(
-                        ...analysis.confidenceBuckets.map((b) => b.count),
-                        1,
-                      );
-                      return (
-                        <div key={bucket.label} className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-text-secondary font-mono">
-                              {bucket.label}
-                            </span>
-                            <span className="text-text-primary font-mono font-medium">
-                              {bucket.count}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-surface-active rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{
-                                width:
-                                  bucket.count > 0
-                                    ? `${(bucket.count / maxCount) * 100}%`
-                                    : "0%",
-                                backgroundColor: bucket.color,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* ============ PANEL 8: Resolution Path (full width) ============ */}
+            <ResolutionPathPanel graphData={graphData} analysis={analysis} />
           </div>
         </section>
       )}
@@ -1679,6 +1318,1089 @@ function StatCard({
         {value}
       </div>
       <div className="text-xs text-text-secondary mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helper: resolve link source/target to string id                    */
+/* ------------------------------------------------------------------ */
+
+function linkId(ref: string | GraphNode): string {
+  return typeof ref === "string" ? ref : ref.id;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helper: get nodes by type                                          */
+/* ------------------------------------------------------------------ */
+
+function nodesByType(data: GraphData, type: string): GraphNode[] {
+  return data.nodes.filter((n) => n.node_type === type);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helper: get links by edge type                                     */
+/* ------------------------------------------------------------------ */
+
+function linksByType(data: GraphData, type: string): GraphLink[] {
+  return data.links.filter((l) => l.edge_type === type);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helper: find node by id                                            */
+/* ------------------------------------------------------------------ */
+
+function findNode(data: GraphData, id: string): GraphNode | undefined {
+  return data.nodes.find((n) => n.id === id);
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 1: Conflict Overview                                         */
+/* ------------------------------------------------------------------ */
+
+function ConflictOverviewPanel({
+  graphData,
+  analysis,
+  stats,
+}: {
+  graphData: GraphData;
+  analysis: ComputedAnalysis;
+  stats: ReturnType<typeof computeStats>;
+}) {
+  const conflicts = nodesByType(graphData, "conflict");
+  const conflict = conflicts[0];
+
+  const glaslStage = (conflict?.properties.glasl_stage as number) || 0;
+  const conflictScale = (conflict?.properties.scale as string) || "unknown";
+  const conflictDomain = (conflict?.properties.domain as string) || "unknown";
+  const conflictStatus = (conflict?.properties.status as string) || "unknown";
+  const kriesbergPhase = (conflict?.properties.kriesberg_phase as string) || "unknown";
+
+  const glaslBadgeColor =
+    glaslStage <= 3
+      ? "bg-green-500/20 text-green-400 border-green-500/30"
+      : glaslStage <= 6
+        ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+        : "bg-red-500/20 text-red-400 border-red-500/30";
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-6 space-y-5">
+      <div className="flex items-center gap-2">
+        <Activity size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Conflict Overview
+        </h3>
+      </div>
+
+      {conflict ? (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h4 className="text-lg font-bold text-text-primary">{conflict.name}</h4>
+                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${glaslBadgeColor} uppercase tracking-wider`}>
+                  Glasl Stage {glaslStage}
+                </span>
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-text-secondary border border-zinc-700 capitalize">
+                  {conflictScale}
+                </span>
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-text-secondary border border-zinc-700 capitalize">
+                  {conflictDomain}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-text-secondary">
+                <span>Status: <span className="text-text-primary capitalize">{conflictStatus}</span></span>
+                <span>Phase: <span className="text-text-primary capitalize">{kriesbergPhase.replace(/_/g, " ")}</span></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Glasl 9-dot progress */}
+          <div className="space-y-2">
+            <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">
+              Glasl Escalation Position
+            </div>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: 9 }, (_, i) => {
+                const stage = i + 1;
+                const level = glaslLevel(stage);
+                const isCurrent = stage === glaslStage;
+                const isPast = stage < glaslStage;
+                return (
+                  <div key={stage} className="flex flex-col items-center gap-1">
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                        isCurrent
+                          ? "ring-2 ring-offset-1 ring-offset-zinc-900"
+                          : ""
+                      }`}
+                      style={{
+                        backgroundColor:
+                          isCurrent || isPast
+                            ? GLASL_COLORS[level]
+                            : "rgba(148,163,184,0.12)",
+                        color:
+                          isCurrent || isPast ? "#000" : "rgba(148,163,184,0.4)",
+                        ...(isCurrent ? { "--tw-ring-color": GLASL_COLORS[level] } as React.CSSProperties : {}),
+                      }}
+                    >
+                      {stage}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-between text-[9px] text-text-secondary/50 uppercase tracking-wider px-1" style={{ maxWidth: "calc(9 * 1.5rem + 8 * 0.375rem)" }}>
+              <span>win-win</span>
+              <span>win-lose</span>
+              <span>lose-lose</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-text-secondary/50">No conflict node detected in graph</p>
+      )}
+
+      {/* Key stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-zinc-800">
+        <StatCard label="Total Nodes" value={graphData.nodes.length} />
+        <StatCard label="Total Edges" value={graphData.links.length} />
+        <StatCard label="Deterministic" value={analysis.deterministicCount} />
+        <StatCard label="Probabilistic" value={analysis.probabilisticCount} />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 2: Actors & Power Map                                        */
+/* ------------------------------------------------------------------ */
+
+function ActorsPowerPanel({ graphData }: { graphData: GraphData }) {
+  const actors = nodesByType(graphData, "actor");
+  const powerDynamics = nodesByType(graphData, "power_dynamic");
+  const alliances = linksByType(graphData, "ALLIED_WITH");
+  const oppositions = linksByType(graphData, "OPPOSED_TO");
+  const powerLinks = linksByType(graphData, "HAS_POWER_OVER");
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Users size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Actors &amp; Power Map
+        </h3>
+        <span className="text-[10px] text-text-secondary/60 ml-auto">{actors.length} actors</span>
+      </div>
+
+      {/* Actor list */}
+      <div className="space-y-2">
+        {actors.map((actor) => {
+          const influence = (actor.properties.centrality as number) || 0;
+          const role = (actor.properties.role_title as string) || (actor.properties.actor_type as string) || "";
+          return (
+            <div key={actor.id} className="flex items-center gap-3 bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-2">
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: NODE_COLORS.actor }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-text-primary truncate">{actor.name}</div>
+                {role && (
+                  <div className="text-[10px] text-text-secondary truncate capitalize">{role}</div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[10px] text-text-secondary font-mono">{Math.round(influence * 100)}%</span>
+                <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all"
+                    style={{ width: `${influence * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Power Dynamics */}
+      {powerDynamics.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-zinc-800">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">Power Dynamics</div>
+          {powerLinks.map((link) => {
+            const sourceId = linkId(link.source);
+            const targetId = linkId(link.target);
+            const sourceNode = findNode(graphData, sourceId);
+            const targetNode = findNode(graphData, targetId);
+            // Find matching power_dynamic node for this link
+            const matchingPD = powerDynamics.find((pd) => {
+              const dir = (pd.properties.direction as string) || "";
+              return dir.includes(sourceNode?.name || "") && dir.includes(targetNode?.name || "");
+            });
+            const domain = (matchingPD?.properties.domain as string) || "power";
+            const magnitude = link.weight || 0;
+            return (
+              <div key={link.id} className="flex items-center gap-2 text-xs">
+                <span className="text-text-primary font-medium truncate">{sourceNode?.name || sourceId}</span>
+                <ArrowRight size={10} className="text-purple-400 shrink-0" />
+                <span className="text-text-primary font-medium truncate">{targetNode?.name || targetId}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 capitalize shrink-0">
+                  {domain}
+                </span>
+                <div className="flex items-center gap-1 ml-auto shrink-0">
+                  <span className="text-[10px] text-text-secondary font-mono">{magnitude.toFixed(2)}</span>
+                  <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${magnitude * 100}%` }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Alliances & Oppositions */}
+      {(alliances.length > 0 || oppositions.length > 0) && (
+        <div className="space-y-2 pt-2 border-t border-zinc-800">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">Alliances &amp; Oppositions</div>
+          {alliances.map((link) => {
+            const a = findNode(graphData, linkId(link.source));
+            const b = findNode(graphData, linkId(link.target));
+            return (
+              <div key={link.id} className="flex items-center gap-2 text-xs">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span className="text-text-primary">{a?.name}</span>
+                <span className="text-text-secondary">&mdash;</span>
+                <span className="text-text-primary">{b?.name}</span>
+                <span className="text-green-400/70 text-[10px] ml-auto font-mono">{link.weight.toFixed(2)}</span>
+              </div>
+            );
+          })}
+          {oppositions.map((link) => {
+            const a = findNode(graphData, linkId(link.source));
+            const b = findNode(graphData, linkId(link.target));
+            return (
+              <div key={link.id} className="flex items-center gap-2 text-xs">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span className="text-text-primary">{a?.name}</span>
+                <span className="text-text-secondary">&mdash;</span>
+                <span className="text-text-primary">{b?.name}</span>
+                <span className="text-red-400/70 text-[10px] ml-auto font-mono">{link.weight.toFixed(2)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 3: Event Timeline & Causal Chain                             */
+/* ------------------------------------------------------------------ */
+
+const QUAD_CLASS_COLORS: Record<string, string> = {
+  tension: "#eab308",
+  disapprove: "#f97316",
+  demand: "#ef4444",
+  consult: "#3b82f6",
+  cooperate: "#22c55e",
+  withdraw: "#94a3b8",
+  polarize: "#a855f7",
+};
+
+const MECHANISM_COLORS: Record<string, string> = {
+  escalation: "#ef4444",
+  retaliation: "#f97316",
+  provocation: "#f97316",
+  precedent: "#94a3b8",
+  "de-escalation_attempt": "#22c55e",
+  scope_creep: "#eab308",
+  quality_failure: "#ef4444",
+  system_failure: "#ef4444",
+  resource_strain: "#f97316",
+  financial_escalation: "#ef4444",
+  negotiation_failure: "#94a3b8",
+  initiation: "#3b82f6",
+};
+
+function EventTimelinePanel({ graphData }: { graphData: GraphData }) {
+  const events = nodesByType(graphData, "event").sort((a, b) => {
+    const dateA = (a.properties.occurred_at as string) || "";
+    const dateB = (b.properties.occurred_at as string) || "";
+    return dateA.localeCompare(dateB);
+  });
+  const causedLinks = linksByType(graphData, "CAUSED");
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Clock size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Event Timeline &amp; Causal Chain
+        </h3>
+        <span className="text-[10px] text-text-secondary/60 ml-auto">{events.length} events</span>
+      </div>
+
+      <div className="relative">
+        {/* Vertical timeline line */}
+        <div className="absolute left-3 top-0 bottom-0 w-px bg-zinc-700" />
+
+        <div className="space-y-1">
+          {events.map((event, idx) => {
+            const eventType = (event.properties.event_type as string) || "unknown";
+            const severity = (event.properties.severity as number) || 0;
+            const date = (event.properties.occurred_at as string) || "";
+            const typeColor = QUAD_CLASS_COLORS[eventType] || "#94a3b8";
+
+            // Find if this event is caused by a previous one
+            const incomingCause = causedLinks.find(
+              (l) => linkId(l.target) === event.id
+            );
+            const causeSource = incomingCause
+              ? findNode(graphData, linkId(incomingCause.source))
+              : null;
+
+            return (
+              <div key={event.id} className="relative pl-8">
+                {/* Timeline dot */}
+                <div
+                  className="absolute left-1.5 top-3 w-3 h-3 rounded-full border-2 border-zinc-900"
+                  style={{ backgroundColor: typeColor }}
+                />
+
+                {/* Causal arrow from previous event */}
+                {incomingCause && idx > 0 && (
+                  <div className="absolute left-3 -top-1 flex items-center">
+                    <div
+                      className="w-px h-2"
+                      style={{
+                        backgroundColor:
+                          MECHANISM_COLORS[
+                            (incomingCause as GraphLink & { properties?: Record<string, unknown> }).edge_type === "CAUSED"
+                              ? "escalation"
+                              : "precedent"
+                          ] || "#94a3b8",
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-2.5 space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {date && (
+                      <span className="text-[10px] font-mono text-text-secondary/70">{date}</span>
+                    )}
+                    <span className="text-sm font-medium text-text-primary">{event.name}</span>
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize"
+                      style={{
+                        backgroundColor: `${typeColor}15`,
+                        color: typeColor,
+                        borderColor: `${typeColor}30`,
+                      }}
+                    >
+                      {eventType}
+                    </span>
+                  </div>
+
+                  {/* Severity bar */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-text-secondary">Severity</span>
+                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${severity * 100}%`,
+                          backgroundColor: severity > 0.7 ? "#ef4444" : severity > 0.4 ? "#eab308" : "#22c55e",
+                        }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-mono text-text-secondary">{severity.toFixed(2)}</span>
+                  </div>
+
+                  {/* Causal connection indicator */}
+                  {causeSource && (
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <span className="text-text-secondary/60">caused by</span>
+                      <span className="text-teal-400 font-medium">{causeSource.name}</span>
+                      <ArrowRight size={8} className="text-text-secondary/40" />
+                      <span className="text-text-primary font-medium">{event.name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 4: Interests & Issues                                        */
+/* ------------------------------------------------------------------ */
+
+function InterestsIssuesPanel({ graphData }: { graphData: GraphData }) {
+  const interests = nodesByType(graphData, "interest");
+  const issues = nodesByType(graphData, "issue");
+
+  // Group interests by holder
+  const grouped: Record<string, GraphNode[]> = {};
+  for (const interest of interests) {
+    const holder = (interest.properties.holder as string) || "Unknown";
+    if (!grouped[holder]) grouped[holder] = [];
+    grouped[holder].push(interest);
+  }
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Target size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Interests &amp; Issues
+        </h3>
+      </div>
+
+      {/* Interests grouped by actor */}
+      {Object.entries(grouped).map(([holder, holderInterests]) => (
+        <div key={holder} className="space-y-2">
+          <div className="text-xs font-semibold text-teal-400">{holder}</div>
+          {holderInterests.map((interest) => {
+            const type = (interest.properties.interest_type as string) || "unknown";
+            const priority = (interest.properties.priority as number) || 0;
+            const isStated = type === "substantive";
+            return (
+              <div
+                key={interest.id}
+                className={`bg-zinc-900/80 border rounded-md px-3 py-2 space-y-1 ${
+                  isStated ? "border-zinc-800/60" : "border-zinc-800/40 border-dashed"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-text-primary">{interest.name}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded border capitalize ${
+                    isStated
+                      ? "bg-green-500/10 text-green-400 border-green-500/20"
+                      : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  }`}>
+                    {type}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-secondary">Priority</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-full ${
+                          i < priority ? "bg-teal-400" : "bg-zinc-700"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+
+      {/* Issues */}
+      {issues.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-zinc-800">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">Issues</div>
+          {issues.map((issue) => {
+            const salience = (issue.properties.salience as number) || 0;
+            const issueType = (issue.properties.issue_type as string) || "";
+            return (
+              <div key={issue.id} className="flex items-center gap-3 bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-2">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: NODE_COLORS.issue }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-text-primary truncate">{issue.name}</div>
+                  {issueType && (
+                    <div className="text-[10px] text-text-secondary capitalize">{issueType}</div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] text-text-secondary">Salience</span>
+                  <div className="w-14 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-orange-500 rounded-full"
+                      style={{ width: `${salience * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-text-secondary">{salience.toFixed(2)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 5: Emotional & Trust State                                   */
+/* ------------------------------------------------------------------ */
+
+const PLUTCHIK_COLORS: Record<string, string> = {
+  joy: "#22c55e",
+  trust: "#06b6d4",
+  fear: "#a855f7",
+  surprise: "#eab308",
+  sadness: "#3b82f6",
+  disgust: "#84cc16",
+  anger: "#ef4444",
+  anticipation: "#f97316",
+  shame: "#a855f7",
+};
+
+function EmotionalTrustPanel({ graphData }: { graphData: GraphData }) {
+  const emotions = nodesByType(graphData, "emotional_state");
+  const trustStates = nodesByType(graphData, "trust_state");
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Heart size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Emotional &amp; Trust State
+        </h3>
+      </div>
+
+      {/* Emotional States */}
+      {emotions.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">Emotional States</div>
+          {emotions.map((emotion) => {
+            const holder = (emotion.properties.holder as string) || "";
+            const intensity = (emotion.properties.intensity as number) || 0;
+            const valence = (emotion.properties.valence as string) || "";
+            // Extract emotion name from the node name (e.g. "Alex: Fear" -> "Fear")
+            const emotionName = emotion.name.includes(":")
+              ? emotion.name.split(":")[1].trim().toLowerCase()
+              : emotion.name.toLowerCase();
+            const emotionColor = PLUTCHIK_COLORS[emotionName] || "#94a3b8";
+
+            return (
+              <div key={emotion.id} className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-2 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-text-secondary">{holder}</span>
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize"
+                    style={{
+                      backgroundColor: `${emotionColor}15`,
+                      color: emotionColor,
+                      borderColor: `${emotionColor}30`,
+                    }}
+                  >
+                    {emotionName}
+                  </span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                    valence === "negative"
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : valence === "positive"
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-zinc-800 text-text-secondary border-zinc-700"
+                  }`}>
+                    {valence}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-secondary">Intensity</span>
+                  <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${intensity * 100}%`, backgroundColor: emotionColor }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-text-secondary">{intensity.toFixed(2)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Trust States */}
+      {trustStates.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-zinc-800">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">Trust States</div>
+          {trustStates.map((trust) => {
+            const from = (trust.properties.from as string) || "";
+            const to = (trust.properties.to as string) || "";
+            const overall = (trust.properties.overall as number) || 0;
+            const basis = (trust.properties.basis as string) || "";
+            const ability = (trust.properties.ability as number) || undefined;
+            const benevolence = (trust.properties.benevolence as number) || undefined;
+            const integrity = (trust.properties.integrity as number) || undefined;
+
+            const trustColor =
+              overall >= 0.6 ? "#22c55e" : overall >= 0.4 ? "#eab308" : "#ef4444";
+
+            return (
+              <div key={trust.id} className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-2.5 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-text-primary font-medium">{from}</span>
+                  <ArrowRight size={10} className="text-text-secondary/40" />
+                  <span className="text-xs text-text-primary font-medium">{to}</span>
+                  {basis && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 capitalize ml-auto">
+                      {basis}
+                    </span>
+                  )}
+                </div>
+
+                {/* Overall trust meter */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-secondary w-12">Overall</span>
+                  <div className="flex-1 h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${overall * 100}%`, backgroundColor: trustColor }}
+                    />
+                  </div>
+                  <span className="text-xs font-mono font-bold" style={{ color: trustColor }}>
+                    {overall.toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Sub-dimensions if present */}
+                {(ability !== undefined || benevolence !== undefined || integrity !== undefined) && (
+                  <div className="space-y-1">
+                    {ability !== undefined && (
+                      <TrustBar label="Ability" value={ability} />
+                    )}
+                    {benevolence !== undefined && (
+                      <TrustBar label="Benevolence" value={benevolence} />
+                    )}
+                    {integrity !== undefined && (
+                      <TrustBar label="Integrity" value={integrity} />
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {emotions.length === 0 && trustStates.length === 0 && (
+        <p className="text-sm text-text-secondary/50">No emotional or trust state data in graph</p>
+      )}
+    </div>
+  );
+}
+
+function TrustBar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-text-secondary/70 w-16">{label}</span>
+      <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-violet-500/60 rounded-full"
+          style={{ width: `${value * 100}%` }}
+        />
+      </div>
+      <span className="text-[10px] font-mono text-text-secondary/70">{value.toFixed(2)}</span>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 6: Norms & Compliance                                        */
+/* ------------------------------------------------------------------ */
+
+function NormsCompliancePanel({ graphData }: { graphData: GraphData }) {
+  const norms = nodesByType(graphData, "norm");
+  const violations = linksByType(graphData, "VIOLATES");
+  const governedBy = linksByType(graphData, "GOVERNED_BY");
+
+  const NORM_TYPE_COLORS: Record<string, string> = {
+    statute: "#3b82f6",
+    policy: "#eab308",
+    treaty: "#06b6d4",
+    contract: "#22c55e",
+  };
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Shield size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Norms &amp; Compliance
+        </h3>
+        <span className="text-[10px] text-text-secondary/60 ml-auto">{norms.length} norms</span>
+      </div>
+
+      {/* Norm list */}
+      {norms.map((norm) => {
+        const normType = (norm.properties.norm_type as string) || "unknown";
+        const binding = norm.properties.binding as boolean;
+        const typeColor = NORM_TYPE_COLORS[normType] || "#94a3b8";
+
+        return (
+          <div key={norm.id} className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-2 space-y-1">
+            <div className="flex items-center gap-2">
+              <FileText size={12} className="text-text-secondary/60 shrink-0" />
+              <span className="text-sm text-text-primary font-medium">{norm.name}</span>
+              <span
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize"
+                style={{
+                  backgroundColor: `${typeColor}15`,
+                  color: typeColor,
+                  borderColor: `${typeColor}30`,
+                }}
+              >
+                {normType}
+              </span>
+              {binding && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                  Binding
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Violations */}
+      {violations.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-zinc-800">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold flex items-center gap-1.5">
+            <AlertTriangle size={10} className="text-red-400" />
+            Violations Detected
+          </div>
+          {violations.map((link) => {
+            const eventNode = findNode(graphData, linkId(link.source));
+            const normNode = findNode(graphData, linkId(link.target));
+            const severity = link.weight || 0;
+            return (
+              <div key={link.id} className="bg-red-500/5 border border-red-500/15 rounded-md px-3 py-2 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs flex-wrap">
+                  <span className="text-text-primary font-medium">{eventNode?.name || "Event"}</span>
+                  <span className="text-red-400 font-semibold text-[10px] uppercase">violates</span>
+                  <span className="text-text-primary font-medium">{normNode?.name || "Norm"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-secondary">Severity</span>
+                  <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-red-500 rounded-full"
+                      style={{ width: `${severity * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-red-400">{severity.toFixed(2)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Compliance (governed_by without violations) */}
+      {governedBy.length > 0 && (
+        <div className="space-y-1.5 pt-2 border-t border-zinc-800">
+          <div className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold flex items-center gap-1.5">
+            <CheckCircle2 size={10} className="text-green-400" />
+            Governance
+          </div>
+          {governedBy.map((link) => {
+            const conflictNode = findNode(graphData, linkId(link.source));
+            const normNode = findNode(graphData, linkId(link.target));
+            return (
+              <div key={link.id} className="flex items-center gap-2 text-xs">
+                <span className="text-text-primary">{conflictNode?.name}</span>
+                <span className="text-text-secondary/60">governed by</span>
+                <span className="text-green-400">{normNode?.name}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {norms.length === 0 && (
+        <p className="text-sm text-text-secondary/50">No norms detected in graph</p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 7: Narratives & Frames                                       */
+/* ------------------------------------------------------------------ */
+
+function NarrativesFramesPanel({ graphData }: { graphData: GraphData }) {
+  const narratives = nodesByType(graphData, "narrative");
+  const promotesLinks = linksByType(graphData, "PROMOTES");
+
+  const DOMINANCE_COLORS: Record<string, string> = {
+    dominant: "#ef4444",
+    counter: "#3b82f6",
+    alternative: "#eab308",
+  };
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <MessageSquare size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Narratives &amp; Frames
+        </h3>
+        <span className="text-[10px] text-text-secondary/60 ml-auto">{narratives.length} narratives</span>
+      </div>
+
+      {narratives.length > 0 ? (
+        <div className="space-y-3">
+          {narratives.map((narrative) => {
+            const holder = (narrative.properties.holder as string) || "";
+            const dominance = (narrative.properties.dominance as string) || "";
+            const frameType = (narrative.properties.frame_type as string) || "";
+            const coherence = (narrative.properties.coherence as number) || undefined;
+            const reach = (narrative.properties.reach as number) || undefined;
+            const domColor = DOMINANCE_COLORS[dominance] || "#94a3b8";
+
+            // Find who promotes this narrative
+            const promoters = promotesLinks
+              .filter((l) => linkId(l.target) === narrative.id)
+              .map((l) => findNode(graphData, linkId(l.source)))
+              .filter(Boolean);
+
+            return (
+              <div key={narrative.id} className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-3 py-3 space-y-2">
+                <div className="flex items-start gap-2 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-text-primary">{narrative.name}</div>
+                    {holder && (
+                      <div className="text-[10px] text-text-secondary">Perspective: {holder}</div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize"
+                      style={{
+                        backgroundColor: `${domColor}15`,
+                        color: domColor,
+                        borderColor: `${domColor}30`,
+                      }}
+                    >
+                      {dominance}
+                    </span>
+                    {frameType && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-text-secondary border border-zinc-700 capitalize">
+                        {frameType}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Coherence & Reach bars if present */}
+                {coherence !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-text-secondary w-16">Coherence</span>
+                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-teal-500 rounded-full" style={{ width: `${coherence * 100}%` }} />
+                    </div>
+                    <span className="text-[10px] font-mono text-text-secondary">{coherence.toFixed(2)}</span>
+                  </div>
+                )}
+                {reach !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-text-secondary w-16">Reach</span>
+                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${reach * 100}%` }} />
+                    </div>
+                    <span className="text-[10px] font-mono text-text-secondary">{reach.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {/* Promoters */}
+                {promoters.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[10px] pt-1 border-t border-zinc-800/50">
+                    <Eye size={10} className="text-text-secondary/60" />
+                    <span className="text-text-secondary/60">Promoted by:</span>
+                    {promoters.map((p) => (
+                      <span key={p!.id} className="text-teal-400 font-medium">{p!.name}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-text-secondary/50">No narratives detected in graph</p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  PANEL 8: Resolution Path                                           */
+/* ------------------------------------------------------------------ */
+
+function ResolutionPathPanel({
+  graphData,
+  analysis,
+}: {
+  graphData: GraphData;
+  analysis: ComputedAnalysis;
+}) {
+  const processes = nodesByType(graphData, "process");
+  const outcomes = nodesByType(graphData, "outcome");
+  const process = processes[0];
+  const outcome = outcomes[0];
+
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-6 space-y-5">
+      <div className="flex items-center gap-2">
+        <Handshake size={16} className="text-teal-400" />
+        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+          Resolution Path
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Process */}
+        {process && (
+          <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-4 py-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <CircleDot size={12} className="text-cyan-400" />
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">
+                Process
+              </span>
+            </div>
+            <div className="text-sm font-medium text-text-primary">{process.name}</div>
+            <div className="space-y-1 text-xs">
+              {Boolean(process.properties.process_type) && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Type</span>
+                  <span className="text-text-primary capitalize">
+                    {String(process.properties.process_type).replace(/_/g, " ")}
+                  </span>
+                </div>
+              )}
+              {Boolean(process.properties.status) && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Status</span>
+                  <span className="text-teal-400 capitalize">{String(process.properties.status)}</span>
+                </div>
+              )}
+              {Boolean(process.properties.approach) && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Approach</span>
+                  <span className="text-text-primary capitalize">
+                    {String(process.properties.approach).replace(/_/g, " ")}
+                  </span>
+                </div>
+              )}
+              {Boolean(process.properties.stage) && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Stage</span>
+                  <span className="text-text-primary capitalize">
+                    {String(process.properties.stage).replace(/_/g, " ")}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Outcome */}
+        {outcome && (
+          <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-4 py-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={12} className="text-green-400" />
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">
+                Outcome
+              </span>
+            </div>
+            <div className="text-sm font-medium text-text-primary">{outcome.name}</div>
+            <div className="space-y-1.5 text-xs">
+              {Boolean(outcome.properties.outcome_type) && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Type</span>
+                  <span className="text-text-primary capitalize">
+                    {String(outcome.properties.outcome_type).replace(/_/g, " ")}
+                  </span>
+                </div>
+              )}
+              {outcome.properties.satisfaction_a !== undefined && (
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Satisfaction A</span>
+                    <span className="font-mono text-text-primary">{(outcome.properties.satisfaction_a as number).toFixed(2)}</span>
+                  </div>
+                  <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${(outcome.properties.satisfaction_a as number) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {outcome.properties.satisfaction_b !== undefined && (
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Satisfaction B</span>
+                    <span className="font-mono text-text-primary">{(outcome.properties.satisfaction_b as number).toFixed(2)}</span>
+                  </div>
+                  <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full"
+                      style={{ width: `${(outcome.properties.satisfaction_b as number) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {Boolean(outcome.properties.durability) && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Durability</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 capitalize">
+                    {String(outcome.properties.durability)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Theory Frameworks */}
+        <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-md px-4 py-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Scale size={12} className="text-amber-400" />
+            <span className="text-[10px] text-text-secondary uppercase tracking-wider font-semibold">
+              Theory Frameworks
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {analysis.theoryFrameworks.map((tf) => (
+              <div key={tf.name} className="flex items-center gap-2" title={tf.description}>
+                {tf.fired ? (
+                  <CheckCircle2 size={11} className="text-green-500 shrink-0" />
+                ) : (
+                  <div className="w-[11px] h-[11px] rounded-full border border-zinc-700 shrink-0" />
+                )}
+                <span className={`text-xs ${tf.fired ? "text-text-primary" : "text-text-secondary/40"}`}>
+                  {tf.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* No process/outcome fallback */}
+      {!process && !outcome && (
+        <p className="text-sm text-text-secondary/50">No resolution process or outcome detected in graph</p>
+      )}
     </div>
   );
 }
