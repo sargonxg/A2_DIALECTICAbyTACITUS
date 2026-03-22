@@ -82,6 +82,8 @@ pnpm-lock.yaml
 !data/seed/samples/*.json
 !packages/*/pyproject.toml
 !apps/web/package.json
+!apps/web/tsconfig.json
+!apps/web/vercel.json
 service-account*.json
 *-credentials.json
 gcloud-key.json
