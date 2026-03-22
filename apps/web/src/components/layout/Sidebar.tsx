@@ -72,6 +72,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "ADMIN",
     items: [
+      { label: "System Health", href: "/admin/system", icon: Settings },
+      { label: "Graph Explorer", href: "/admin/graph", icon: Database },
+      { label: "Architecture", href: "/admin/architecture", icon: Layers },
       { label: "Users", href: "/admin/users", icon: Users },
       { label: "Workspaces", href: "/admin/workspaces", icon: LayoutDashboard },
       { label: "Data", href: "/admin/data", icon: Database },
@@ -79,7 +82,6 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Extraction", href: "/admin/extraction", icon: Cpu },
       { label: "Graph Health", href: "/admin/graph-health", icon: Heart },
       { label: "Usage", href: "/admin/usage", icon: BarChart3 },
-      { label: "System", href: "/admin/system", icon: Settings },
       { label: "API Keys", href: "/admin/api-keys", icon: Shield },
     ],
   },

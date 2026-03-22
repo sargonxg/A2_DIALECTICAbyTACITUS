@@ -32,8 +32,9 @@ async def create_node(session, ws: str, tenant: str, label: str, props: dict):
     props["workspace_id"] = ws
     props["tenant_id"] = tenant
     props["created_at"] = datetime.now(timezone.utc).isoformat()
+    props["category"] = "MOCK_DIALECTICA"
     prop_str = ", ".join(f"n.{k} = ${k}" for k in props)
-    q = f"MERGE (n:{label} {{id: $id}}) SET {prop_str} RETURN n.id"
+    q = f"MERGE (n:{label} {{id: $id}}) SET {prop_str} SET n:MOCK_DIALECTICA RETURN n.id"
     await run_query(session, q, props)
     return nid
 
@@ -49,6 +50,7 @@ async def create_edge(session, ws: str, tenant: str, edge_type: str, src: str, t
     p["target_id"] = tgt
     p["source_label"] = src_label
     p["target_label"] = tgt_label
+    p["category"] = "MOCK_DIALECTICA"
     prop_str = ", ".join(f"r.{k} = ${k}" for k in p)
     q = f"""
     MATCH (a {{id: $source_id}}), (b {{id: $target_id}})
@@ -825,7 +827,7 @@ async def main():
         async with driver.session(database=NEO4J_DATABASE) as session:
             # Clear existing data
             print("Clearing existing data...")
-            await run_query(session, "MATCH (n) DETACH DELETE n")
+            await run_query(session, "MATCH (n {category: 'MOCK_DIALECTICA'}) DETACH DELETE n")
             print("Database cleared.\n")
 
             print("Seeding 3 expanded conflict cases (Full Tier 3)...\n")

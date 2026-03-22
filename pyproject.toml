@@ -5,6 +5,9 @@ description = "DIALECTICA by TACITUS — The Universal Data Layer for Human Fric
 license = "Apache-2.0"
 requires-python = ">=3.12"
 authors = [{ name = "TACITUS", email = "team@tacitus.ai" }]
+dependencies = [
+    "neo4j>=6.1.0",
+]
 
 [tool.uv.workspace]
 members = ["packages/*"]
