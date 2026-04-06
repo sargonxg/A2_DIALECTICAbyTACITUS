@@ -39,6 +39,8 @@ __all__ = [
     "SpannerGraphClient",
     "Neo4jGraphClient",
     "FalkorDBGraphClient",
+    # Qdrant stores
+    "QdrantVectorStore",
 ]
 
 
@@ -109,4 +111,8 @@ def __getattr__(name: str) -> Any:
         from dialectica_graph.falkordb_client import FalkorDBGraphClient
 
         return FalkorDBGraphClient
+    if name == "QdrantVectorStore":
+        from dialectica_graph.qdrant_store import QdrantVectorStore
+
+        return QdrantVectorStore
     raise AttributeError(f"module 'dialectica_graph' has no attribute {name!r}")
