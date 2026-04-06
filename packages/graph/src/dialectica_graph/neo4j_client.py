@@ -515,11 +515,51 @@ class Neo4jGraphClient(GraphClient):
         workspace_id: str,
         tenant_id: str,
     ) -> list[str]:
-        ids = []
+        """Bulk upsert nodes using Cypher UNWIND, grouped by label.
+
+        Nodes are grouped by their Neo4j label, then each group is
+        written in a single UNWIND query.  Embeddings are set in a
+        separate pass (only for nodes that carry them) to keep the
+        property map homogeneous.
+        """
+        if not nodes:
+            return []
+
+        # Group nodes by label
+        by_label: dict[str, list[tuple[ConflictNode, dict]]] = {}
         for node in nodes:
-            nid = await self.upsert_node(node, workspace_id, tenant_id)
-            ids.append(nid)
-        return ids
+            label = node.label or "ConflictNode"
+            props = _node_to_props(node, workspace_id, tenant_id)
+            by_label.setdefault(label, []).append((node, props))
+
+        all_ids: list[str] = []
+
+        async with self._session() as session:
+            for label, items in by_label.items():
+                batch = [{"id": n.id, "props": p} for n, p in items]
+                cypher = (
+                    "UNWIND $batch AS item "
+                    f"MERGE (n:{label} {{id: item.id}}) "
+                    "SET n += item.props, n:ConflictNode, n.updated_at = datetime()"
+                )
+                await session.run(cypher, {"batch": batch})
+                all_ids.extend(item["id"] for item in batch)
+
+            # Second pass: set embeddings where present
+            embedding_batch = [
+                {"id": node.id, "embedding": node.embedding}
+                for node, _ in (item for items in by_label.values() for item in items)
+                if node.embedding
+            ]
+            if embedding_batch:
+                emb_cypher = (
+                    "UNWIND $batch AS item "
+                    "MATCH (n:ConflictNode {id: item.id}) "
+                    "SET n.embedding = item.embedding"
+                )
+                await session.run(emb_cypher, {"batch": embedding_batch})
+
+        return all_ids
 
     async def batch_upsert_edges(
         self,
@@ -527,11 +567,43 @@ class Neo4jGraphClient(GraphClient):
         workspace_id: str,
         tenant_id: str,
     ) -> list[str]:
-        ids = []
+        """Bulk upsert edges using Cypher UNWIND, grouped by relationship type.
+
+        Edges are grouped by their ``EdgeType`` so that a single
+        UNWIND query handles each relationship type in one round-trip.
+        """
+        if not edges:
+            return []
+
+        # Group edges by type
+        by_type: dict[str, list[dict]] = {}
         for edge in edges:
-            eid = await self.upsert_edge(edge, workspace_id, tenant_id)
-            ids.append(eid)
-        return ids
+            edge_type = str(edge.type)
+            props = _edge_to_props(edge, workspace_id, tenant_id)
+            by_type.setdefault(edge_type, []).append(
+                {
+                    "eid": edge.id,
+                    "src_id": edge.source_id,
+                    "tgt_id": edge.target_id,
+                    "props": props,
+                }
+            )
+
+        all_ids: list[str] = []
+
+        async with self._session() as session:
+            for edge_type, batch in by_type.items():
+                cypher = (
+                    "UNWIND $batch AS item "
+                    "MATCH (s:ConflictNode {id: item.src_id, workspace_id: $ws}) "
+                    "MATCH (t:ConflictNode {id: item.tgt_id, workspace_id: $ws}) "
+                    f"MERGE (s)-[r:{edge_type} {{id: item.eid}}]->(t) "
+                    "SET r += item.props"
+                )
+                await session.run(cypher, {"batch": batch, "ws": workspace_id})
+                all_ids.extend(item["eid"] for item in batch)
+
+        return all_ids
 
     # ── Lifecycle ──────────────────────────────────────────────────────────
 
