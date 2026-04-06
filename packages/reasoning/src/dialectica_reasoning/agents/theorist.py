@@ -215,6 +215,95 @@ class TheoristAgent:
             )
         )
 
+        # Burton Basic Human Needs
+        burton_score = 0.8 if has_interests else 0.25
+        assessments.append(
+            FrameworkAssessment(
+                framework_id="burton_basic_needs",
+                framework_name="Burton Basic Human Needs Theory",
+                applicability_score=round(burton_score, 3),
+                key_insights=[
+                    "Interest data maps to basic human needs analysis"
+                    if has_interests
+                    else "No interest data for needs assessment"
+                ],
+                indicators_present=["interests", "needs_mapping"] if has_interests else [],
+            )
+        )
+
+        # Lederach Conflict Transformation
+        lederach_score = (
+            min(1.0, 0.4 + 0.3 * has_narratives + 0.3 * (len(actors) / max(1, 5)))
+        )
+        assessments.append(
+            FrameworkAssessment(
+                framework_id="lederach_transformation",
+                framework_name="Lederach Conflict Transformation",
+                applicability_score=round(lederach_score, 3),
+                key_insights=[
+                    "Narrative and relational transformation analysis"
+                    + (" — narratives available" if has_narratives else "")
+                    + f" with {len(actors)} actors"
+                ],
+                indicators_present=(
+                    (["narratives"] if has_narratives else [])
+                    + (["actors"] if actors else [])
+                ),
+            )
+        )
+
+        # Azar Protracted Social Conflict
+        actor_count = len(actors)
+        azar_score = min(1.0, 0.2 + 0.1 * glasl_num + 0.05 * actor_count)
+        assessments.append(
+            FrameworkAssessment(
+                framework_id="azar_protracted",
+                framework_name="Azar Protracted Social Conflict",
+                applicability_score=round(azar_score, 3),
+                key_insights=[
+                    f"Escalation stage {glasl_num} with {actor_count} actors "
+                    "suggests protracted conflict dynamics"
+                ],
+                indicators_present=["escalation_stage", "actor_count"],
+            )
+        )
+
+        # Kelman Interactive Problem-Solving
+        kelman_score = 0.8 if has_trust else 0.2
+        assessments.append(
+            FrameworkAssessment(
+                framework_id="kelman_problem_solving",
+                framework_name="Kelman Interactive Problem-Solving",
+                applicability_score=round(kelman_score, 3),
+                key_insights=[
+                    f"Trust data available (avg={trust_matrix.average_trust:.2f}) "
+                    "for interactive problem-solving assessment"
+                    if has_trust
+                    else "No trust data for problem-solving assessment"
+                ],
+                indicators_present=["trust_dyads", "interactive_dynamics"] if has_trust else [],
+            )
+        )
+
+        # Deutsch Cooperation-Competition Theory
+        deutsch_score = min(1.0, 0.3 * has_power + 0.3 * has_trust + 0.2)
+        assessments.append(
+            FrameworkAssessment(
+                framework_id="deutsch_cooperation",
+                framework_name="Deutsch Cooperation-Competition Theory",
+                applicability_score=round(deutsch_score, 3),
+                key_insights=[
+                    "Power and trust data enable cooperation-competition analysis"
+                    if (has_power and has_trust)
+                    else "Limited data for cooperation-competition dynamics"
+                ],
+                indicators_present=(
+                    (["power_dynamics"] if has_power else [])
+                    + (["trust_dyads"] if has_trust else [])
+                ),
+            )
+        )
+
         # Sort by applicability
         assessments.sort(key=lambda a: a.applicability_score, reverse=True)
         report.assessments = assessments
