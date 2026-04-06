@@ -6,8 +6,11 @@ It transforms unstructured conflict data into structured knowledge graphs using 
 Conflict Grammar ontology (15 node types, 20 edge types, 25+ controlled vocabularies)
 and delivers reasoning-backed decision support grounded in 15 conflict resolution theories.
 
-Two domains: human friction (HR disputes, commercial mediation) and warfare/political
-conflict (JCPOA-type geopolitical analysis, UN Security Council dynamics).
+**Two specialized domains:**
+1. **Human Friction** (micro-meso scale): Interpersonal, workplace, commercial, legal, family, community disputes. Theories: Fisher/Ury, Mayer Trust, Thomas-Kilmann, Deutsch, Plutchik.
+2. **Conflict & Warfare** (macro-meta scale): Geopolitical, armed, political, protracted social, insurgency, hybrid warfare. Theories: Glasl, Zartman, Galtung, Azar, Kelman, Kriesberg, Lederach.
+
+Domain specs: `packages/ontology/src/dialectica_ontology/domains.py`
 
 ## Architecture (4 layers)
 1. **Neural Ingestion**: GLiNER NER pre-filter -> Gemini 2.5 Flash structured extraction -> Pydantic v2 validation
@@ -104,10 +107,10 @@ cd apps/web && npm install && npm run dev
 make dev                      # docker-compose.yml: Neo4j + Redis + API + Web + Qdrant + FalkorDB + MCP
 ```
 
-## Testing (596 tests total)
+## Testing (630+ tests total)
 ```bash
 make test                     # all Python tests
-make test-ontology            # 420 tests, 80% coverage (enums, primitives, relationships, tiers, symbolic rules, neurosymbolic, theories)
+make test-ontology            # 452 tests, 82% coverage (enums, primitives, relationships, tiers, symbolic rules, neurosymbolic, theories, domains, corpus, benchmarks)
 make test-api                 # 72 tests (health, workspaces, entities, extraction, graph, reasoning, theory, admin, auth, tenant isolation)
 make test-extraction          # 75 tests (pipeline chunking, GLiNER fallback, density calculation)
 make test-reasoning           # 29 tests (escalation, ripeness, trust, firewall, power, KGE availability)
@@ -148,3 +151,63 @@ docker build -f packages/api/Dockerfile.cloudrun -t dialectica-api .
 - Add API endpoint: routers/ -> register in main.py -> add to _PUBLIC_PATHS if unauthenticated -> test
 - Add seed data: data/seed/samples/new_scenario.json (use nodes/edges or actors/events format)
 - Publish ontology: `cd packages/ontology && uv build && twine upload dist/*`
+
+## ConflictCorpus — Core Queryable Entity
+The `ConflictCorpus` is the primary unit of analysis in DIALECTICA. Every workspace maps to
+one ConflictCorpus. It wraps the conflict knowledge graph with:
+- Source document tracking (ingestion provenance, word counts, extraction tier)
+- Computed analytics (Glasl stage, ripeness, patterns, clusters, graph density)
+- Benchmark scores (F1, precision, recall, hallucination rate)
+- Domain classification (human_friction or conflict_warfare)
+
+Location: `packages/ontology/src/dialectica_ontology/corpus.py`
+
+## Knowledge Clusters & Subdomains
+Knowledge clusters group related actors/entities within a conflict graph using
+Leiden community detection at multiple resolutions. Each cluster is enriched with:
+- Subdomain classification (geopolitical, workplace, commercial, legal, armed, environmental)
+- Applicable theories (domain-specific theory selection)
+- Escalation indicators (domain-specific warning signs)
+
+Locations:
+- Subdomain specs: `packages/ontology/src/dialectica_ontology/domains.py`
+- Cluster detector: `packages/reasoning/src/dialectica_reasoning/graphrag/knowledge_clusters.py`
+
+## Benchmarking System
+4 gold-standard corpora: jcpoa, romeo_juliet, crime_punishment, war_peace
+35+ universal benchmark questions organized by domain, theory, mode, difficulty.
+Quality gate: 9 minimum coverage questions every corpus must answer.
+
+Locations:
+- Gold standards: `data/seed/benchmarks/*.json`
+- Question library: `packages/ontology/src/dialectica_ontology/benchmark_questions.py`
+- Runner: `packages/api/src/dialectica_api/benchmark_runner.py`
+- API: POST /v1/admin/benchmark/run, GET /v1/admin/benchmark/history
+- Frontend: /admin/benchmarks
+
+## TACITUS Integration API
+Machine-to-machine endpoints for other TACITUS apps (Praxis, Query Layer):
+- GET /v1/integration/graph/{workspace_id} — Full graph snapshot
+- GET /v1/integration/context/{workspace_id} — Structured conflict context
+- POST /v1/integration/query — Execute conflict analysis query
+
+Location: `packages/api/src/dialectica_api/routers/integration.py`
+
+## Cloud Infrastructure
+- **GCP**: Cloud Run (API), BigQuery (analytics), Vertex AI (Gemini), Secret Manager, Pub/Sub, Cloud Storage
+- **Neo4j Aura**: Primary graph database (TACITUS is in Neo4j Startup Program)
+- **Databricks**: Advanced analytics, KGE training (optional)
+- **Vercel**: Frontend deployment
+- **Terraform**: `infrastructure/terraform/` (all GCP resources)
+- **Runbook**: `docs/runbook.md` (step-by-step production deployment)
+
+## Key new file locations
+- **Domain specs**: packages/ontology/src/dialectica_ontology/domains.py (2 domains, 12 subdomains)
+- **ConflictCorpus**: packages/ontology/src/dialectica_ontology/corpus.py
+- **Benchmark questions**: packages/ontology/src/dialectica_ontology/benchmark_questions.py (35+ questions)
+- **Knowledge clusters**: packages/reasoning/src/dialectica_reasoning/graphrag/knowledge_clusters.py
+- **Qdrant store**: packages/graph/src/dialectica_graph/qdrant_store.py
+- **BigQuery analytics**: packages/api/src/dialectica_api/analytics.py
+- **Databricks connector**: packages/reasoning/src/dialectica_reasoning/databricks_connector.py
+- **Integration API**: packages/api/src/dialectica_api/routers/integration.py
+- **Implementation plan**: docs/superpowers/plans/2026-04-06-dialectica-production-ready.md
