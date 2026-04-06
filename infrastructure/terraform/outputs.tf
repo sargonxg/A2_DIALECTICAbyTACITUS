@@ -34,3 +34,13 @@ output "api_service_account" {
   description = "API service account email"
   value       = google_service_account.api_sa.email
 }
+
+output "bigquery_dataset" {
+  description = "BigQuery analytics dataset ID"
+  value       = google_bigquery_dataset.analytics.dataset_id
+}
+
+output "databricks_service_account" {
+  description = "Databricks service account email (empty if not enabled)"
+  value       = local.databricks_enabled ? google_service_account.databricks_sa[0].email : ""
+}

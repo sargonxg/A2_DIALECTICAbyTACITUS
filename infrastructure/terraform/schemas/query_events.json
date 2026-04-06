@@ -1,0 +1,9 @@
+[
+  {"name": "workspace_id", "type": "STRING", "mode": "REQUIRED", "description": "Workspace queried"},
+  {"name": "query_text", "type": "STRING", "mode": "REQUIRED", "description": "User query text"},
+  {"name": "mode", "type": "STRING", "mode": "REQUIRED", "description": "Query mode (local, global, hybrid)"},
+  {"name": "response_time_ms", "type": "FLOAT64", "mode": "REQUIRED", "description": "End-to-end response time in milliseconds"},
+  {"name": "nodes_retrieved", "type": "INT64", "mode": "REQUIRED", "description": "Number of graph nodes returned"},
+  {"name": "confidence", "type": "FLOAT64", "mode": "NULLABLE", "description": "Aggregate confidence score of response"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED", "description": "Event timestamp (UTC)"}
+]
