@@ -30,6 +30,12 @@ ontology -> graph -> extraction -> reasoning -> api
                                              apps/web (Next.js)
                                              packages/mcp (MCP server)
                                              packages/sdk-typescript (TS SDK)
+
+Cross-cutting concerns:
+  ontology/subdomains.py    — knowledge cluster detection (used by extraction + reasoning)
+  api/analytics.py          — BigQuery event logging (used by api routers)
+  reasoning/databricks.py   — Databricks ML connector (used by reasoning + api)
+  api/routers/integration.py — TACITUS integration layer (used by external TACITUS apps)
 ```
 
 ## Tech stack
@@ -57,6 +63,86 @@ These are NOT installed by default. The codebase works without them:
 - Graph queries: always scope by workspace_id AND tenant_id
 - Neo4j is the default backend everywhere (GRAPH_BACKEND=neo4j)
 
+## Knowledge Clusters & Subdomains
+DIALECTICA organizes conflict knowledge into 6 subdomains, each with specialized
+ontology extensions, extraction prompts, and benchmark expectations:
+
+| Subdomain | Scope | Key node types emphasized |
+|-----------|-------|--------------------------|
+| `geopolitical` | International relations, treaties, sanctions | Actor (state), Norm (treaty), Event (diplomatic) |
+| `workplace` | HR disputes, harassment, organizational conflict | Actor (person), Process (grievance), EmotionalState |
+| `commercial` | Contract disputes, IP, business mediation | Actor (organization), Norm (contract), Outcome |
+| `legal` | Litigation, regulatory, statutory interpretation | Norm (statute/precedent), Process (adjudication), Evidence |
+| `armed` | War, insurgency, UCDP-classified conflict | Event (material_conflict), Location, PowerDynamic |
+| `environmental` | Resource disputes, climate conflict, land rights | Issue, Location, Norm (regulation) |
+
+- **KnowledgeClusterDetector** (`packages/ontology/src/dialectica_ontology/subdomains.py`):
+  Classifies input text into one or more subdomains using keyword heuristics and
+  optional GLiNER entity distribution. Used by the extraction pipeline to select
+  subdomain-specific extraction prompts and validation rules.
+- Each subdomain defines which ontology tiers, theory frameworks, and symbolic
+  rules are most relevant (e.g., armed subdomain prioritizes Galtung + Glasl +
+  Kriesberg; workplace prioritizes Thomas-Kilmann + Fisher-Ury + Mayer trust).
+
+## Benchmarking
+4 gold-standard corpora for evaluating extraction pipeline accuracy:
+
+| Corpus | Domain | Entities | Edges |
+|--------|--------|----------|-------|
+| `jcpoa` | Geopolitical / treaty | ~25 | ~30 |
+| `romeo_juliet` | Interpersonal / literary | ~15 | ~20 |
+| `crime_punishment` | Psychological / literary | ~18 | ~22 |
+| `war_peace` | Armed conflict / literary | ~20 | ~25 |
+
+- **Run benchmarks**: `POST /v1/admin/benchmark/run` with `{"corpus_id":"jcpoa","tier":"standard"}`
+- **Make target**: `make benchmark` (runs JCPOA against live API)
+- **Test suite**: `make test-benchmark` (runs `packages/api/tests/test_benchmark.py`)
+- **Frontend dashboard**: `/admin/benchmarks` — run benchmarks, view results, trend charts
+- **Metrics**: entity F1/precision/recall, relationship F1, hallucination rate
+- **Custom corpora**: Add JSON to `data/seed/samples/` with a `gold_standard` key (see `docs/benchmarking.md`)
+
+## BigQuery Analytics
+Optional analytics pipeline that logs extraction, query, and benchmark events to
+BigQuery for longitudinal analysis.
+
+- **3 tables** in `dialectica_analytics` dataset:
+  - `extraction_events` — every pipeline run (workspace, corpus, tier, entity/edge counts, duration)
+  - `query_events` — every reasoning query (workspace, mode, token count, latency)
+  - `benchmark_results` — every benchmark run (corpus, tier, F1, hallucination rate)
+- **AnalyticsClient**: `packages/api/src/dialectica_api/analytics.py`
+  - `log_extraction_event()`, `log_query_event()`, `log_benchmark_result()`
+  - Enabled via `BIGQUERY_ENABLED=true` + `BIGQUERY_DATASET=dialectica_analytics`
+  - No-ops gracefully when disabled
+- Terraform provisions the BigQuery dataset and tables (`infrastructure/terraform/`)
+
+## Databricks Integration
+Optional connector for running KGE (Knowledge Graph Embedding) training and
+advanced ML on Databricks.
+
+- **DatabricksConnector**: `packages/reasoning/src/dialectica_reasoning/databricks.py`
+  - `export_graph(workspace_id)` — export conflict graph as Spark DataFrame
+  - `train_kge(workspace_id, model)` — train RotatE/TransE on exported graph
+  - `get_predictions(workspace_id)` — retrieve link predictions back into reasoning
+- **Configuration**: `DATABRICKS_HOST`, `DATABRICKS_TOKEN`, `DATABRICKS_CLUSTER_ID`
+- Requires `pip install dialectica-reasoning[kge]` for local KGE; Databricks
+  provides its own Spark + PyTorch environment
+- Falls back gracefully when Databricks is not configured
+
+## TACITUS Integration API
+3 endpoints that allow other TACITUS platform applications (e.g., trust graph,
+context layer, mediation tools) to interact with DIALECTICA:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v1/integration/graph` | POST | Push/pull conflict graphs between TACITUS apps |
+| `/v1/integration/context` | GET | Retrieve workspace context (actors, conflicts, timelines) |
+| `/v1/integration/query` | POST | Execute reasoning queries from other TACITUS apps |
+
+- **Router**: `packages/api/src/dialectica_api/routers/integration.py`
+- Authenticated via standard API key with `integration` level
+- Supports workspace-scoped data exchange with tenant isolation
+- DIALECTICA serves as the trust graph and context layer for the broader TACITUS platform
+
 ## Key file locations
 - **Ontology models**: packages/ontology/src/dialectica_ontology/primitives.py (15 node types)
 - **Relationships**: packages/ontology/src/dialectica_ontology/relationships.py (20 edge types)
@@ -82,6 +168,14 @@ These are NOT installed by default. The codebase works without them:
 - **Demo page**: apps/web/src/app/demo/page.tsx (paste-and-see with ForceGraph)
 - **Investor demo**: apps/web/src/app/demo/investor/page.tsx (5-step guided walkthrough)
 - **Landing page**: apps/web/src/app/page.tsx (marketing, no auth)
+- **Subdomains**: packages/ontology/src/dialectica_ontology/subdomains.py (6 subdomains, KnowledgeClusterDetector)
+- **Benchmark router**: packages/api/src/dialectica_api/routers/benchmark.py (POST /v1/admin/benchmark/run)
+- **Benchmark dashboard**: apps/web/src/app/admin/benchmarks/page.tsx (frontend UI)
+- **Analytics client**: packages/api/src/dialectica_api/analytics.py (BigQuery AnalyticsClient)
+- **Databricks connector**: packages/reasoning/src/dialectica_reasoning/databricks.py (DatabricksConnector)
+- **Integration router**: packages/api/src/dialectica_api/routers/integration.py (TACITUS integration)
+- **Production runbook**: docs/runbook.md (step-by-step deployment guide)
+- **Benchmarking guide**: docs/benchmarking.md (corpora, metrics, custom gold standards)
 
 ## Running locally
 
@@ -150,6 +244,9 @@ docker build -f packages/api/Dockerfile.cloudrun -t dialectica-api .
 - Add symbolic rule: symbolic_rules.py -> register in _DEFAULT_RULES -> add test
 - Add API endpoint: routers/ -> register in main.py -> add to _PUBLIC_PATHS if unauthenticated -> test
 - Add seed data: data/seed/samples/new_scenario.json (use nodes/edges or actors/events format)
+- Add benchmark corpus: data/seed/samples/new_corpus.json (add `gold_standard` key, see docs/benchmarking.md)
+- Add subdomain: subdomains.py -> add to SubdomainType enum + SUBDOMAIN_KEYWORDS + SUBDOMAIN_THEORIES
+- Run production deploy: follow docs/runbook.md step by step
 - Publish ontology: `cd packages/ontology && uv build && twine upload dist/*`
 
 ## ConflictCorpus — Core Queryable Entity
