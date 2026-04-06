@@ -11,7 +11,7 @@ Usage:
     from dialectica_ontology.tiers import OntologyTier
 """
 
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 
 # Node types (primitives)
 # Compatibility mappers
@@ -135,6 +135,44 @@ from dialectica_ontology.theory import (
     ZartmanFramework,
 )
 
+# Benchmark questions
+from dialectica_ontology.benchmark_questions import (
+    ALL_QUESTIONS,
+    BenchmarkQuestion,
+    CONFLICT_WARFARE_QUESTIONS,
+    CROSS_DOMAIN_QUESTIONS,
+    HUMAN_FRICTION_QUESTIONS,
+    get_minimum_coverage_questions,
+    get_questions_by_difficulty,
+    get_questions_by_mode,
+    get_questions_by_theory,
+    get_questions_for_domain,
+)
+
+# ConflictCorpus
+from dialectica_ontology.corpus import (
+    ConflictCorpus,
+    CorpusAnalytics,
+    CorpusBenchmarkScore,
+    SourceDocument,
+)
+
+# Domain specialization
+from dialectica_ontology.domains import (
+    CONFLICT_WARFARE,
+    DOMAIN_SPECS,
+    HUMAN_FRICTION,
+    DomainSpec,
+    FrictionSubdomain,
+    TacitusDomain,
+    WarfareSubdomain,
+    detect_domain_from_conflict_domain,
+    detect_domain_from_scale,
+    get_domain_spec,
+    get_extraction_prompt_for_domain,
+    get_theories_for_domain,
+)
+
 # Tiers
 from dialectica_ontology.tiers import (
     TIER_CONFIGS,
@@ -256,6 +294,36 @@ __all__ = [
     # Confidence types
     "ConfidenceType",
     "Conclusion",
+    # Domains
+    "TacitusDomain",
+    "FrictionSubdomain",
+    "WarfareSubdomain",
+    "FrictionSubdomain",
+    "DomainSpec",
+    "DOMAIN_SPECS",
+    "HUMAN_FRICTION",
+    "CONFLICT_WARFARE",
+    "detect_domain_from_scale",
+    "detect_domain_from_conflict_domain",
+    "get_domain_spec",
+    "get_theories_for_domain",
+    "get_extraction_prompt_for_domain",
+    # ConflictCorpus
+    "ConflictCorpus",
+    "CorpusAnalytics",
+    "CorpusBenchmarkScore",
+    "SourceDocument",
+    # Benchmark Questions
+    "BenchmarkQuestion",
+    "ALL_QUESTIONS",
+    "CROSS_DOMAIN_QUESTIONS",
+    "HUMAN_FRICTION_QUESTIONS",
+    "CONFLICT_WARFARE_QUESTIONS",
+    "get_questions_for_domain",
+    "get_questions_by_mode",
+    "get_questions_by_theory",
+    "get_questions_by_difficulty",
+    "get_minimum_coverage_questions",
     # Compatibility mappers
     "plover_to_dialectica",
     "dialectica_to_plover",
