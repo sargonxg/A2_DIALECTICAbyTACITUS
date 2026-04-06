@@ -246,6 +246,41 @@ async def get_causation(
     }
 
 
+@router.get("/clusters")
+async def get_clusters(
+    workspace_id: str,
+    resolution: float = 1.5,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
+) -> dict[str, Any]:
+    """Get knowledge clusters with subdomain classification and theory enrichment."""
+    if graph_client is None:
+        raise HTTPException(status_code=503, detail="Graph client unavailable.")
+    from dialectica_reasoning.graphrag.knowledge_clusters import KnowledgeClusterDetector
+
+    detector = KnowledgeClusterDetector(graph_client)
+    report = await detector.detect_clusters(workspace_id, resolution=resolution)
+    return {
+        "workspace_id": report.workspace_id,
+        "subdomain": report.subdomain,
+        "cross_cluster_edges": report.cross_cluster_edges,
+        "clusters": [
+            {
+                "cluster_id": c.cluster_id,
+                "subdomain": c.subdomain,
+                "community": c.community,
+                "applicable_theories": c.applicable_theories,
+                "primary_node_types": c.primary_node_types,
+                "escalation_indicators": c.escalation_indicators,
+                "node_count": c.node_count,
+                "edge_count": c.edge_count,
+                "density": c.density,
+            }
+            for c in report.clusters
+        ],
+    }
+
+
 @router.get("/quality")
 async def get_quality(
     workspace_id: str,
