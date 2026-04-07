@@ -318,6 +318,59 @@ export interface FrameworkAssessment {
   limitations: string[];
 }
 
+// ─── Integration Types ──────────────────────────────────────────────────────
+
+export interface GraphSnapshotNode {
+  id: string;
+  label: string;
+  name: string;
+  properties: Record<string, unknown>;
+  confidence: number;
+}
+
+export interface GraphSnapshotEdge {
+  id: string;
+  type: string;
+  source_id: string;
+  target_id: string;
+  weight: number;
+}
+
+export interface GraphSnapshot {
+  workspace_id: string;
+  nodes: GraphSnapshotNode[];
+  edges: GraphSnapshotEdge[];
+  node_count: number;
+  edge_count: number;
+  subdomain: string | null;
+  escalation_stage: number | null;
+  ripeness_score: number | null;
+}
+
+export interface ConflictContext {
+  workspace_id: string;
+  context_text: string;
+  key_actors: string[];
+  key_issues: string[];
+  escalation_summary: string;
+  theory_recommendation: string;
+}
+
+export interface QueryResult {
+  answer: string;
+  confidence: number;
+  citations: Array<Record<string, unknown>>;
+  reasoning_trace: string[];
+  escalation_stage: number | null;
+  patterns_detected: string[];
+}
+
+export interface QueryConflictParams {
+  workspaceId: string;
+  query: string;
+  mode?: string;
+}
+
 // ─── SDK Error ───────────────────────────────────────────────────────────────
 
 export class DialecticaError extends Error {
@@ -692,6 +745,35 @@ class TheoryResource extends BaseResource {
   }
 }
 
+// ─── Integration ────────────────────────────────────────────────────────────
+
+class IntegrationResource extends BaseResource {
+  /** Get full graph snapshot for a workspace (admin only). */
+  async getGraphSnapshot(workspaceId: string): Promise<GraphSnapshot> {
+    return this.request<GraphSnapshot>(
+      "GET",
+      `/v1/integration/graph/${workspaceId}`,
+    );
+  }
+
+  /** Get structured conflict context for Praxis (admin only). */
+  async getConflictContext(workspaceId: string): Promise<ConflictContext> {
+    return this.request<ConflictContext>(
+      "GET",
+      `/v1/integration/context/${workspaceId}`,
+    );
+  }
+
+  /** Execute a conflict analysis query (admin only). */
+  async queryConflict(params: QueryConflictParams): Promise<QueryResult> {
+    return this.request<QueryResult>("POST", "/v1/integration/query", {
+      workspace_id: params.workspaceId,
+      query: params.query,
+      mode: params.mode ?? "general",
+    });
+  }
+}
+
 // ─── Main Client ─────────────────────────────────────────────────────────────
 
 export class DialecticaClient {
@@ -702,6 +784,7 @@ export class DialecticaClient {
   public readonly graph: GraphResource;
   public readonly reasoning: ReasoningResource;
   public readonly theory: TheoryResource;
+  public readonly integration: IntegrationResource;
 
   constructor(options: ClientOptions) {
     const baseUrl = (options.baseUrl ?? "http://localhost:8080").replace(
@@ -721,6 +804,7 @@ export class DialecticaClient {
     this.graph = new GraphResource(baseUrl, headers, fetchFn);
     this.reasoning = new ReasoningResource(baseUrl, headers, fetchFn);
     this.theory = new TheoryResource(baseUrl, headers, fetchFn);
+    this.integration = new IntegrationResource(baseUrl, headers, fetchFn);
   }
 }
 
