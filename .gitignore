@@ -81,6 +81,7 @@ pnpm-lock.yaml
 !data/seed/*.json
 !data/seed/samples/*.json
 !data/seed/benchmarks/*.json
+!data/seed/theories/*.json
 !packages/*/pyproject.toml
 !apps/web/package.json
 !apps/web/tsconfig.json

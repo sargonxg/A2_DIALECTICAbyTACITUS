@@ -1,8 +1,9 @@
 """
-Conflict Primitives — Pydantic v2 models for all 15 DIALECTICA node types.
+Conflict Primitives — Pydantic v2 models for all 17 DIALECTICA node types.
 
 Implements: Actor, Conflict, Event, Issue, Interest, Norm, Process, Outcome,
-Narrative, EmotionalState, TrustState, PowerDynamic, Location, Evidence, Role
+Narrative, EmotionalState, TrustState, PowerDynamic, Location, Evidence, Role,
+ReasoningTrace, InferredFact
 
 All inherit from ConflictNode base with tenant isolation, workspace scoping,
 source text tracking, and extraction confidence scoring.
@@ -10,8 +11,10 @@ source text tracking, and extraction confidence scoring.
 Theoretical basis: TACITUS Core Ontology v2.0 (see ontology.py)
 """
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from ulid import ULID
@@ -147,7 +150,7 @@ class Conflict(ConflictNode):
     summary: str | None = None
 
     @model_validator(mode="after")
-    def derive_glasl_level(self) -> "Conflict":
+    def derive_glasl_level(self) -> Conflict:
         if self.glasl_stage is not None and self.glasl_level is None:
             if self.glasl_stage <= 3:
                 self.glasl_level = GlaslLevel.WIN_WIN
@@ -409,6 +412,75 @@ class Role(ConflictNode):
     context_id: str | None = None
 
 
+# ─── 16. REASONING TRACE ────────────────────────────────────────────────────
+
+
+class ReasoningTrace(ConflictNode):
+    """Records a symbolic reasoning chain with its inputs, rules fired, and conclusion.
+
+    Persists the deterministic reasoning process to Neo4j so that every
+    inference is auditable, replayable, and validatable by a human analyst.
+    """
+
+    node_type: Literal["ReasoningTrace"] = "ReasoningTrace"
+    label: str = "ReasoningTrace"
+    rules_fired: list[str] = Field(default_factory=list)
+    conclusion: str = ""
+    confidence_type: str = "deterministic"  # "deterministic" | "probabilistic"
+    confidence_score: float = Field(default=1.0, ge=0.0, le=1.0)
+    validated_by: str | None = None  # user ID who validated
+    validated_at: datetime | None = None
+    invalidated: bool = False
+    source_node_ids: list[str] = Field(default_factory=list)
+
+
+# ─── 17. INFERRED FACT ──────────────────────────────────────────────────────
+
+
+class InferredFact(ConflictNode):
+    """A fact derived by symbolic rules, written back to the graph as a first-class node.
+
+    Links to its parent ReasoningTrace via HAS_INFERENCE edge.
+    Human analysts can confirm, reject, or modify each fact.
+    """
+
+    node_type: Literal["InferredFact"] = "InferredFact"
+    label: str = "InferredFact"
+    predicate: str  # e.g. "ESCALATION_RISK_HIGH", "RIPENESS_DETECTED"
+    subject_node_id: str
+    object_node_id: str | None = None
+    value: str | float | bool | None = None
+    confidence_type: str = "deterministic"
+    confidence_score: float = Field(default=1.0, ge=0.0, le=1.0)
+    trace_id: str | None = None  # links back to ReasoningTrace
+    human_validated: bool = False
+    human_verdict: str | None = None  # "confirmed" | "rejected" | "modified"
+
+
+# ─── 18. THEORY FRAMEWORK NODE ──────────────────────────────────────────────
+
+
+class TheoryFrameworkNode(ConflictNode):
+    """A conflict resolution theory or framework stored as a graph node.
+
+    Enables LLM agents to traverse: Conflict -[ASSESSED_VIA]-> TheoryFrameworkNode
+    and access structured theory knowledge for reasoning and explanation.
+    The theory layer is shared across all tenants as universal scaffold.
+    """
+
+    node_type: Literal["TheoryFrameworkNode"] = "TheoryFrameworkNode"
+    label: str = "TheoryFrameworkNode"
+    framework_id: str  # e.g. "glasl", "zartman", "fisher_ury"
+    display_name: str
+    domain: str  # "human_friction" | "conflict_warfare" | "universal"
+    core_concepts: list[str] = Field(default_factory=list)
+    key_propositions: list[str] = Field(default_factory=list)  # 3-5 falsifiable statements
+    escalation_indicators: list[str] = Field(default_factory=list)
+    de_escalation_levers: list[str] = Field(default_factory=list)
+    primary_questions: list[str] = Field(default_factory=list)  # questions this theory asks
+    citations: list[str] = Field(default_factory=list)
+
+
 # ─── Registry ───────────────────────────────────────────────────────────────
 
 NODE_TYPES: dict[str, type[ConflictNode]] = {
@@ -427,4 +499,7 @@ NODE_TYPES: dict[str, type[ConflictNode]] = {
     "Location": Location,
     "Evidence": Evidence,
     "Role": Role,
+    "ReasoningTrace": ReasoningTrace,
+    "InferredFact": InferredFact,
+    "TheoryFrameworkNode": TheoryFrameworkNode,
 }

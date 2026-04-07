@@ -1,4 +1,4 @@
-.PHONY: dev test lint format typecheck seed seed-schema seed-frameworks seed-samples \
+.PHONY: dev test lint format typecheck seed seed-schema seed-frameworks seed-theories seed-samples \
         create-admin-key deploy build clean docker-build docker-push publish-ontology \
         sdk-generate sdk-build benchmark help
 
@@ -101,7 +101,7 @@ quality-check: lint typecheck ## Alias for quality
 
 # ─── Database & Seed ─────────────────────────────────────────────────────────
 
-seed: ## Load all sample data into Neo4j
+seed: seed-theories ## Load all sample data into Neo4j
 	uv run python infrastructure/scripts/seed_sample_data.py
 
 seed-api: ## Load sample data via REST API (tests full stack)
@@ -112,6 +112,9 @@ seed-schema: ## Initialize Spanner schema (Spanner only)
 
 seed-frameworks: ## Load theory frameworks into database
 	uv run python infrastructure/scripts/seed_frameworks.py
+
+seed-theories: ## Upsert 15 TheoryFrameworkNode nodes into Neo4j
+	uv run python infrastructure/scripts/seed_theories.py
 
 create-admin-key: ## Generate and store admin API key
 	uv run python infrastructure/scripts/create_admin_key.py

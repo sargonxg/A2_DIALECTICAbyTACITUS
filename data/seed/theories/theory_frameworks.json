@@ -1,0 +1,686 @@
+{
+  "_comment": "DIALECTICA Theory Frameworks — 15 conflict resolution frameworks as TheoryFrameworkNode seeds",
+  "theory_frameworks": [
+    {
+      "framework_id": "glasl",
+      "display_name": "Glasl 9-Stage Escalation Model",
+      "domain": "conflict_warfare",
+      "core_concepts": [
+        "9 escalation stages",
+        "Win-Win zone (stages 1-3)",
+        "Win-Lose zone (stages 4-6)",
+        "Lose-Lose zone (stages 7-9)",
+        "Intervention threshold",
+        "De-escalation ladder"
+      ],
+      "key_propositions": [
+        "Conflicts escalate in predictable stages from mild tension to mutual destruction",
+        "Each stage requires qualitatively different intervention strategies",
+        "Stage determines whether parties can self-resolve or need third-party help",
+        "Escalation is reversible through targeted de-escalation interventions",
+        "Crossing into Lose-Lose zone requires external coercive intervention"
+      ],
+      "escalation_indicators": [
+        "Hardening of positions",
+        "Shift from debate to action",
+        "Coalition formation",
+        "Dehumanization of opponent",
+        "Threats and counter-threats",
+        "Physical violence or sabotage"
+      ],
+      "de_escalation_levers": [
+        "Facilitate dialogue at stages 1-3",
+        "Introduce mediator at stages 4-6",
+        "Apply arbitration or judicial intervention at stages 7-9",
+        "Rebuild communication channels",
+        "Separate parties physically if violence present"
+      ],
+      "primary_questions": [
+        "What stage is the conflict at on Glasl's 9-stage scale?",
+        "Is the conflict in Win-Win, Win-Lose, or Lose-Lose zone?",
+        "What type of third-party intervention is appropriate at this stage?",
+        "What events triggered escalation between stages?",
+        "Is de-escalation toward a lower stage possible?"
+      ],
+      "citations": [
+        "Glasl, F. (1999). Confronting Conflict. Hawthorn Press.",
+        "Glasl, F. (1980). Konfliktmanagement. Haupt Verlag."
+      ]
+    },
+    {
+      "framework_id": "zartman",
+      "display_name": "Zartman Ripeness Theory",
+      "domain": "conflict_warfare",
+      "core_concepts": [
+        "Mutually Hurting Stalemate (MHS)",
+        "Mutually Enticing Opportunity (MEO)",
+        "Ripe moment",
+        "Way out",
+        "Negotiating window"
+      ],
+      "key_propositions": [
+        "Conflicts become ripe for resolution when parties perceive a Mutually Hurting Stalemate",
+        "MHS alone is insufficient — a perceived Way Out must also exist",
+        "Ripeness is a subjective perception, not an objective condition",
+        "The ripe moment is perishable: it must be seized when it appears",
+        "MEO can substitute for or reinforce MHS as a trigger for negotiation"
+      ],
+      "escalation_indicators": [
+        "Parties not yet perceiving mutual cost (conflict not ripe)",
+        "One party believes military solution is still possible",
+        "No mutually acceptable formula for resolution visible",
+        "Absence of credible mediator or facilitator"
+      ],
+      "de_escalation_levers": [
+        "Document and communicate MHS to both parties",
+        "Identify and amplify MEO (attractive peace dividend)",
+        "Provide a credible formula for settlement",
+        "Introduce trusted mediator to hold the ripe moment",
+        "Create hurting costs for spoilers blocking negotiation"
+      ],
+      "primary_questions": [
+        "Is there a Mutually Hurting Stalemate — are both parties paying unacceptable costs?",
+        "Do parties perceive a Mutually Enticing Opportunity for resolution?",
+        "Is there a visible Way Out — an acceptable negotiated formula?",
+        "Is the moment currently ripe, pre-ripe, or post-ripe?",
+        "Which party still believes a unilateral solution is possible?"
+      ],
+      "citations": [
+        "Zartman, I.W. (1989). Ripe for Resolution. Oxford University Press.",
+        "Zartman, I.W. (2000). Ripeness: The Hurting Stalemate and Beyond. In Stern & Druckman (Eds.), International Conflict Resolution After the Cold War."
+      ]
+    },
+    {
+      "framework_id": "fisher_ury",
+      "display_name": "Fisher & Ury Principled Negotiation",
+      "domain": "human_friction",
+      "core_concepts": [
+        "Interests vs. positions",
+        "BATNA (Best Alternative to a Negotiated Agreement)",
+        "ZOPA (Zone of Possible Agreement)",
+        "Separate people from problem",
+        "Invent options for mutual gain",
+        "Objective criteria"
+      ],
+      "key_propositions": [
+        "Durable agreements address underlying interests, not stated positions",
+        "Knowing your BATNA determines your negotiating power",
+        "Agreements within the ZOPA are achievable; outside it are not",
+        "Relationship repair and substantive resolution should be pursued simultaneously",
+        "Agreements evaluated against objective criteria are more stable"
+      ],
+      "escalation_indicators": [
+        "Positional bargaining hardening",
+        "Parties conflating relationship issues with substantive issues",
+        "No shared understanding of underlying interests",
+        "Absence of objective criteria for evaluation",
+        "Parties unaware of their own or opponent's BATNA"
+      ],
+      "de_escalation_levers": [
+        "Interest mapping — ask 'why' behind stated positions",
+        "BATNA clarification for both parties",
+        "Brainstorming options before evaluating them",
+        "Introducing objective external criteria",
+        "Separating relationship repair from deal negotiation"
+      ],
+      "primary_questions": [
+        "What are each party's underlying interests beneath their stated positions?",
+        "What is each party's BATNA?",
+        "Is there a ZOPA — do the reservation values overlap?",
+        "What objective criteria could evaluate proposed solutions?",
+        "Are parties conflating personal attacks with substantive disagreement?"
+      ],
+      "citations": [
+        "Fisher, R. & Ury, W. (1981). Getting to Yes. Houghton Mifflin.",
+        "Ury, W. (1993). Getting Past No. Bantam Books."
+      ]
+    },
+    {
+      "framework_id": "galtung",
+      "display_name": "Galtung Conflict Triangle (ABC)",
+      "domain": "universal",
+      "core_concepts": [
+        "Attitude (A)",
+        "Behavior (B)",
+        "Contradiction (C)",
+        "Direct violence",
+        "Structural violence",
+        "Cultural violence",
+        "Positive peace",
+        "Negative peace"
+      ],
+      "key_propositions": [
+        "Conflict has three dimensions: attitudes, behaviors, and underlying contradictions",
+        "Structural violence (built into systems) is as harmful as direct violence",
+        "Cultural violence legitimizes structural and direct violence",
+        "Negative peace (absence of war) is insufficient — positive peace requires justice",
+        "Sustainable resolution requires addressing all three corners of the ABC triangle"
+      ],
+      "escalation_indicators": [
+        "Rising hostility or dehumanization in attitudes",
+        "Increasingly aggressive behaviors (threats, violence)",
+        "Structural inequalities worsening",
+        "Cultural narratives legitimizing violence",
+        "No progress on underlying contradiction (C)"
+      ],
+      "de_escalation_levers": [
+        "Address structural inequalities directly",
+        "Counter cultural narratives legitimizing violence",
+        "Change hostile attitudes through dialogue",
+        "Stop violent behaviors through ceasefire or enforcement",
+        "Resolve the underlying contradiction (C)"
+      ],
+      "primary_questions": [
+        "What is the underlying contradiction (C) driving the conflict?",
+        "What attitudes (A) sustain the conflict on each side?",
+        "What behaviors (B) express the conflict?",
+        "Is structural violence present — inequality built into systems?",
+        "What would positive peace (not just absence of violence) look like?"
+      ],
+      "citations": [
+        "Galtung, J. (1969). Violence, Peace, and Peace Research. Journal of Peace Research, 6(3).",
+        "Galtung, J. (1990). Cultural Violence. Journal of Peace Research, 27(3)."
+      ]
+    },
+    {
+      "framework_id": "lederach",
+      "display_name": "Lederach Conflict Transformation",
+      "domain": "universal",
+      "core_concepts": [
+        "Conflict transformation vs. resolution",
+        "Moral imagination",
+        "Web of relationships",
+        "Elicitive approach",
+        "Middle-range leadership",
+        "Peacebuilding pyramid"
+      ],
+      "key_propositions": [
+        "Conflict transformation changes the relationships and structures underlying conflict, not just the immediate dispute",
+        "Moral imagination — the capacity to envision constructive responses — is the heart of peacebuilding",
+        "Sustainable peace requires engagement at top, middle, and grassroots leadership levels",
+        "Elicitive approaches draw on local knowledge rather than imposing external models",
+        "The web of relationships is the locus of both conflict and transformation"
+      ],
+      "escalation_indicators": [
+        "Focus on transaction rather than transformation",
+        "Exclusion of middle-range leaders from peace processes",
+        "Grassroots communities not engaged in peace",
+        "Local knowledge and resources ignored",
+        "Relationship repair neglected in favor of formal agreements"
+      ],
+      "de_escalation_levers": [
+        "Engage top, middle, and grassroots leadership simultaneously",
+        "Build on local cultural resources for peace",
+        "Focus on transforming relationships not just resolving disputes",
+        "Cultivate moral imagination through dialogue",
+        "Create platforms for sustained relationship-building"
+      ],
+      "primary_questions": [
+        "What structural and relational changes would constitute transformation?",
+        "Are all three levels of leadership (top, middle, grassroots) engaged?",
+        "What local cultural resources support peacebuilding?",
+        "Is the process addressing the web of relationships or just the presenting issue?",
+        "Is moral imagination visible — can parties envision a different future?"
+      ],
+      "citations": [
+        "Lederach, J.P. (1997). Building Peace: Sustainable Reconciliation in Divided Societies. USIP Press.",
+        "Lederach, J.P. (2005). The Moral Imagination: The Art and Soul of Building Peace. Oxford University Press."
+      ]
+    },
+    {
+      "framework_id": "kriesberg",
+      "display_name": "Kriesberg Conflict Resolution",
+      "domain": "universal",
+      "core_concepts": [
+        "Conflict emergence",
+        "Escalation",
+        "De-escalation",
+        "Settlement",
+        "Transformation",
+        "Constructive conflict"
+      ],
+      "key_propositions": [
+        "Conflicts pass through identifiable phases: emergence, escalation, de-escalation, settlement, transformation",
+        "Constructive conflict can produce positive outcomes including social change",
+        "De-escalation requires changes in grievances, relationships, or context",
+        "Settlements are more durable when parties feel ownership over the process",
+        "Transformation involves fundamental change in conflict relationships beyond settlement"
+      ],
+      "escalation_indicators": [
+        "Rapid phase escalation without pause",
+        "Settlement attempts failing repeatedly",
+        "Parties locked in de-escalation phase without moving to settlement",
+        "Spoilers actively preventing transformation",
+        "External actors prolonging conflict through arms or support"
+      ],
+      "de_escalation_levers": [
+        "Identify and address grievances driving emergence",
+        "Introduce confidence-building measures",
+        "Facilitate transition from de-escalation to settlement",
+        "Create ownership through participatory process design",
+        "Address spoilers through inclusion or isolation"
+      ],
+      "primary_questions": [
+        "What phase is the conflict currently in (emergence, escalation, de-escalation, settlement, transformation)?",
+        "What triggered emergence of this conflict?",
+        "What is preventing transition to the next phase?",
+        "Are there spoilers blocking settlement or transformation?",
+        "What confidence-building measures could accelerate de-escalation?"
+      ],
+      "citations": [
+        "Kriesberg, L. (1998). Constructive Conflicts: From Escalation to Resolution. Rowman & Littlefield.",
+        "Kriesberg, L. & Dayton, B. (2012). Constructive Conflicts (4th ed.). Rowman & Littlefield."
+      ]
+    },
+    {
+      "framework_id": "deutsch",
+      "display_name": "Deutsch Cooperation-Competition Theory",
+      "domain": "human_friction",
+      "core_concepts": [
+        "Cooperation",
+        "Competition",
+        "Linked fate",
+        "Crude Law of Social Relations",
+        "Promotively interdependent goals",
+        "Contriently interdependent goals"
+      ],
+      "key_propositions": [
+        "Cooperation occurs when parties have promotively interdependent goals — one's gain helps the other",
+        "Competition occurs when parties have contriently interdependent goals — one's gain hurts the other",
+        "The Crude Law: cooperation begets cooperation; competition begets competition",
+        "Cooperative contexts produce better outcomes than competitive ones for complex problems",
+        "Third-party framing of the situation as cooperative or competitive shapes behavior"
+      ],
+      "escalation_indicators": [
+        "Parties framing situation as zero-sum",
+        "Competitive dynamics established early in interaction",
+        "Absence of shared superordinate goals",
+        "Negative attribution of opponent's cooperative moves",
+        "Resource scarcity framing entrenching competition"
+      ],
+      "de_escalation_levers": [
+        "Reframe situation as promotively interdependent",
+        "Identify superordinate goals shared by both parties",
+        "Small cooperative acts to shift relational dynamic",
+        "Positive attribution training for opponent's moves",
+        "Restructure incentives to reward cooperation"
+      ],
+      "primary_questions": [
+        "Are the parties' goals promotively or contriently interdependent?",
+        "How are parties framing the situation — cooperative or competitive?",
+        "Are there superordinate goals that could reframe the relationship?",
+        "Is the Crude Law operating — is competition self-reinforcing?",
+        "What would shift the relational dynamic from competitive to cooperative?"
+      ],
+      "citations": [
+        "Deutsch, M. (1973). The Resolution of Conflict. Yale University Press.",
+        "Deutsch, M. (1949). A theory of cooperation and competition. Human Relations, 2(2)."
+      ]
+    },
+    {
+      "framework_id": "thomas_kilmann",
+      "display_name": "Thomas-Kilmann Conflict Mode Instrument",
+      "domain": "human_friction",
+      "core_concepts": [
+        "Assertiveness dimension",
+        "Cooperativeness dimension",
+        "Competing mode",
+        "Collaborating mode",
+        "Compromising mode",
+        "Avoiding mode",
+        "Accommodating mode"
+      ],
+      "key_propositions": [
+        "Conflict behavior varies on two dimensions: assertiveness and cooperativeness",
+        "Five distinct conflict modes emerge from combinations of these dimensions",
+        "No single mode is universally best — appropriateness depends on context",
+        "Collaborating is highest value for complex problems requiring creative solutions",
+        "Habitual reliance on one mode is a conflict management failure"
+      ],
+      "escalation_indicators": [
+        "Parties locked in Competing mode escalating to coercion",
+        "Avoiding mode allowing problems to fester",
+        "Accommodating mode creating resentment through asymmetric concession",
+        "Compromising mode failing to address root causes",
+        "Absence of Collaborating mode for complex issues"
+      ],
+      "de_escalation_levers": [
+        "Map each party's dominant conflict mode",
+        "Introduce Collaborating mode for complex substantive issues",
+        "Use Accommodating mode strategically for low-stakes issues",
+        "Use Competing mode only for emergency or core values",
+        "Coach parties to expand their conflict mode repertoire"
+      ],
+      "primary_questions": [
+        "What conflict mode is each party habitually using?",
+        "Is the mode appropriate to the stakes and relationship?",
+        "Is Collaborating being used where creative solutions are needed?",
+        "Is Avoiding allowing unresolved issues to accumulate?",
+        "What mode would best serve the relationship long-term?"
+      ],
+      "citations": [
+        "Thomas, K.W. & Kilmann, R.H. (1974). Thomas-Kilmann Conflict Mode Instrument. Xicom.",
+        "Thomas, K.W. (1992). Conflict and Negotiation Processes in Organizations. In Handbook of Industrial and Organizational Psychology."
+      ]
+    },
+    {
+      "framework_id": "french_raven",
+      "display_name": "French & Raven Power Bases",
+      "domain": "universal",
+      "core_concepts": [
+        "Legitimate power",
+        "Reward power",
+        "Coercive power",
+        "Expert power",
+        "Referent power",
+        "Informational power",
+        "Power asymmetry"
+      ],
+      "key_propositions": [
+        "Social power derives from six distinct bases with different durability and side effects",
+        "Coercive and reward power require surveillance; referent and expert power do not",
+        "Referent power is the most durable because it is internalized by the target",
+        "Power imbalances shape whether parties can negotiate on equal terms",
+        "Legitimate power loses effectiveness when the authority structure is challenged"
+      ],
+      "escalation_indicators": [
+        "Heavy reliance on coercive power escalating resistance",
+        "Reward power withdrawal triggering retaliation",
+        "Expert power monopoly creating resentment",
+        "Legitimate power being contested",
+        "Referent power eroding through scandal or failure"
+      ],
+      "de_escalation_levers": [
+        "Shift from coercive to legitimate or referent power",
+        "Power-balancing through coalition support for weaker party",
+        "Build expert power through demonstrated competence",
+        "Restore legitimate power through procedural fairness",
+        "Cultivate referent power through relationship investment"
+      ],
+      "primary_questions": [
+        "What power bases does each party hold?",
+        "Is there a significant power asymmetry between parties?",
+        "Which power bases are being exercised and which are latent?",
+        "Is coercive power triggering backlash or resistance?",
+        "How durable is each party's power base?"
+      ],
+      "citations": [
+        "French, J.R.P. & Raven, B. (1959). The Bases of Social Power. In D. Cartwright (Ed.), Studies in Social Power.",
+        "Raven, B.H. (1993). The Bases of Power. Journal of Social Issues, 49(4)."
+      ]
+    },
+    {
+      "framework_id": "mayer_trust",
+      "display_name": "Mayer Trust Framework",
+      "domain": "universal",
+      "core_concepts": [
+        "Perceived ability",
+        "Perceived benevolence",
+        "Perceived integrity",
+        "Propensity to trust",
+        "Risk-taking in relationship",
+        "Trust outcomes"
+      ],
+      "key_propositions": [
+        "Trust is a function of three perceived factors: ability, benevolence, and integrity",
+        "Low trust on any single factor (especially integrity) undermines overall trust",
+        "Propensity to trust is a trait that varies by individual and moderates trust formation",
+        "Trust enables risk-taking in relationships; distrust triggers self-protective behaviors",
+        "Trust repair after violation requires explicit action on the violated dimension"
+      ],
+      "escalation_indicators": [
+        "Trust breakdown along ability dimension (perceived incompetence)",
+        "Trust breakdown along benevolence dimension (malicious intent perceived)",
+        "Trust breakdown along integrity dimension (dishonesty or broken promises)",
+        "Propensity to trust very low — generalized distrust",
+        "Absence of trust-building experiences or shared history"
+      ],
+      "de_escalation_levers": [
+        "Demonstrate competence to rebuild ability-based trust",
+        "Signal genuine concern for other party to rebuild benevolence trust",
+        "Fulfill commitments consistently to rebuild integrity trust",
+        "Create low-stakes opportunities for successful cooperation",
+        "Third-party vouching to bootstrap initial trust"
+      ],
+      "primary_questions": [
+        "What is the overall trust level between parties?",
+        "Which trust dimension (ability, benevolence, integrity) is most deficient?",
+        "Has trust been violated — and on which dimension?",
+        "What is each party's propensity to trust as a baseline?",
+        "What trust-building actions are feasible at this stage?"
+      ],
+      "citations": [
+        "Mayer, R.C., Davis, J.H. & Schoorman, F.D. (1995). An Integrative Model of Organizational Trust. Academy of Management Review, 20(3).",
+        "Schoorman, F.D., Mayer, R.C. & Davis, J.H. (2007). An Integrative Model of Organizational Trust: Past, Present, and Future."
+      ]
+    },
+    {
+      "framework_id": "plutchik",
+      "display_name": "Plutchik Emotion Wheel",
+      "domain": "human_friction",
+      "core_concepts": [
+        "8 primary emotions",
+        "Emotion intensity",
+        "Emotion opposites",
+        "Emotion dyads",
+        "Emotional valence",
+        "Arousal dimension"
+      ],
+      "key_propositions": [
+        "Eight primary emotions (joy, trust, fear, surprise, sadness, disgust, anger, anticipation) underlie all emotional experience",
+        "Emotions exist on an intensity continuum from mild to extreme",
+        "Opposite emotions cannot be simultaneously experienced at high intensity",
+        "Conflict emotion profiles predict party behavior and receptivity to resolution",
+        "Emotion dyads (mixtures of primary emotions) create complex conflict-relevant states"
+      ],
+      "escalation_indicators": [
+        "High-intensity anger escalating to rage",
+        "Fear intensifying to terror — triggering flight or freeze",
+        "Disgust deepening to loathing — dehumanization risk",
+        "Sadness deepening to grief — withdrawal from engagement",
+        "Asymmetric emotion profiles between parties preventing empathy"
+      ],
+      "de_escalation_levers": [
+        "Emotion validation before substantive engagement",
+        "De-intensification from extreme to milder emotion variants",
+        "Shift from anger to sadness (more amenable to dialogue)",
+        "Introduce anticipation (hope) as counterweight to fear",
+        "Create shared emotional experiences to build trust"
+      ],
+      "primary_questions": [
+        "What primary emotions are active for each party?",
+        "What is the intensity level of each emotion?",
+        "Are emotions asymmetric between parties (preventing empathy)?",
+        "Are disgust or contempt present (highest barriers to dialogue)?",
+        "What emotional state would enable productive engagement?"
+      ],
+      "citations": [
+        "Plutchik, R. (1980). Emotion: A Psychoevolutionary Synthesis. Harper & Row.",
+        "Plutchik, R. (2001). The Nature of Emotions. American Scientist, 89(4)."
+      ]
+    },
+    {
+      "framework_id": "pearl_causal",
+      "display_name": "Pearl Causal Inference Framework",
+      "domain": "universal",
+      "core_concepts": [
+        "Causal hierarchy (association, intervention, counterfactual)",
+        "Directed Acyclic Graph (DAG)",
+        "Do-calculus",
+        "Counterfactual reasoning",
+        "Confounders",
+        "Causal identification"
+      ],
+      "key_propositions": [
+        "Causal claims require more than correlation — they require an interventional or counterfactual model",
+        "The causal hierarchy has three levels: seeing (association), doing (intervention), imagining (counterfactual)",
+        "Directed Acyclic Graphs make causal assumptions explicit and testable",
+        "Confounders must be identified and controlled to establish causal claims in conflict analysis",
+        "Counterfactual reasoning (what would have happened if X had not occurred) is essential for conflict attribution"
+      ],
+      "escalation_indicators": [
+        "Parties arguing from correlation not causation",
+        "Confounders unidentified in causal narratives",
+        "Counterfactuals being used rhetorically not analytically",
+        "Causal attribution errors driving blame dynamics",
+        "Intervention effects not distinguished from selection effects"
+      ],
+      "de_escalation_levers": [
+        "Build shared causal model through collaborative DAG construction",
+        "Identify confounders both parties agree are operating",
+        "Use counterfactual analysis to test proposed interventions",
+        "Separate causal from correlational claims in negotiations",
+        "Jointly evaluate intervention effects with do-calculus thinking"
+      ],
+      "primary_questions": [
+        "What causal mechanism links the identified trigger to the conflict outcome?",
+        "Is the causal claim associational, interventional, or counterfactual?",
+        "What confounders might be driving observed correlations?",
+        "What would have happened counterfactually if the key event had not occurred?",
+        "Can we build a shared DAG that both parties accept?"
+      ],
+      "citations": [
+        "Pearl, J. (2000). Causality: Models, Reasoning, and Inference. Cambridge University Press.",
+        "Pearl, J. & Mackenzie, D. (2018). The Book of Why. Basic Books."
+      ]
+    },
+    {
+      "framework_id": "winslade_monk",
+      "display_name": "Winslade & Monk Narrative Mediation",
+      "domain": "human_friction",
+      "core_concepts": [
+        "Conflict narrative",
+        "Dominant story",
+        "Alternative story",
+        "Narrative deconstruction",
+        "Reauthoring",
+        "Externalizing the problem",
+        "Unique outcomes"
+      ],
+      "key_propositions": [
+        "Conflicts are constructed and sustained through the stories parties tell about them",
+        "Dominant conflict narratives become self-fulfilling through repetition and selective attention",
+        "Externalizing the problem (separating person from problem) opens space for change",
+        "Unique outcomes — exceptions to the dominant story — are the seeds of alternative narratives",
+        "Reauthoring involves co-creating a preferred story that is thicker and more complex"
+      ],
+      "escalation_indicators": [
+        "Rigid dominant narrative with no acknowledged exceptions",
+        "Total identification of person with problem behavior",
+        "Absence of unique outcomes or alternative accounts",
+        "Both parties telling incompatible totalizing stories",
+        "Media or public narrative reinforcing dominant conflict story"
+      ],
+      "de_escalation_levers": [
+        "Externalize the problem — give it a name separate from persons",
+        "Search for unique outcomes that contradict the dominant narrative",
+        "Ask questions that thicken the alternative story",
+        "Invite witnesses to validate the preferred alternative story",
+        "Help parties become authors of a preferred narrative"
+      ],
+      "primary_questions": [
+        "What is the dominant narrative each party tells about the conflict?",
+        "Are there unique outcomes — exceptions to the dominant story?",
+        "How is the problem externalized (or not) from the persons involved?",
+        "What alternative story is trying to emerge?",
+        "What audience reinforces the dominant narrative?"
+      ],
+      "citations": [
+        "Winslade, J. & Monk, G. (2000). Narrative Mediation: A New Approach to Conflict Resolution. Jossey-Bass.",
+        "Monk, G. & Winslade, J. (2013). When Stories Clash: Addressing Conflict with Narrative Mediation. Taos Institute Publications."
+      ]
+    },
+    {
+      "framework_id": "ury_brett_goldberg",
+      "display_name": "Ury-Brett-Goldberg Dispute Systems Design",
+      "domain": "universal",
+      "core_concepts": [
+        "Interest-based procedures",
+        "Rights-based procedures",
+        "Power-based procedures",
+        "Loop-back provisions",
+        "Low-cost recourse",
+        "Prevention focus",
+        "Motivation to use interests"
+      ],
+      "key_propositions": [
+        "Dispute systems should prioritize interest-based procedures before rights and power procedures",
+        "Rights and power procedures are more costly and should be loop-back options not first resort",
+        "Low-cost rights and power procedures should be available when interests procedures fail",
+        "Prevention systems reduce dispute rates more effectively than reactive systems",
+        "System design should create motivation for parties to use interests procedures"
+      ],
+      "escalation_indicators": [
+        "Parties jumping to litigation or force without attempting interest-based resolution",
+        "Absence of accessible interest-based processes",
+        "Rights procedures being used for every minor dispute",
+        "No loop-back provisions from power back to interests",
+        "Dispute system designed by one party without the other's input"
+      ],
+      "de_escalation_levers": [
+        "Build accessible low-cost interests procedures as first step",
+        "Create loop-back provisions from arbitration/litigation to mediation",
+        "Design prevention mechanisms addressing root causes",
+        "Train parties in interest-based communication",
+        "Make rights and power procedures available but as last resort"
+      ],
+      "primary_questions": [
+        "What dispute procedures are currently in place?",
+        "Are parties going directly to rights or power procedures without trying interests first?",
+        "Are there loop-back provisions from rights/power back to interests?",
+        "Is there a prevention system addressing root causes?",
+        "Who designed the current dispute system — was it participatory?"
+      ],
+      "citations": [
+        "Ury, W., Brett, J.M. & Goldberg, S.B. (1988). Getting Disputes Resolved. Jossey-Bass.",
+        "Costantino, C. & Merchant, C. (1996). Designing Conflict Management Systems. Jossey-Bass."
+      ]
+    },
+    {
+      "framework_id": "burton",
+      "display_name": "Burton Basic Human Needs Theory",
+      "domain": "universal",
+      "core_concepts": [
+        "Basic human needs",
+        "Identity needs",
+        "Security needs",
+        "Recognition needs",
+        "Provention",
+        "Problem-solving workshops",
+        "Non-negotiable needs"
+      ],
+      "key_propositions": [
+        "Deep-rooted conflicts arise from denial of basic human needs (identity, security, recognition) that cannot be traded away",
+        "Unlike interests, basic human needs are non-negotiable and cannot be compromised",
+        "Provention — proactively removing conditions that frustrate needs — is more effective than prevention",
+        "Problem-solving workshops create conditions for parties to jointly analyze needs frustration",
+        "Sustainable resolution must address needs, not just interests or rights"
+      ],
+      "escalation_indicators": [
+        "Identity or recognition needs being denied or threatened",
+        "Security needs unmet — existential threat perceived",
+        "Parties treating non-negotiable needs as bargaining chips",
+        "Structural conditions systematically frustrating needs",
+        "Recognition and belonging needs denied by dominant group"
+      ],
+      "de_escalation_levers": [
+        "Identify which basic human needs are being frustrated for each party",
+        "Create conditions that satisfy basic needs without zero-sum tradeoffs",
+        "Problem-solving workshops to jointly analyze needs frustration",
+        "Structural change to remove needs-denying conditions",
+        "Recognize and validate identity needs explicitly"
+      ],
+      "primary_questions": [
+        "Which basic human needs (identity, security, recognition) are being frustrated?",
+        "Are the needs being treated as negotiable when they are actually non-negotiable?",
+        "What structural conditions are frustrating basic needs?",
+        "Is provention possible — can root causes be addressed before conflict intensifies?",
+        "Would a problem-solving workshop enable joint needs analysis?"
+      ],
+      "citations": [
+        "Burton, J. (1990). Conflict: Resolution and Provention. St. Martin's Press.",
+        "Burton, J. (1979). Deviance, Terrorism and War. St. Martin's Press."
+      ]
+    }
+  ]
+}

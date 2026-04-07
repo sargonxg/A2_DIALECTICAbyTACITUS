@@ -81,6 +81,7 @@ from dialectica_ontology.primitives import (
     EmotionalState,
     Event,
     Evidence,
+    InferredFact,
     Interest,
     Issue,
     Location,
@@ -89,7 +90,9 @@ from dialectica_ontology.primitives import (
     Outcome,
     PowerDynamic,
     Process,
+    ReasoningTrace,
     Role,
+    TheoryFrameworkNode,
     TrustState,
 )
 
@@ -198,7 +201,7 @@ __all__ = [
     "__version__",
     # Base
     "ConflictNode",
-    # 15 node types
+    # 18 node types
     "Actor",
     "Conflict",
     "Event",
@@ -214,6 +217,9 @@ __all__ = [
     "Location",
     "Evidence",
     "Role",
+    "ReasoningTrace",
+    "InferredFact",
+    "TheoryFrameworkNode",
     "NODE_TYPES",
     # Relationships
     "ConflictRelationship",
