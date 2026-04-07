@@ -29,6 +29,7 @@ from dialectica_api.routers import (
     extraction,
     graph,
     health,
+    integration,
     reasoning,
     relationships,
     sdk_info,
@@ -103,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(developers.router)
     app.include_router(sdk_info.router)
     app.include_router(benchmark.router)
+    app.include_router(integration.router)
     app.include_router(waitlist.router)
 
     @app.on_event("startup")
