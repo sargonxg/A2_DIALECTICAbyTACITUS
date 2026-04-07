@@ -47,6 +47,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: "WORKBENCH",
     items: [
       { label: "Workspaces", href: "/workspaces", icon: LayoutDashboard },
+      { label: "Demo Corpus", href: "/workspace/demo-workspace-001", icon: Layers },
       { label: "Ask", href: "/ask", icon: MessageSquare },
       { label: "Compare", href: "/compare", icon: GitCompare },
       { label: "Explore", href: "/explore", icon: Globe },
