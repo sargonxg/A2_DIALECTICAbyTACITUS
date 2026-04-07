@@ -605,6 +605,147 @@ class Neo4jGraphClient(GraphClient):
 
         return all_ids
 
+    # ── Reasoning Persistence ──────────────────────────────────────────────
+
+    async def write_reasoning_trace(
+        self,
+        trace: dict,
+        inferred_facts: list[dict],
+    ) -> str:
+        """Persist a ReasoningTrace node and its InferredFact nodes to Neo4j.
+
+        Merges the trace on (workspace_id, id) and creates each inferred
+        fact linked to the trace via a HAS_INFERENCE relationship.
+
+        Args:
+            trace: Property dict for the ReasoningTrace node.
+                   Must include ``id``, ``workspace_id``, and ``tenant_id``.
+            inferred_facts: List of property dicts for InferredFact nodes.
+                            Each must include ``id``, ``workspace_id``, and
+                            ``tenant_id``.  The ``trace_id`` field will be
+                            auto-populated from *trace["id"]* if absent.
+
+        Returns:
+            The trace node ID.
+        """
+        trace_id: str = trace["id"]
+        workspace_id: str = trace["workspace_id"]
+
+        # Normalise datetime fields to ISO strings for Neo4j
+        trace_props = dict(trace)
+        for k, v in list(trace_props.items()):
+            if isinstance(v, datetime):
+                trace_props[k] = v.isoformat()
+            elif v is None:
+                del trace_props[k]
+
+        async with self._session() as session:
+            # Upsert the ReasoningTrace node
+            await session.run(
+                "MERGE (t:ReasoningTrace {id: $id, workspace_id: $ws}) "
+                "SET t += $props, t:ConflictNode, t.updated_at = datetime()",
+                {"id": trace_id, "ws": workspace_id, "props": trace_props},
+            )
+
+            # Upsert each InferredFact and link to the trace
+            for fact in inferred_facts:
+                fact_props = dict(fact)
+                fact_props.setdefault("trace_id", trace_id)
+                for k, v in list(fact_props.items()):
+                    if isinstance(v, datetime):
+                        fact_props[k] = v.isoformat()
+                    elif v is None:
+                        del fact_props[k]
+
+                fact_id: str = fact_props["id"]
+                await session.run(
+                    "MERGE (f:InferredFact {id: $fid, workspace_id: $ws}) "
+                    "SET f += $props, f:ConflictNode, f.updated_at = datetime() "
+                    "WITH f "
+                    "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws}) "
+                    "MERGE (t)-[:HAS_INFERENCE]->(f)",
+                    {
+                        "fid": fact_id,
+                        "ws": workspace_id,
+                        "props": fact_props,
+                        "tid": trace_id,
+                    },
+                )
+
+        logger.info(
+            "Persisted ReasoningTrace %s with %d inferred facts to workspace %s",
+            trace_id,
+            len(inferred_facts),
+            workspace_id,
+        )
+        return trace_id
+
+    async def validate_reasoning_trace(
+        self,
+        trace_id: str,
+        workspace_id: str,
+        verdict: str,
+        validated_by: str,
+        notes: str = "",
+        modified_value: Any | None = None,
+    ) -> bool:
+        """Set human validation fields on a ReasoningTrace node.
+
+        Also marks linked InferredFact nodes with ``human_validated=true``
+        and the given verdict.  If *verdict* is ``"confirmed"``, creates a
+        VALIDATED_BY edge from each InferredFact to the validator user node
+        (if a User node with ``id=validated_by`` exists in the workspace).
+
+        Returns True if the trace was found and updated, False otherwise.
+        """
+        validated_at = datetime.utcnow().isoformat()
+
+        async with self._session() as session:
+            # Check the trace exists
+            check = await session.run(
+                "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws}) RETURN t.id AS id",
+                {"tid": trace_id, "ws": workspace_id},
+            )
+            record = await check.single()
+            if record is None:
+                return False
+
+            # Update trace
+            update_props: dict[str, Any] = {
+                "human_validated": True,
+                "human_verdict": verdict,
+                "validated_by": validated_by,
+                "validated_at": validated_at,
+            }
+            if notes:
+                update_props["validation_notes"] = notes
+            if modified_value is not None:
+                update_props["modified_value"] = str(modified_value)
+
+            await session.run(
+                "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws}) "
+                "SET t += $props, t.updated_at = datetime()",
+                {"tid": trace_id, "ws": workspace_id, "props": update_props},
+            )
+
+            # Update linked InferredFacts
+            await session.run(
+                "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws})-[:HAS_INFERENCE]->(f:InferredFact) "
+                "SET f.human_validated = true, f.human_verdict = $verdict, f.updated_at = datetime()",
+                {"tid": trace_id, "ws": workspace_id, "verdict": verdict},
+            )
+
+            # If confirmed, add VALIDATED_BY edge from InferredFact to validator
+            if verdict == "confirmed":
+                await session.run(
+                    "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws})-[:HAS_INFERENCE]->(f:InferredFact) "
+                    "MERGE (v:User {id: $uid}) "
+                    "MERGE (f)-[:VALIDATED_BY]->(v)",
+                    {"tid": trace_id, "ws": workspace_id, "uid": validated_by},
+                )
+
+        return True
+
     # ── Lifecycle ──────────────────────────────────────────────────────────
 
     async def close(self) -> None:

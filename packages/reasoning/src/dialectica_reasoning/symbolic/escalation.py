@@ -8,9 +8,11 @@ forward-looking trajectory forecasts.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from statistics import mean
+from typing import Any
 
 from dialectica_graph import GraphClient
 from dialectica_ontology.enums import (
@@ -24,6 +26,8 @@ from dialectica_ontology.primitives import (
     Event,
 )
 from dialectica_ontology.relationships import EdgeType
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Result data classes
@@ -319,3 +323,67 @@ class EscalationDetector:
             direction=direction,
             confidence=round(assessment.confidence * 0.8, 3),
         )
+
+    # -- Persistence write-back --------------------------------------------
+
+    async def write_back(
+        self,
+        workspace_id: str,
+        tenant_id: str,
+        assessment: GlaslAssessment,
+        trace_id: str | None = None,
+    ) -> str:
+        """Persist a Glasl escalation assessment as a ReasoningTrace + InferredFact.
+
+        Writes the assessment to Neo4j via the graph client so that
+        deterministic escalation conclusions survive service restarts and
+        are available for audit and human validation.
+
+        Args:
+            workspace_id: The workspace being analysed.
+            tenant_id: The tenant owning the workspace.
+            assessment: The GlaslAssessment produced by compute_glasl_stage.
+            trace_id: Optional explicit trace ID; auto-generated if omitted.
+
+        Returns:
+            The trace node ID that was persisted.
+        """
+        from ulid import ULID
+
+        from dialectica_ontology.primitives import InferredFact, ReasoningTrace
+
+        tid = trace_id or str(ULID())
+        trace = ReasoningTrace(
+            id=tid,
+            workspace_id=workspace_id,
+            tenant_id=tenant_id,
+            rules_fired=["glasl_stage_derivation"],
+            conclusion=f"Glasl stage {assessment.stage} ({assessment.level}), "
+            f"intervention={assessment.intervention_type}",
+            confidence_type="deterministic",
+            confidence_score=assessment.confidence,
+            source_node_ids=assessment.evidence[:10],
+        )
+
+        fact = InferredFact(
+            workspace_id=workspace_id,
+            tenant_id=tenant_id,
+            predicate="GLASL_STAGE",
+            subject_node_id=workspace_id,
+            value=str(assessment.stage),
+            confidence_type="deterministic",
+            confidence_score=assessment.confidence,
+            trace_id=tid,
+        )
+
+        write_fn = getattr(self._gc, "write_reasoning_trace", None)
+        if write_fn is not None:
+            return await write_fn(trace.model_dump(), [fact.model_dump()])
+
+        logger.warning(
+            "Graph client %s does not support write_reasoning_trace — "
+            "escalation trace %s will not be persisted.",
+            type(self._gc).__name__,
+            tid,
+        )
+        return tid

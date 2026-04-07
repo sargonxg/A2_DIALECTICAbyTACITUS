@@ -1,4 +1,4 @@
-"""Tests for dialectica_ontology.primitives — All 15 node type Pydantic models."""
+"""Tests for dialectica_ontology.primitives — All 18 node type Pydantic models."""
 
 from datetime import datetime
 
@@ -50,7 +50,9 @@ from dialectica_ontology.primitives import (
 
 
 def test_node_types_registry():
-    assert len(NODE_TYPES) == 15
+    # Registry contains 18 types: the original 15 plus
+    # ReasoningTrace, InferredFact, and TheoryFrameworkNode.
+    assert len(NODE_TYPES) == 18
     expected = {
         "Actor",
         "Conflict",
@@ -67,6 +69,9 @@ def test_node_types_registry():
         "Location",
         "Evidence",
         "Role",
+        "ReasoningTrace",
+        "InferredFact",
+        "TheoryFrameworkNode",
     }
     assert set(NODE_TYPES.keys()) == expected
 
