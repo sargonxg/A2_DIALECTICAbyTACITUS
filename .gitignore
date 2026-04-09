@@ -121,6 +121,10 @@ terraform.rc
 .Trashes
 ehthumbs.db
 Thumbs.db
+# SQLite dev database
+dialectica.db
+*.db-shm
+*.db-wal
 *.sublime-project
 *.sublime-workspace
 .project
