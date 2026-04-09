@@ -95,6 +95,114 @@ gcloud run deploy dialectica-mcp-server \
   --region $REGION --allow-unauthenticated
 ```
 
+## Step 5: BigQuery Analytics Setup (Optional)
+
+If you want longitudinal analytics on extraction quality, query patterns, and
+benchmark results, enable BigQuery.
+
+### 5.1 Terraform provisions the dataset
+
+If you ran `terraform apply` in Step 1, the `dialectica_analytics` dataset and
+three tables are already created. Verify:
+
+```bash
+bq ls --project_id=$PROJECT_ID
+# Expected: dialectica_analytics
+
+bq ls $PROJECT_ID:dialectica_analytics
+# Expected: extraction_events, query_events, benchmark_results
+```
+
+### 5.2 Configure the API
+
+Add these environment variables to your Cloud Run service:
+
+```bash
+gcloud run services update dialectica-api \
+  --region=$REGION \
+  --update-env-vars="BIGQUERY_ENABLED=true,BIGQUERY_DATASET=dialectica_analytics"
+```
+
+### 5.3 Verify data flow
+
+Run an extraction and check BigQuery:
+
+```bash
+bq query --use_legacy_sql=false \
+  "SELECT COUNT(*) as events FROM \`$PROJECT_ID.dialectica_analytics.extraction_events\`"
+```
+
+---
+
+## Step 6: Databricks Integration (Optional)
+
+For advanced ML workloads (KGE training, graph analytics at scale), connect
+DIALECTICA to a Databricks workspace.
+
+### 6.1 Prerequisites
+
+- Databricks workspace on GCP
+- Personal access token or service account token
+- Running cluster with PyTorch and PyKEEN
+
+### 6.2 Configure
+
+```bash
+gcloud run services update dialectica-api \
+  --region=$REGION \
+  --update-env-vars="DATABRICKS_HOST=https://your-workspace.cloud.databricks.com,DATABRICKS_TOKEN=dapi-xxx,DATABRICKS_CLUSTER_ID=xxxx-xxxxxx-xxxxxxxx"
+```
+
+### 6.3 Test
+
+```bash
+curl -s -X POST https://$API_URL/v1/admin/databricks/test \
+  -H "X-API-Key: $ADMIN_API_KEY"
+# Expected: {"status": "connected", "cluster_state": "RUNNING"}
+```
+
+---
+
+## Step 7: TACITUS Integration Configuration (Optional)
+
+If connecting DIALECTICA to other TACITUS platform applications:
+
+### 7.1 Create integration API key
+
+```bash
+curl -s -X POST https://$API_URL/v1/admin/api-keys \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $ADMIN_API_KEY" \
+  -d '{"level": "integration", "tenant_id": "tacitus-platform", "description": "TACITUS platform integration"}'
+```
+
+### 7.2 Configure calling applications
+
+In the TACITUS application that needs to call DIALECTICA:
+
+```bash
+TACITUS_DIALECTICA_URL=https://dialectica-api-xxxxx-ue.a.run.app
+TACITUS_DIALECTICA_API_KEY=sk-integration-xxxxxxxx
+```
+
+### 7.3 Integration endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v1/integration/graph` | POST | Push/pull conflict graphs |
+| `/v1/integration/context` | GET | Retrieve workspace context |
+| `/v1/integration/query` | POST | Execute reasoning queries |
+
+---
+
+## Production Runbook
+
+For a complete step-by-step production deployment guide including Neo4j Aura
+setup, monitoring, benchmarking baselines, and post-deployment checklist, see
+**[docs/runbook.md](runbook.md)**.
+
+---
+
 ## Environment Variables Reference
 
 | Variable | Required | Default | Description |
@@ -110,6 +218,14 @@ gcloud run deploy dialectica-mcp-server \
 | `ENVIRONMENT` | No | `development` | `development` or `production` |
 | `LOG_LEVEL` | No | `INFO` | Python log level |
 | `CORS_ORIGINS` | No | - | Comma-separated origins |
+| `BIGQUERY_ENABLED` | No | `false` | Enable BigQuery analytics logging |
+| `BIGQUERY_DATASET` | No | `dialectica_analytics` | BigQuery dataset name |
+| `DATABRICKS_HOST` | No | - | Databricks workspace URL |
+| `DATABRICKS_TOKEN` | No | - | Databricks access token |
+| `DATABRICKS_CLUSTER_ID` | No | - | Databricks cluster ID |
+| `NEO4J_URI` | Yes* | - | Neo4j connection URI (*when GRAPH_BACKEND=neo4j) |
+| `NEO4J_USER` | Yes* | `neo4j` | Neo4j username |
+| `NEO4J_PASSWORD` | Yes* | - | Neo4j password |
 
 ## Cost Estimation
 

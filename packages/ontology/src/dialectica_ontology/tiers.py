@@ -52,6 +52,10 @@ _FULL_NODES: frozenset[str] = _STANDARD_NODES | frozenset(
         "EmotionalState",
         "TrustState",
         "PowerDynamic",
+        # Reasoning persistence layer (added in TACITUS Core Ontology v2.1)
+        "ReasoningTrace",
+        "InferredFact",
+        "TheoryFrameworkNode",
     }
 )
 

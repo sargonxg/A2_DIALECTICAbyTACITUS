@@ -78,6 +78,48 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
 
+      # Neo4j Aura credentials (injected from Secret Manager when configured)
+      dynamic "env" {
+        for_each = local.neo4j_configured ? [1] : []
+        content {
+          name = "NEO4J_URI"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.neo4j_uri[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      dynamic "env" {
+        for_each = local.neo4j_configured ? [1] : []
+        content {
+          name = "NEO4J_USER"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.neo4j_user[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      dynamic "env" {
+        for_each = local.neo4j_configured ? [1] : []
+        content {
+          name = "NEO4J_PASSWORD"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.neo4j_password[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      env {
+        name  = "BIGQUERY_DATASET"
+        value = "dialectica_analytics"
+      }
+
       startup_probe {
         http_get {
           path = "/health"

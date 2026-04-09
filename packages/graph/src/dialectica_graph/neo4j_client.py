@@ -515,11 +515,51 @@ class Neo4jGraphClient(GraphClient):
         workspace_id: str,
         tenant_id: str,
     ) -> list[str]:
-        ids = []
+        """Bulk upsert nodes using Cypher UNWIND, grouped by label.
+
+        Nodes are grouped by their Neo4j label, then each group is
+        written in a single UNWIND query.  Embeddings are set in a
+        separate pass (only for nodes that carry them) to keep the
+        property map homogeneous.
+        """
+        if not nodes:
+            return []
+
+        # Group nodes by label
+        by_label: dict[str, list[tuple[ConflictNode, dict]]] = {}
         for node in nodes:
-            nid = await self.upsert_node(node, workspace_id, tenant_id)
-            ids.append(nid)
-        return ids
+            label = node.label or "ConflictNode"
+            props = _node_to_props(node, workspace_id, tenant_id)
+            by_label.setdefault(label, []).append((node, props))
+
+        all_ids: list[str] = []
+
+        async with self._session() as session:
+            for label, items in by_label.items():
+                batch = [{"id": n.id, "props": p} for n, p in items]
+                cypher = (
+                    "UNWIND $batch AS item "
+                    f"MERGE (n:{label} {{id: item.id}}) "
+                    "SET n += item.props, n:ConflictNode, n.updated_at = datetime()"
+                )
+                await session.run(cypher, {"batch": batch})
+                all_ids.extend(item["id"] for item in batch)
+
+            # Second pass: set embeddings where present
+            embedding_batch = [
+                {"id": node.id, "embedding": node.embedding}
+                for node, _ in (item for items in by_label.values() for item in items)
+                if node.embedding
+            ]
+            if embedding_batch:
+                emb_cypher = (
+                    "UNWIND $batch AS item "
+                    "MATCH (n:ConflictNode {id: item.id}) "
+                    "SET n.embedding = item.embedding"
+                )
+                await session.run(emb_cypher, {"batch": embedding_batch})
+
+        return all_ids
 
     async def batch_upsert_edges(
         self,
@@ -527,11 +567,184 @@ class Neo4jGraphClient(GraphClient):
         workspace_id: str,
         tenant_id: str,
     ) -> list[str]:
-        ids = []
+        """Bulk upsert edges using Cypher UNWIND, grouped by relationship type.
+
+        Edges are grouped by their ``EdgeType`` so that a single
+        UNWIND query handles each relationship type in one round-trip.
+        """
+        if not edges:
+            return []
+
+        # Group edges by type
+        by_type: dict[str, list[dict]] = {}
         for edge in edges:
-            eid = await self.upsert_edge(edge, workspace_id, tenant_id)
-            ids.append(eid)
-        return ids
+            edge_type = str(edge.type)
+            props = _edge_to_props(edge, workspace_id, tenant_id)
+            by_type.setdefault(edge_type, []).append(
+                {
+                    "eid": edge.id,
+                    "src_id": edge.source_id,
+                    "tgt_id": edge.target_id,
+                    "props": props,
+                }
+            )
+
+        all_ids: list[str] = []
+
+        async with self._session() as session:
+            for edge_type, batch in by_type.items():
+                cypher = (
+                    "UNWIND $batch AS item "
+                    "MATCH (s:ConflictNode {id: item.src_id, workspace_id: $ws}) "
+                    "MATCH (t:ConflictNode {id: item.tgt_id, workspace_id: $ws}) "
+                    f"MERGE (s)-[r:{edge_type} {{id: item.eid}}]->(t) "
+                    "SET r += item.props"
+                )
+                await session.run(cypher, {"batch": batch, "ws": workspace_id})
+                all_ids.extend(item["eid"] for item in batch)
+
+        return all_ids
+
+    # ── Reasoning Persistence ──────────────────────────────────────────────
+
+    async def write_reasoning_trace(
+        self,
+        trace: dict,
+        inferred_facts: list[dict],
+    ) -> str:
+        """Persist a ReasoningTrace node and its InferredFact nodes to Neo4j.
+
+        Merges the trace on (workspace_id, id) and creates each inferred
+        fact linked to the trace via a HAS_INFERENCE relationship.
+
+        Args:
+            trace: Property dict for the ReasoningTrace node.
+                   Must include ``id``, ``workspace_id``, and ``tenant_id``.
+            inferred_facts: List of property dicts for InferredFact nodes.
+                            Each must include ``id``, ``workspace_id``, and
+                            ``tenant_id``.  The ``trace_id`` field will be
+                            auto-populated from *trace["id"]* if absent.
+
+        Returns:
+            The trace node ID.
+        """
+        trace_id: str = trace["id"]
+        workspace_id: str = trace["workspace_id"]
+
+        # Normalise datetime fields to ISO strings for Neo4j
+        trace_props = dict(trace)
+        for k, v in list(trace_props.items()):
+            if isinstance(v, datetime):
+                trace_props[k] = v.isoformat()
+            elif v is None:
+                del trace_props[k]
+
+        async with self._session() as session:
+            # Upsert the ReasoningTrace node
+            await session.run(
+                "MERGE (t:ReasoningTrace {id: $id, workspace_id: $ws}) "
+                "SET t += $props, t:ConflictNode, t.updated_at = datetime()",
+                {"id": trace_id, "ws": workspace_id, "props": trace_props},
+            )
+
+            # Upsert each InferredFact and link to the trace
+            for fact in inferred_facts:
+                fact_props = dict(fact)
+                fact_props.setdefault("trace_id", trace_id)
+                for k, v in list(fact_props.items()):
+                    if isinstance(v, datetime):
+                        fact_props[k] = v.isoformat()
+                    elif v is None:
+                        del fact_props[k]
+
+                fact_id: str = fact_props["id"]
+                await session.run(
+                    "MERGE (f:InferredFact {id: $fid, workspace_id: $ws}) "
+                    "SET f += $props, f:ConflictNode, f.updated_at = datetime() "
+                    "WITH f "
+                    "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws}) "
+                    "MERGE (t)-[:HAS_INFERENCE]->(f)",
+                    {
+                        "fid": fact_id,
+                        "ws": workspace_id,
+                        "props": fact_props,
+                        "tid": trace_id,
+                    },
+                )
+
+        logger.info(
+            "Persisted ReasoningTrace %s with %d inferred facts to workspace %s",
+            trace_id,
+            len(inferred_facts),
+            workspace_id,
+        )
+        return trace_id
+
+    async def validate_reasoning_trace(
+        self,
+        trace_id: str,
+        workspace_id: str,
+        verdict: str,
+        validated_by: str,
+        notes: str = "",
+        modified_value: Any | None = None,
+    ) -> bool:
+        """Set human validation fields on a ReasoningTrace node.
+
+        Also marks linked InferredFact nodes with ``human_validated=true``
+        and the given verdict.  If *verdict* is ``"confirmed"``, creates a
+        VALIDATED_BY edge from each InferredFact to the validator user node
+        (if a User node with ``id=validated_by`` exists in the workspace).
+
+        Returns True if the trace was found and updated, False otherwise.
+        """
+        validated_at = datetime.utcnow().isoformat()
+
+        async with self._session() as session:
+            # Check the trace exists
+            check = await session.run(
+                "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws}) RETURN t.id AS id",
+                {"tid": trace_id, "ws": workspace_id},
+            )
+            record = await check.single()
+            if record is None:
+                return False
+
+            # Update trace
+            update_props: dict[str, Any] = {
+                "human_validated": True,
+                "human_verdict": verdict,
+                "validated_by": validated_by,
+                "validated_at": validated_at,
+            }
+            if notes:
+                update_props["validation_notes"] = notes
+            if modified_value is not None:
+                update_props["modified_value"] = str(modified_value)
+
+            await session.run(
+                "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws}) "
+                "SET t += $props, t.updated_at = datetime()",
+                {"tid": trace_id, "ws": workspace_id, "props": update_props},
+            )
+
+            # Update linked InferredFacts
+            await session.run(
+                "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws})-[:HAS_INFERENCE]->(f:InferredFact) "
+                "SET f.human_validated = true, f.human_verdict = $verdict, f.updated_at = datetime()",
+                {"tid": trace_id, "ws": workspace_id, "verdict": verdict},
+            )
+
+            # If confirmed, add VALIDATED_BY edge from InferredFact to validator
+            if verdict == "confirmed":
+                await session.run(
+                    "MATCH (t:ReasoningTrace {id: $tid, workspace_id: $ws})-[:HAS_INFERENCE]->(f:InferredFact) "
+                    "MERGE (v:User {id: $uid}) "
+                    "MERGE (f)-[:VALIDATED_BY]->(v)",
+                    {"tid": trace_id, "ws": workspace_id, "uid": validated_by},
+                )
+
+        return True
 
     # ── Lifecycle ──────────────────────────────────────────────────────────
 

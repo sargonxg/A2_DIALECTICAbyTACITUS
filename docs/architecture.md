@@ -75,6 +75,12 @@ ontology  <--  graph  <--  extraction  <--  reasoning  <--  api
                                                              ^
                                                              |
                                                          apps/web (via HTTP)
+
+Cross-cutting:
+  ontology/subdomains.py      -- knowledge cluster detection (extraction + reasoning)
+  api/analytics.py            -- BigQuery event logging (all api routers)
+  reasoning/databricks.py     -- Databricks ML connector (reasoning + api)
+  api/routers/integration.py  -- TACITUS integration layer (external apps)
 ```
 
 All Python packages are installed as editable packages (`pip install -e`).
@@ -530,6 +536,171 @@ From `neurosymbolic.py` `BridgeProtocol.scientific_risks`:
 
 ---
 
+## Knowledge Clusters and Subdomains
+
+DIALECTICA classifies conflict data into 6 subdomains, each with specialized
+extraction prompts, validation rules, and theory framework priorities.
+
+### Subdomain Architecture
+
+```
+  Input Text
+       |
+       v
+  KnowledgeClusterDetector    (packages/ontology/.../subdomains.py)
+       |
+       +--> keyword heuristic scoring
+       +--> optional GLiNER entity distribution
+       |
+       v
+  SubdomainClassification
+       |
+       +--> primary_subdomain: str
+       +--> secondary_subdomains: list[str]
+       +--> confidence: float
+       |
+       v
+  Extraction Pipeline (selects subdomain-specific prompts)
+       |
+       v
+  Reasoning Engine (prioritises relevant theory frameworks)
+```
+
+### 6 Subdomains
+
+| Subdomain | Scope | Priority Theories |
+|-----------|-------|-------------------|
+| `geopolitical` | International relations, treaties, sanctions, diplomacy | Zartman, Kriesberg, Galtung |
+| `workplace` | HR disputes, harassment, organizational conflict | Thomas-Kilmann, Fisher-Ury, Mayer trust |
+| `commercial` | Contract disputes, IP, business mediation | Fisher-Ury, Ury-Brett-Goldberg, Deutsch |
+| `legal` | Litigation, regulatory, statutory interpretation | Ury-Brett-Goldberg, Fisher-Ury |
+| `armed` | War, insurgency, UCDP-classified armed conflict | Galtung, Glasl, Kriesberg, Zartman |
+| `environmental` | Resource disputes, climate conflict, land rights | Burton (needs), Lederach, Galtung |
+
+Defined in `packages/ontology/src/dialectica_ontology/subdomains.py`.
+
+---
+
+## BigQuery Analytics Pipeline
+
+Optional analytics layer that logs platform events to BigQuery for longitudinal
+analysis, cost tracking, and quality monitoring.
+
+### Data Flow
+
+```
+  API Routers
+       |
+       v
+  AnalyticsClient              (packages/api/.../analytics.py)
+       |
+       +--> log_extraction_event()
+       +--> log_query_event()
+       +--> log_benchmark_result()
+       |
+       v
+  BigQuery Streaming Insert
+       |
+       v
+  dialectica_analytics dataset
+       |
+       +--> extraction_events table
+       +--> query_events table
+       +--> benchmark_results table
+```
+
+### Tables
+
+| Table | Key Columns | Purpose |
+|-------|-------------|---------|
+| `extraction_events` | workspace_id, corpus_id, tier, entity_count, edge_count, duration_ms, timestamp | Track extraction volume and performance |
+| `query_events` | workspace_id, query_mode, token_count, latency_ms, timestamp | Track reasoning usage and latency |
+| `benchmark_results` | corpus_id, tier, entity_f1, relationship_f1, hallucination_rate, timestamp | Track extraction quality over time |
+
+Configuration: `BIGQUERY_ENABLED=true`, `BIGQUERY_DATASET=dialectica_analytics`.
+Provisioned by Terraform (`infrastructure/terraform/`). No-ops gracefully when
+disabled.
+
+---
+
+## Databricks ML Pipeline
+
+Optional integration for running Knowledge Graph Embedding (KGE) training and
+advanced ML on Databricks clusters.
+
+### Data Flow
+
+```
+  Conflict Graph (Neo4j)
+       |
+       v
+  DatabricksConnector.export_graph()    (packages/reasoning/.../databricks.py)
+       |
+       v
+  Databricks Cluster
+       |
+       +--> Spark DataFrame (nodes + edges)
+       +--> KGE Training (RotatE, TransE via PyKEEN)
+       +--> Link Prediction
+       |
+       v
+  DatabricksConnector.get_predictions()
+       |
+       v
+  Reasoning Engine (neural gap-filling)
+```
+
+The DatabricksConnector supports three operations:
+- `export_graph(workspace_id)` -- serialize conflict graph to Spark DataFrame
+- `train_kge(workspace_id, model)` -- train KGE model on Databricks cluster
+- `get_predictions(workspace_id)` -- retrieve link predictions for neural inference
+
+Configuration: `DATABRICKS_HOST`, `DATABRICKS_TOKEN`, `DATABRICKS_CLUSTER_ID`.
+Falls back gracefully when not configured.
+
+---
+
+## TACITUS Integration Layer
+
+DIALECTICA serves as the trust graph and context layer for the broader TACITUS
+platform (tacitus.me). Other TACITUS applications connect via the integration API.
+
+### Integration Architecture
+
+```
+  TACITUS Platform
+       |
+       +--> Trust Graph App
+       +--> Mediation Tools
+       +--> Context Layer
+       |
+       v
+  /v1/integration/*              (packages/api/.../routers/integration.py)
+       |
+       +--> /graph   (POST)  -- push/pull conflict graphs
+       +--> /context (GET)   -- retrieve workspace context
+       +--> /query   (POST)  -- execute reasoning queries
+       |
+       v
+  DIALECTICA Core
+       |
+       +--> Graph DB (Neo4j Aura)
+       +--> Reasoning Engine
+       +--> Extraction Pipeline
+```
+
+### Endpoints
+
+| Endpoint | Method | Purpose | Auth Level |
+|----------|--------|---------|------------|
+| `/v1/integration/graph` | POST | Push/pull conflict graphs between TACITUS apps | integration |
+| `/v1/integration/context` | GET | Retrieve actors, conflicts, timelines for a workspace | integration |
+| `/v1/integration/query` | POST | Execute cross-app reasoning queries | integration |
+
+All integration endpoints enforce tenant isolation via workspace_id scoping.
+
+---
+
 ## Key File Reference
 
 | File | Path |
@@ -551,3 +722,11 @@ From `neurosymbolic.py` `BridgeProtocol.scientific_risks`:
 | CI workflow | `.github/workflows/ci.yml` |
 | Deploy workflow | `.github/workflows/deploy.yml` |
 | Env config template | `.env.example` |
+| Subdomains / clusters | `packages/ontology/src/dialectica_ontology/subdomains.py` |
+| BigQuery analytics client | `packages/api/src/dialectica_api/analytics.py` |
+| Databricks connector | `packages/reasoning/src/dialectica_reasoning/databricks.py` |
+| TACITUS integration router | `packages/api/src/dialectica_api/routers/integration.py` |
+| Benchmark router | `packages/api/src/dialectica_api/routers/benchmark.py` |
+| Benchmark dashboard | `apps/web/src/app/admin/benchmarks/page.tsx` |
+| Production runbook | `docs/runbook.md` |
+| Benchmarking guide | `docs/benchmarking.md` |

@@ -1,0 +1,12 @@
+[
+  {"name": "benchmark_id", "type": "STRING", "mode": "REQUIRED", "description": "Unique benchmark run identifier"},
+  {"name": "corpus_id", "type": "STRING", "mode": "REQUIRED", "description": "Corpus used for evaluation"},
+  {"name": "tier", "type": "STRING", "mode": "REQUIRED", "description": "Extraction tier (quick, standard, deep)"},
+  {"name": "model", "type": "STRING", "mode": "REQUIRED", "description": "Model identifier (e.g. gemini-2.5-flash-001)"},
+  {"name": "f1", "type": "FLOAT64", "mode": "REQUIRED", "description": "F1 score"},
+  {"name": "precision", "type": "FLOAT64", "mode": "REQUIRED", "description": "Precision score"},
+  {"name": "recall", "type": "FLOAT64", "mode": "REQUIRED", "description": "Recall score"},
+  {"name": "extraction_time_ms", "type": "FLOAT64", "mode": "REQUIRED", "description": "Extraction duration in milliseconds"},
+  {"name": "hallucination_rate", "type": "FLOAT64", "mode": "REQUIRED", "description": "Fraction of extracted facts not grounded in source"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED", "description": "Benchmark run timestamp (UTC)"}
+]

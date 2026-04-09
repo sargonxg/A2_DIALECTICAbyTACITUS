@@ -6,9 +6,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator
+from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -323,6 +324,139 @@ async def get_quality(
         "recommendations": dashboard.recommendations,
         "assessed_at": dashboard.assessed_at,
     }
+
+
+# ── Reasoning Persistence ─────────────────────────────────────────────────
+
+
+class ValidationRequest(BaseModel):
+    """Body for POST .../reasoning/{trace_id}/validate."""
+
+    verdict: str  # "confirmed" | "rejected" | "modified"
+    notes: str = ""
+    modified_value: str | None = None
+
+
+class ValidationResponse(BaseModel):
+    """Response after a human validates a reasoning trace."""
+
+    trace_id: str
+    workspace_id: str
+    verdict: str
+    validated_by: str
+    validated_at: str
+    notes: str = ""
+
+
+class TracesResponse(BaseModel):
+    """Paginated list of ReasoningTrace nodes for a workspace."""
+
+    workspace_id: str
+    traces: list[dict[str, Any]]
+    total: int
+    limit: int
+    offset: int
+
+
+@router.post("/reasoning/{trace_id}/validate")
+async def validate_reasoning_trace(
+    workspace_id: str,
+    trace_id: str,
+    body: ValidationRequest,
+    request: Request,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
+) -> ValidationResponse:
+    """Human-validate a persisted ReasoningTrace.
+
+    Allowed verdicts: ``confirmed``, ``rejected``, ``modified``.
+    On ``confirmed``, a ``VALIDATED_BY`` edge is created from each
+    linked InferredFact to the validator user node.
+    """
+    _VALID_VERDICTS = {"confirmed", "rejected", "modified"}
+    if body.verdict not in _VALID_VERDICTS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"verdict must be one of {sorted(_VALID_VERDICTS)}",
+        )
+
+    if graph_client is None:
+        raise HTTPException(status_code=503, detail="Graph client unavailable.")
+
+    # Prefer the dedicated method; fall back to a no-op for mock clients
+    validate_fn = getattr(graph_client, "validate_reasoning_trace", None)
+    if validate_fn is None:
+        raise HTTPException(
+            status_code=501,
+            detail="Graph client does not support reasoning trace validation.",
+        )
+
+    validated_by: str = getattr(request.state, "tenant_id", tenant_id)
+    validated_at = datetime.utcnow().isoformat()
+
+    found = await validate_fn(
+        trace_id=trace_id,
+        workspace_id=workspace_id,
+        verdict=body.verdict,
+        validated_by=validated_by,
+        notes=body.notes,
+        modified_value=body.modified_value,
+    )
+    if not found:
+        raise HTTPException(
+            status_code=404,
+            detail=f"ReasoningTrace {trace_id!r} not found in workspace {workspace_id!r}.",
+        )
+
+    return ValidationResponse(
+        trace_id=trace_id,
+        workspace_id=workspace_id,
+        verdict=body.verdict,
+        validated_by=validated_by,
+        validated_at=validated_at,
+        notes=body.notes,
+    )
+
+
+@router.get("/reasoning/traces")
+async def list_reasoning_traces(
+    workspace_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    graph_client: Any = Depends(get_graph_client),  # noqa: B008
+) -> TracesResponse:
+    """List all ReasoningTrace nodes for a workspace, paginated.
+
+    Returns traces ordered by ``created_at`` descending.
+    """
+    if graph_client is None:
+        raise HTTPException(status_code=503, detail="Graph client unavailable.")
+
+    nodes = await graph_client.get_nodes(
+        workspace_id=workspace_id,
+        label="ReasoningTrace",
+        limit=limit,
+        offset=offset,
+    )
+
+    traces: list[dict[str, Any]] = []
+    for node in nodes:
+        if hasattr(node, "model_dump"):
+            traces.append(node.model_dump(exclude={"embedding"}))
+        else:
+            # ConflictNode subclass serialisation fallback
+            traces.append(
+                {k: v for k, v in node.__dict__.items() if not k.startswith("_")}
+            )
+
+    return TracesResponse(
+        workspace_id=workspace_id,
+        traces=traces,
+        total=len(traces),
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get("/network")

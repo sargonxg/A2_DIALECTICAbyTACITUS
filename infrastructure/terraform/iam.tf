@@ -58,6 +58,12 @@ resource "google_project_iam_member" "api_trace_agent" {
   member  = "serviceAccount:${google_service_account.api_sa.email}"
 }
 
+resource "google_project_iam_member" "api_bigquery_data_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.api_sa.email}"
+}
+
 # ─── Cloud Run Public Access ─────────────────────────────────────────────────
 
 data "google_iam_policy" "noauth" {

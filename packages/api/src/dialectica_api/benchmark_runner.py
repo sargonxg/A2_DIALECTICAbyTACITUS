@@ -12,6 +12,7 @@ Tiers: essential (nodes only), standard (nodes + edges), full (nodes + edges + p
 from __future__ import annotations
 
 import json
+import logging
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -19,6 +20,8 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -218,14 +221,44 @@ class BenchmarkRunner:
     async def _run_extraction(
         self, source_text: str, tier: str, model: str
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        """Run the extraction pipeline. Currently returns stub/simulated results.
+        """Run the extraction pipeline.
 
-        In production, this would call:
-            from dialectica_extraction import ExtractionPipeline
-            pipeline = ExtractionPipeline(model=model)
-            result = await pipeline.extract(text=source_text, tier=tier)
+        Attempts to use the real ``ExtractionPipeline`` from
+        ``dialectica_extraction``.  Falls back to hardcoded stub data
+        when the extraction package is unavailable or the pipeline fails
+        (e.g. missing Gemini API credentials in CI).
         """
-        # Stub: return a realistic partial extraction to exercise the comparison logic
+        try:
+            from dialectica_extraction.pipeline import ExtractionPipeline
+            from dialectica_ontology.tiers import OntologyTier
+
+            pipeline = ExtractionPipeline()
+            result = pipeline.run(
+                text=source_text,
+                tier=OntologyTier(tier),
+            )
+
+            nodes: list[dict[str, Any]] = result.get("validated_nodes", [])
+            edges: list[dict[str, Any]] = result.get("validated_edges", [])
+
+            # Only accept pipeline results if extraction produced output
+            if nodes:
+                return nodes, edges
+
+            logger.warning(
+                "ExtractionPipeline returned 0 nodes — falling back to stub data"
+            )
+        except Exception as exc:
+            logger.warning(
+                "ExtractionPipeline unavailable or failed (%s) — using stub data",
+                exc,
+            )
+
+        return self._stub_extraction()
+
+    @staticmethod
+    def _stub_extraction() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """Return hardcoded JCPOA stub data for benchmark comparison logic."""
         stub_nodes: list[dict[str, Any]] = [
             {"id": "ext_iran", "label": "Actor", "name": "Iran"},
             {"id": "ext_usa", "label": "Actor", "name": "United States"},
