@@ -35,6 +35,23 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: dialectica-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dialectica
+      POSTGRES_PASSWORD: dialectica-dev
+      POSTGRES_DB: dialectica
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dialectica -d dialectica"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -45,6 +62,7 @@ services:
     depends_on:
       neo4j: { condition: service_healthy }
       redis: { condition: service_healthy }
+      postgres: { condition: service_healthy }
     environment:
       GRAPH_BACKEND: neo4j
       NEO4J_URI: bolt://neo4j:7687
@@ -58,6 +76,7 @@ services:
       CORS_ORIGINS: "*"
       LOG_LEVEL: INFO
       GCP_PROJECT_ID: local-project
+      DATABASE_URL: postgresql+asyncpg://dialectica:dialectica-dev@postgres:5432/dialectica
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 15s
@@ -67,3 +86,4 @@ services:
 
 volumes:
   neo4j-data:
+  postgres-data:

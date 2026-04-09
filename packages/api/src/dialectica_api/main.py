@@ -110,6 +110,16 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup() -> None:
         logger.info('{"event":"startup","backend":"%s"}', settings.graph_backend)
+
+        # Initialise relational metadata store (SQLite dev / PostgreSQL prod)
+        from dialectica_api.database.engine import create_db_and_tables
+
+        try:
+            await create_db_and_tables()
+            logger.info('{"event":"db_tables_created"}')
+        except Exception as exc:
+            logger.warning('{"event":"db_init_failed","error":"%s"}', exc)
+
         from dialectica_api.deps import get_graph_client
 
         client = get_graph_client(settings)
