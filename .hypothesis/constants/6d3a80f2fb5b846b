@@ -1,0 +1,4 @@
+# file: C:\Users\giuli\ANTIGRAVITY\DIALECTICA\A2_DIALECTICAbyTACITUS\.claude\worktrees\agent-a65948ce\packages\ontology\src\dialectica_ontology\theory_graph.py
+# hypothesis_version: 6.151.9
+
+['APPLIES_VIA', 'AUTHORED_BY', 'Authorship relation', 'BUILDS_ON', 'CONTRADICTS', 'EXEMPLIFIES', 'INTRODUCES', 'Methodology', 'PRESCRIBES', 'Pattern', 'Principle', 'Publication', 'Theorist', 'TheoryConcept', 'description', 'source', 'target']
