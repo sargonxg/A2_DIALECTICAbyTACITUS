@@ -12,6 +12,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Allow Next.js frontend lib directory (overrides Python lib/ rule above)
+!apps/web/src/lib/
 parts/
 sdist/
 var/

@@ -6,11 +6,18 @@ const nextConfig: NextConfig = {
     reactCompiler: false,
   },
   env: {
-    INTERNAL_API_URL: process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+    INTERNAL_API_URL:
+      process.env.DIALECTICA_API_URL ||
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8080",
   },
   // Proxy API calls to the backend (avoids CORS in production)
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiUrl =
+      process.env.DIALECTICA_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8080";
     return [
       {
         source: "/api/v1/:path*",

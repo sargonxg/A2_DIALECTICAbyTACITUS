@@ -22,8 +22,7 @@ import type {
   AddRelationshipRequest,
 } from "@/types/api";
 import type { GraphData } from "@/types/graph";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { getApiUrl } from "./config";
 
 class ApiError extends Error {
   constructor(
@@ -39,6 +38,7 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const API_URL = getApiUrl();
   const apiKey =
     typeof window !== "undefined" ? localStorage.getItem("dialectica_api_key") : null;
   const headers: Record<string, string> = {
@@ -157,6 +157,7 @@ export const api = {
 
   // Analysis (SSE streaming)
   analyzeStream: (data: AnalysisRequest): EventSource => {
+    const API_URL = getApiUrl();
     const apiKey =
       typeof window !== "undefined"
         ? localStorage.getItem("dialectica_api_key")
