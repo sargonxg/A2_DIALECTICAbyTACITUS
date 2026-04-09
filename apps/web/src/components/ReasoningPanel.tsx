@@ -11,7 +11,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ReasoningTrace } from "@/lib/workspace-api";
+import type { ReasoningTrace } from "@/types/api";
 
 interface ReasoningPanelProps {
   traces: ReasoningTrace[];

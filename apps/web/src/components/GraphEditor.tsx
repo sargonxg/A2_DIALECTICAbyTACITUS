@@ -10,7 +10,7 @@ import {
 import * as d3 from "d3";
 import { X, Plus } from "lucide-react";
 import { cn, NODE_COLORS } from "@/lib/utils";
-import type { IntegrationNode, IntegrationEdge } from "@/lib/workspace-api";
+import type { GraphNode, GraphEdge } from "@/types/api";
 
 const NODE_TYPES = [
   "Actor",
@@ -48,8 +48,8 @@ const EDGE_TYPES = [
 ] as const;
 
 export interface GraphEditorProps {
-  nodes: Array<IntegrationNode>;
-  edges: Array<IntegrationEdge>;
+  nodes: Array<GraphNode>;
+  edges: Array<GraphEdge>;
   onAddNode: (node: { type: string; label: string }) => Promise<void>;
   onDeleteNode: (nodeId: string) => Promise<void>;
   onAddEdge: (edge: { source: string; target: string; type: string }) => Promise<void>;
@@ -71,7 +71,7 @@ interface AddEdgeModal {
   sourceId: string;
 }
 
-type SimNode = IntegrationNode & d3.SimulationNodeDatum;
+type SimNode = GraphNode & d3.SimulationNodeDatum;
 interface SimLink {
   source: SimNode;
   target: SimNode;
@@ -95,7 +95,7 @@ export default function GraphEditor({
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [selectedNode, setSelectedNode] = useState<IntegrationNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
   const [addNodeModal, setAddNodeModal] = useState<AddNodeModal | null>(null);
   const [addEdgeModal, setAddEdgeModal] = useState<AddEdgeModal | null>(null);

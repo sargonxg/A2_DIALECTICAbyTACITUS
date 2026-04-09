@@ -112,3 +112,80 @@ export interface UserProfile {
   role: "admin" | "analyst" | "viewer";
   avatar_url?: string;
 }
+
+// Graph node — matches workspace graph endpoint response
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: string;
+  properties: Record<string, unknown>;
+  x?: number;
+  y?: number;
+  fx?: number | null;
+  fy?: number | null;
+  vx?: number;
+  vy?: number;
+}
+
+export interface GraphEdge {
+  id?: string;
+  source: string;
+  target: string;
+  type: string;
+  weight?: number;
+  properties?: Record<string, unknown>;
+}
+
+export interface WorkspaceGraphResponse {
+  workspace_id: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface ReasoningTrace {
+  id: string;
+  rules_fired: string[];
+  conclusion: string;
+  confidence_type: "deterministic" | "probabilistic";
+  confidence_score: number;
+  human_validated: boolean;
+  human_verdict?: string;
+  source_node_ids: string[];
+  created_at?: string;
+}
+
+export interface ReasoningTracesResponse {
+  traces: ReasoningTrace[];
+  total: number;
+}
+
+export interface ValidateTraceRequest {
+  verdict: "confirmed" | "rejected";
+  notes?: string;
+}
+
+export interface TheoryAssessment {
+  framework_id: string;
+  display_name: string;
+  score: number;
+  primary_questions: string[];
+  key_propositions: string[];
+  domain: string;
+}
+
+export interface TheoryAssessmentsResponse {
+  assessments: TheoryAssessment[];
+}
+
+export interface AddEntityRequest {
+  type: string;
+  label: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface AddRelationshipRequest {
+  source: string;
+  target: string;
+  type: string;
+}

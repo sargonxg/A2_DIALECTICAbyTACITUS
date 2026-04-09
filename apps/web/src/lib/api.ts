@@ -10,6 +10,16 @@ import type {
   ApiKey,
   HealthResponse,
   UserProfile,
+  WorkspaceGraphResponse,
+  GraphNode,
+  GraphEdge,
+  ReasoningTrace,
+  ReasoningTracesResponse,
+  ValidateTraceRequest,
+  TheoryAssessment,
+  TheoryAssessmentsResponse,
+  AddEntityRequest,
+  AddRelationshipRequest,
 } from "@/types/api";
 import type { GraphData } from "@/types/graph";
 
@@ -67,10 +77,53 @@ export const api = {
 
   // Graph
   getGraph: (workspaceId: string) =>
-    request<GraphData>(`/v1/workspaces/${workspaceId}/graph`),
+    request<WorkspaceGraphResponse>(`/v1/workspaces/${workspaceId}/graph`),
   getSubgraph: (workspaceId: string, nodeId: string, depth = 2) =>
-    request<GraphData>(
+    request<WorkspaceGraphResponse>(
       `/v1/workspaces/${workspaceId}/graph/subgraph?node_id=${nodeId}&depth=${depth}`,
+    ),
+
+  // Entity mutations
+  addEntity: (workspaceId: string, entity: AddEntityRequest) =>
+    request<GraphNode>(`/v1/workspaces/${workspaceId}/entities`, {
+      method: "POST",
+      body: JSON.stringify(entity),
+    }),
+  deleteEntity: (workspaceId: string, entityId: string) =>
+    request<void>(`/v1/workspaces/${workspaceId}/entities/${entityId}`, {
+      method: "DELETE",
+    }),
+
+  // Relationship mutations
+  addRelationship: (workspaceId: string, edge: AddRelationshipRequest) =>
+    request<GraphEdge>(`/v1/workspaces/${workspaceId}/relationships`, {
+      method: "POST",
+      body: JSON.stringify(edge),
+    }),
+
+  // Reasoning traces
+  getReasoningTraces: (workspaceId: string) =>
+    request<ReasoningTracesResponse>(
+      `/v1/workspaces/${workspaceId}/reasoning/traces`,
+    ),
+  validateTrace: (
+    workspaceId: string,
+    traceId: string,
+    verdict: "confirmed" | "rejected",
+    notes?: string,
+  ) =>
+    request<ReasoningTrace>(
+      `/v1/workspaces/${workspaceId}/reasoning/${traceId}/validate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ verdict, notes } satisfies ValidateTraceRequest),
+      },
+    ),
+
+  // Theory assessments
+  getTheoryAssessments: (workspaceId: string) =>
+    request<TheoryAssessmentsResponse>(
+      `/v1/workspaces/${workspaceId}/theory/assessments`,
     ),
 
   // Entities

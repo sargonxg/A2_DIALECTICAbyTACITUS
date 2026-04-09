@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { TheoryAssessment } from "@/lib/workspace-api";
+import type { TheoryAssessment } from "@/types/api";
 
 interface TheoryGridProps {
   assessments: TheoryAssessment[];
