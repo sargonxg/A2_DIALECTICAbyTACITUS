@@ -43,7 +43,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_api_key_records_key_hash'), 'api_key_records', ['key_hash'], unique=False)
+    op.create_index(op.f('ix_api_key_records_key_hash'), 'api_key_records', ['key_hash'], unique=True)
     op.create_index(op.f('ix_api_key_records_user_id'), 'api_key_records', ['user_id'], unique=False)
     op.create_table('workspace_meta',
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),

@@ -46,7 +46,7 @@ class ApiKeyRecord(SQLModel, table=True):
     __tablename__ = "api_key_records"
 
     id: str = Field(default_factory=_ulid, primary_key=True)
-    key_hash: str = Field(index=True)  # bcrypt hash of the raw API key
+    key_hash: str = Field(unique=True)  # bcrypt hash of the raw API key
     name: str
     user_id: str = Field(foreign_key="users.id", index=True)
     tier: str = "standard"
