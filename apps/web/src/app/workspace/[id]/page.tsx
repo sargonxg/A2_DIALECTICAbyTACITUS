@@ -8,19 +8,13 @@ import { cn } from "@/lib/utils";
 import GraphEditor from "@/components/GraphEditor";
 import ReasoningPanel from "@/components/ReasoningPanel";
 import TheoryGrid from "@/components/TheoryGrid";
-import {
-  fetchWorkspaceGraph,
-  fetchReasoningTraces,
-  fetchTheoryAssessments,
-  validateTrace,
-  addNode,
-  deleteNode,
-  addEdge,
-  type IntegrationNode,
-  type IntegrationEdge,
-  type ReasoningTrace,
-  type TheoryAssessment,
-} from "@/lib/workspace-api";
+import { api } from "@/lib/api";
+import type {
+  GraphNode,
+  GraphEdge,
+  ReasoningTrace,
+  TheoryAssessment,
+} from "@/types/api";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 
@@ -80,8 +74,8 @@ export default function WorkspaceDashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>("situation");
 
   // Situation layer
-  const [nodes, setNodes] = useState<IntegrationNode[]>([]);
-  const [edges, setEdges] = useState<IntegrationEdge[]>([]);
+  const [nodes, setNodes] = useState<GraphNode[]>([]);
+  const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [situationLoading, setSituationLoading] = useState(true);
   const [situationError, setSituationError] = useState<string | null>(null);
 
@@ -99,7 +93,7 @@ export default function WorkspaceDashboardPage() {
   useEffect(() => {
     setSituationLoading(true);
     setSituationError(null);
-    fetchWorkspaceGraph(workspaceId)
+    api.getGraph(workspaceId)
       .then((data) => {
         setNodes(data.nodes ?? []);
         setEdges(data.edges ?? []);
@@ -115,7 +109,7 @@ export default function WorkspaceDashboardPage() {
     if (activeTab !== "reasoning" || traces.length > 0 || reasoningLoading) return;
     setReasoningLoading(true);
     setReasoningError(null);
-    fetchReasoningTraces(workspaceId)
+    api.getReasoningTraces(workspaceId)
       .then((data) => setTraces(data.traces ?? []))
       .catch((err: unknown) => {
         setReasoningError(err instanceof Error ? err.message : "Failed to load reasoning traces");
@@ -128,7 +122,7 @@ export default function WorkspaceDashboardPage() {
     if (activeTab !== "theories" || assessments.length > 0 || theoriesLoading) return;
     setTheoriesLoading(true);
     setTheoriesError(null);
-    fetchTheoryAssessments(workspaceId)
+    api.getTheoryAssessments(workspaceId)
       .then((data) => setAssessments(data.assessments ?? []))
       .catch((err: unknown) => {
         setTheoriesError(
@@ -142,7 +136,7 @@ export default function WorkspaceDashboardPage() {
 
   const handleAddNode = useCallback(
     async (node: { type: string; label: string }) => {
-      const created = await addNode(workspaceId, node);
+      const created = await api.addEntity(workspaceId, node);
       setNodes((prev) => [...prev, created]);
     },
     [workspaceId],
@@ -150,7 +144,7 @@ export default function WorkspaceDashboardPage() {
 
   const handleDeleteNode = useCallback(
     async (nodeId: string) => {
-      await deleteNode(workspaceId, nodeId);
+      await api.deleteEntity(workspaceId, nodeId);
       setNodes((prev) => prev.filter((n) => n.id !== nodeId));
       setEdges((prev) =>
         prev.filter((e) => e.source !== nodeId && e.target !== nodeId),
@@ -161,7 +155,7 @@ export default function WorkspaceDashboardPage() {
 
   const handleAddEdge = useCallback(
     async (edge: { source: string; target: string; type: string }) => {
-      const created = await addEdge(workspaceId, edge);
+      const created = await api.addRelationship(workspaceId, edge);
       setEdges((prev) => [...prev, created]);
     },
     [workspaceId],
@@ -175,9 +169,13 @@ export default function WorkspaceDashboardPage() {
       verdict: "confirmed" | "rejected",
       notes?: string,
     ) => {
-      const updated = await validateTrace(workspaceId, traceId, verdict, notes);
+      const updated = await api.validateTrace(workspaceId, traceId, verdict, notes);
       setTraces((prev) =>
-        prev.map((t) => (t.id === traceId ? { ...t, ...updated } : t)),
+        prev.map((t) =>
+          t.id === traceId
+            ? { ...t, human_validated: true, human_verdict: updated.verdict }
+            : t,
+        ),
       );
     },
     [workspaceId],

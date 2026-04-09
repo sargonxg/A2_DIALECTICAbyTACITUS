@@ -31,9 +31,16 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const apiUrl = process.env.DIALECTICA_API_URL || "";
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background">
+        {/* Inject runtime config before any client JS executes */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__DIALECTICA_CONFIG__=${JSON.stringify({ apiUrl })}`,
+          }}
+        />
         <Providers>
           <div className="flex h-screen overflow-hidden">
             <Sidebar />

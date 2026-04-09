@@ -10,10 +10,19 @@ import type {
   ApiKey,
   HealthResponse,
   UserProfile,
+  WorkspaceGraphResponse,
+  GraphNode,
+  GraphEdge,
+  ReasoningTracesResponse,
+  ValidateTraceRequest,
+  ValidationResponse,
+  TheoryAssessment,
+  TheoryAssessmentsResponse,
+  AddEntityRequest,
+  AddRelationshipRequest,
 } from "@/types/api";
 import type { GraphData } from "@/types/graph";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { getApiUrl } from "./config";
 
 class ApiError extends Error {
   constructor(
@@ -29,6 +38,7 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const API_URL = getApiUrl();
   const apiKey =
     typeof window !== "undefined" ? localStorage.getItem("dialectica_api_key") : null;
   const headers: Record<string, string> = {
@@ -67,11 +77,64 @@ export const api = {
 
   // Graph
   getGraph: (workspaceId: string) =>
-    request<GraphData>(`/v1/workspaces/${workspaceId}/graph`),
+    request<WorkspaceGraphResponse>(`/v1/workspaces/${workspaceId}/graph`),
   getSubgraph: (workspaceId: string, nodeId: string, depth = 2) =>
-    request<GraphData>(
+    request<WorkspaceGraphResponse>(
       `/v1/workspaces/${workspaceId}/graph/subgraph?node_id=${nodeId}&depth=${depth}`,
     ),
+
+  // Entity mutations
+  addEntity: (workspaceId: string, entity: AddEntityRequest) =>
+    request<GraphNode>(`/v1/workspaces/${workspaceId}/entities`, {
+      method: "POST",
+      body: JSON.stringify(entity),
+    }),
+  deleteEntity: (workspaceId: string, entityId: string) =>
+    request<void>(`/v1/workspaces/${workspaceId}/entities/${entityId}`, {
+      method: "DELETE",
+    }),
+
+  // Relationship mutations
+  addRelationship: (workspaceId: string, edge: AddRelationshipRequest) =>
+    request<GraphEdge>(`/v1/workspaces/${workspaceId}/relationships`, {
+      method: "POST",
+      body: JSON.stringify(edge),
+    }),
+
+  // Reasoning traces
+  getReasoningTraces: (workspaceId: string) =>
+    request<ReasoningTracesResponse>(
+      `/v1/workspaces/${workspaceId}/reasoning/traces`,
+    ),
+  validateTrace: (
+    workspaceId: string,
+    traceId: string,
+    verdict: "confirmed" | "rejected" | "modified",
+    notes?: string,
+  ) =>
+    request<ValidationResponse>(
+      `/v1/workspaces/${workspaceId}/reasoning/${traceId}/validate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ verdict, notes } satisfies ValidateTraceRequest),
+      },
+    ),
+
+  // Theory assessments
+  getTheoryAssessments: (workspaceId: string) =>
+    request<{ workspace_id: string; assessments: Array<Record<string, unknown>> }>(
+      `/v1/workspaces/${workspaceId}/theory`,
+    ).then((data): TheoryAssessmentsResponse => {
+      const assessments: TheoryAssessment[] = (data.assessments ?? []).map((a) => ({
+        framework_id: (a.framework_id ?? "") as string,
+        display_name: (a.name ?? a.display_name ?? "") as string,
+        score: (a.applicability ?? a.score ?? 0) as number,
+        primary_questions: (a.insights ?? a.primary_questions ?? []) as string[],
+        key_propositions: (a.indicators ?? a.key_propositions ?? []) as string[],
+        domain: (a.domain ?? "universal") as string,
+      }));
+      return { assessments };
+    }),
 
   // Entities
   getEntities: (workspaceId: string, nodeType?: string) =>
@@ -94,6 +157,7 @@ export const api = {
 
   // Analysis (SSE streaming)
   analyzeStream: (data: AnalysisRequest): EventSource => {
+    const API_URL = getApiUrl();
     const apiKey =
       typeof window !== "undefined"
         ? localStorage.getItem("dialectica_api_key")

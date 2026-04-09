@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     rate_limit_backend: str = "memory"  # "memory" or "redis"
     redis_url: str = "redis://localhost:6379"
 
+    # Metadata database (SQLite for dev, PostgreSQL for production Cloud SQL)
+    database_url: str = "sqlite+aiosqlite:///./dialectica.db"
+    # For production Cloud SQL (PostgreSQL):
+    # DATABASE_URL=postgresql+asyncpg://user:pass@/dialectica?host=/cloudsql/PROJECT:REGION:INSTANCE
+
     # Environment & auth
     environment: str = "development"  # "development" or "production"
     api_keys_json: str = "[]"  # JSON array of key definitions

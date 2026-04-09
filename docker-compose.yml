@@ -38,6 +38,25 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # ─── PostgreSQL (metadata store) ────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: dialectica-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dialectica
+      POSTGRES_PASSWORD: dialectica-dev
+      POSTGRES_DB: dialectica
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dialectica -d dialectica"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # ─── DIALECTICA API ──────────────────────────────────────────────────────
   api:
     build:
@@ -50,6 +69,8 @@ services:
       neo4j:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     environment:
       # GCP
@@ -72,6 +93,7 @@ services:
       RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-redis}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       API_KEYS_JSON: ${API_KEYS_JSON:-[]}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://dialectica:dialectica-dev@postgres:5432/dialectica}
       # Google Application Credentials (mount key file in production)
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     volumes:
@@ -194,6 +216,7 @@ volumes:
   qdrant-data:
   neo4j-data:
   neo4j-logs:
+  postgres-data:
 
 networks:
   default:
