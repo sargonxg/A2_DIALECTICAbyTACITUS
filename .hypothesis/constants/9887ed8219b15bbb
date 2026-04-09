@@ -1,0 +1,4 @@
+# file: C:\Users\giuli\ANTIGRAVITY\DIALECTICA\A2_DIALECTICAbyTACITUS\.claude\worktrees\agent-a65948ce\packages\ontology\src\dialectica_ontology\compatibility\plover.py
+# hypothesis_version: 6.151.9
+
+[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 1.0, 'AGREE', 'AID', 'ARREST', 'ASSAULT', 'ASSAULT:attack', 'ASSAULT:bombing', 'ASSAULT:massacre', 'ASSAULT:shelling', 'COERCE', 'COERCE:blockade', 'COERCE:detention', 'COERCE:occupation', 'CONSULT', 'COOPERATE', 'DEMAND', 'DISAPPROVE', 'MOBILIZE', 'PROTEST', 'PROTEST:march', 'PROTEST:peaceful', 'PROTEST:riot', 'PROTEST:strike', 'REJECT', 'RESTRICT', 'RETREAT', 'SANCTION', 'SANCTION:diplomatic', 'SANCTION:economic', 'SANCTION:military', 'THREATEN', 'THREATEN:nuclear', 'THREATEN:ultimatum', 'description', 'event_type', 'performer_id', 'severity', 'source_text', 'target_id']

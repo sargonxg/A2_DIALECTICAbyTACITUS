@@ -1,0 +1,4 @@
+# file: C:\Users\giuli\ANTIGRAVITY\DIALECTICA\A2_DIALECTICAbyTACITUS\.claude\worktrees\agent-a65948ce\packages\ontology\src\dialectica_ontology\schemas.py
+# hypothesis_version: 6.151.9
+
+['  )', '  );', '  EDGE TABLES (', '  NODE TABLES (', '# ── Node Classes ──', '$defs', '$ref', '$schema', ',\n', ', ', 'ARRAY<STRING(MAX)>', 'Actor', 'BOOL', 'Conflict', 'DIALECTICA Ontology', 'Event', 'FLOAT64', 'INT64', 'JSON', 'QuadClass', 'STRING(MAX)', 'TIMESTAMP', '__name__', 'actor_type', 'bool', 'datetime', 'description', 'dia', 'domain', 'event_type', 'float', 'glasl_stage', 'int', 'name', 'occurred_at', 'oneOf', 'severity', 'source', 'started_at', 'status', 'str', 'target', 'title', 'xsd:boolean', 'xsd:dateTime', 'xsd:double', 'xsd:integer', 'xsd:string']

@@ -1,0 +1,4 @@
+# file: C:\Users\giuli\ANTIGRAVITY\DIALECTICA\A2_DIALECTICAbyTACITUS\.claude\worktrees\agent-a65948ce\packages\ontology\src\dialectica_ontology\compatibility\__init__.py
+# hypothesis_version: 6.151.9
+
+['acled_to_dialectica', 'cameo_to_dialectica', 'dialectica_to_acled', 'dialectica_to_cameo', 'dialectica_to_plover', 'event_type_quadclass', 'plover_quadclass', 'plover_to_dialectica']
