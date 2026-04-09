@@ -247,6 +247,11 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
                 chunk = chunks[idx]
                 result = extractor.extract_entities(chunk["text"], tier)
                 if result.error:
+                    logger.error(
+                        "Gemini extraction error for chunk %d: %s",
+                        idx,
+                        result.error,
+                    )
                     state.setdefault("errors", []).append(
                         {
                             "step": "extract_entities",
@@ -531,6 +536,7 @@ def compute_embeddings(state: ExtractionState) -> ExtractionState:
 
 def check_review_needed(state: ExtractionState) -> ExtractionState:
     """Pre-write check: flag for human review if low confidence or novel types."""
+    _start = time.time()
     nodes = state.get("_nodes", [])
     tier = OntologyTier(state.get("tier", "essential"))
     review_reasons: list[str] = []
@@ -558,6 +564,7 @@ def check_review_needed(state: ExtractionState) -> ExtractionState:
     if review_reasons:
         logger.info("Human review flagged: %s", "; ".join(review_reasons))
 
+    state.setdefault("processing_time", {})["check_review_needed"] = time.time() - _start
     return state
 
 
