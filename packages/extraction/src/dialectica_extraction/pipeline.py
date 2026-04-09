@@ -148,6 +148,7 @@ def gliner_prefilter(state: ExtractionState) -> ExtractionState:
     chunks = state.get("chunks", [])
     chunk_texts = [c["text"] for c in chunks]
 
+    state["gliner_available"] = True  # assume available until proven otherwise
     try:
         prefilter = GLiNERPreFilter()
         results = prefilter.prefilter(chunk_texts)
@@ -157,26 +158,42 @@ def gliner_prefilter(state: ExtractionState) -> ExtractionState:
                 "entity_count": r.entity_count,
                 "entity_density": r.entity_density,
                 "priority_score": r.priority_score,
+                "priority": r.priority_score,
             }
             for r in results
         ]
     except Exception as e:
-        logger.warning("GLiNER prefilter failed: %s (passing all chunks)", e)
+        logger.error(
+            "GLiNER prefilter UNAVAILABLE — passing all chunks with priority 1.0: %s",
+            e,
+            exc_info=True,
+        )
+        state["gliner_available"] = False
+        # fallback: all chunks pass with uniform priority
         state["prefilter_results"] = [
-            {"chunk_index": i, "entity_count": 0, "entity_density": 0, "priority_score": 1.0}
+            {"chunk_index": i, "entity_count": 0, "entity_density": 0, "priority_score": 1.0, "priority": 1.0}
             for i in range(len(chunks))
         ]
 
-    state["processing_time"]["gliner_prefilter"] = time.time() - start
+    state.setdefault("processing_time", {})["gliner_prefilter"] = time.time() - start
     return state
 
 
 def extract_entities(state: ExtractionState) -> ExtractionState:
     """Step 3: Extract entities using Instructor + LiteLLM (fallback to Gemini)."""
-    start = time.time()
+    import traceback
+
+    _start = time.time()
     chunks = state.get("chunks", [])
     tier = OntologyTier(state.get("tier", "essential"))
     prefilter_results = state.get("prefilter_results", [])
+
+    # If no prefilter results, process all chunks at equal priority
+    if not prefilter_results and chunks:
+        prefilter_results = [
+            {"chunk_index": i, "priority_score": 1.0, "priority": 1.0}
+            for i in range(len(chunks))
+        ]
 
     # Sort by priority, process highest-priority chunks first
     sorted_indices = sorted(
@@ -187,23 +204,41 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
 
     all_raw_entities: list[dict] = []
 
-    # Try Instructor-based extraction first
+    # Only catch ImportError for the import itself — keep it separate from runtime errors
+    _instructor_available = False
     try:
         from dialectica_extraction.instructor_extractors import extract_conflict_entities
 
-        for idx in sorted_indices:
-            if idx >= len(chunks):
-                continue
-            chunk = chunks[idx]
-            entities = extract_conflict_entities(chunk["text"], tier)
-            for entity in entities:
-                entity.setdefault("_chunk_index", idx)
-                entity.setdefault("source_text", chunk["text"][:200])
-            all_raw_entities.extend(entities)
+        _instructor_available = True
+    except ImportError:
+        logger.info("instructor not available, using gemini fallback")
 
-    except (ImportError, Exception) as e:
-        logger.warning("Instructor extraction unavailable (%s), falling back to Gemini", e)
+    if _instructor_available:
+        try:
+            for idx in sorted_indices:
+                if idx >= len(chunks):
+                    continue
+                chunk = chunks[idx]
+                entities = extract_conflict_entities(chunk["text"], tier)  # type: ignore[name-defined]
+                for entity in entities:
+                    entity.setdefault("_chunk_index", idx)
+                    entity.setdefault("source_text", chunk["text"][:200])
+                all_raw_entities.extend(entities)
+        except Exception as e:
+            error_msg = traceback.format_exc()
+            logger.error("Extraction failed in extract_entities (instructor): %s", error_msg)
+            state.setdefault("errors", []).append(
+                {
+                    "step": "extract_entities",
+                    "message": str(e),
+                    "details": {"traceback": error_msg},
+                }
+            )
+            # Fall through to Gemini fallback
+            _instructor_available = False
 
+    if not _instructor_available:
+        logger.info("Falling back to Gemini for entity extraction")
         try:
             extractor = GeminiExtractor()
             for idx in sorted_indices:
@@ -212,7 +247,7 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
                 chunk = chunks[idx]
                 result = extractor.extract_entities(chunk["text"], tier)
                 if result.error:
-                    state["errors"].append(
+                    state.setdefault("errors", []).append(
                         {
                             "step": "extract_entities",
                             "message": result.error,
@@ -226,16 +261,18 @@ def extract_entities(state: ExtractionState) -> ExtractionState:
                     entity.setdefault("source_text", entity.get("source_text", chunk["text"][:200]))
                 all_raw_entities.extend(result.raw_nodes)
         except Exception as e2:
-            logger.error("Entity extraction failed: %s", e2)
-            state["errors"].append(
+            error_msg = traceback.format_exc()
+            logger.error("Extraction failed in extract_entities (gemini): %s", error_msg)
+            state.setdefault("errors", []).append(
                 {
                     "step": "extract_entities",
                     "message": str(e2),
+                    "details": {"traceback": error_msg},
                 }
             )
 
     state["raw_entities"] = all_raw_entities
-    state["processing_time"]["extract_entities"] = time.time() - start
+    state.setdefault("processing_time", {})["extract_entities"] = time.time() - _start
     return state
 
 
@@ -539,6 +576,26 @@ def write_to_graph(state: ExtractionState) -> ExtractionState:
         "nodes_written": len(nodes),
         "edges_written": len(edges),
         "errors": len(state.get("errors", [])),
+        "total_chunks": len(state.get("chunks", [])),
+        "chunks_processed": len([
+            c for c in state.get("prefilter_results", [])
+            if c.get("priority", c.get("priority_score", 0)) > 0
+        ]),
+        "chunks_failed": sum(
+            1 for e in state.get("errors", [])
+            if e.get("step") in ("extract_entities", "gliner_prefilter")
+        ),
+        "entities_extracted": len(state.get("raw_entities", [])),
+        "entities_deduplicated": len(state.get("validated_nodes", [])),
+        "relationships_extracted": len(state.get("validated_edges", [])),
+        "confidence_avg": (
+            sum(
+                n.get("confidence_score", 0)
+                for n in state.get("validated_nodes", [])
+                if isinstance(n, dict)
+            )
+            / max(len(state.get("validated_nodes", [])), 1)
+        ),
     }
 
     state["processing_time"]["write_to_graph"] = time.time() - start
