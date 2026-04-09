@@ -30,9 +30,12 @@ class TestDiscriminatedUnionDispatch:
         assert e.label == "Event"
 
     def test_all_15_node_types_have_labels(self):
-        assert len(NODE_TYPES) == 15
+        # Registry now contains 18 types: the original 15 plus
+        # ReasoningTrace, InferredFact, and TheoryFrameworkNode.
+        assert len(NODE_TYPES) == 18
         labels = set(NODE_TYPES.keys())
-        expected = {
+        # Original 15 conflict-grammar types
+        original_15 = {
             "Actor",
             "Conflict",
             "Event",
@@ -49,7 +52,13 @@ class TestDiscriminatedUnionDispatch:
             "Evidence",
             "Role",
         }
-        assert labels == expected
+        # Persistence / scaffold types added in the reasoning persistence layer
+        new_types = {
+            "ReasoningTrace",
+            "InferredFact",
+            "TheoryFrameworkNode",
+        }
+        assert original_15 | new_types == labels
 
     def test_each_node_type_has_unique_label(self):
         labels = list(NODE_TYPES.keys())

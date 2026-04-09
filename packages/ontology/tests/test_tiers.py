@@ -39,10 +39,15 @@ def test_standard_nodes():
 
 def test_full_nodes():
     nodes = get_available_nodes(OntologyTier.FULL)
-    assert len(nodes) == 15
+    # Full tier now has 18 nodes: 15 original + ReasoningTrace + InferredFact
+    # + TheoryFrameworkNode (added in TACITUS Core Ontology v2.1)
+    assert len(nodes) == 18
     assert "EmotionalState" in nodes
     assert "TrustState" in nodes
     assert "PowerDynamic" in nodes
+    assert "ReasoningTrace" in nodes
+    assert "InferredFact" in nodes
+    assert "TheoryFrameworkNode" in nodes
 
 
 def test_tier_cumulative_nodes():

@@ -11,8 +11,12 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 from dialectica_ontology.confidence import Conclusion, ConfidenceType
+
+if TYPE_CHECKING:
+    from dialectica_graph.interface import GraphClient
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +123,46 @@ class SymbolicFirewall:
             )
 
         return merged
+
+    # ── Persistence helpers ────────────────────────────────────────────────
+
+    @staticmethod
+    async def write_trace_to_graph(
+        trace_data: dict[str, Any],
+        graph_client: GraphClient,
+        inferred_facts: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Write a ReasoningTrace (and optional InferredFacts) to Neo4j.
+
+        This helper bridges the in-memory firewall computation with the
+        durable graph store.  It delegates to
+        ``Neo4jGraphClient.write_reasoning_trace`` when the method is
+        available, falling back to a no-op that returns the trace ID so
+        callers never break in test/mock environments.
+
+        Args:
+            trace_data: Property dict for the ReasoningTrace node.
+                        Must contain at least ``id``, ``workspace_id``,
+                        and ``tenant_id``.
+            graph_client: Any GraphClient implementation (live or mock).
+            inferred_facts: Optional list of InferredFact property dicts.
+
+        Returns:
+            The trace node ID.
+        """
+        facts = inferred_facts or []
+        write_fn = getattr(graph_client, "write_reasoning_trace", None)
+        if write_fn is not None:
+            return await write_fn(trace_data, facts)
+
+        # Graceful degradation: graph client does not support write-back
+        logger.warning(
+            "Graph client %s does not implement write_reasoning_trace — "
+            "ReasoningTrace %s will NOT be persisted.",
+            type(graph_client).__name__,
+            trace_data.get("id", "<unknown>"),
+        )
+        return trace_data.get("id", "")
 
     @staticmethod
     def _contradicts(deterministic: Conclusion, prediction: Conclusion) -> bool:

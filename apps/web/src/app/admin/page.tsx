@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, LayoutDashboard, Database, Layers, Cpu, Heart, BarChart3, Settings, Shield, Network, Activity } from "lucide-react";
+import { Users, LayoutDashboard, Database, Layers, Cpu, Heart, BarChart3, Settings, Shield, Network, Activity, Target } from "lucide-react";
 
 const SECTIONS = [
   { href: "/admin/system", icon: Activity, label: "System Health", desc: "Live API, Neo4j, and Redis status with architecture overview" },
@@ -13,6 +13,7 @@ const SECTIONS = [
   { href: "/admin/ontology", icon: Layers, label: "Ontology", desc: "Browse node and edge types" },
   { href: "/admin/extraction", icon: Cpu, label: "Extraction", desc: "Pipeline monitoring" },
   { href: "/admin/graph-health", icon: Heart, label: "Graph Health", desc: "Consistency checks" },
+  { href: "/admin/benchmarks", icon: Target, label: "Benchmarks", desc: "Extraction pipeline evaluation against gold-standard corpora" },
   { href: "/admin/usage", icon: BarChart3, label: "Usage", desc: "API analytics" },
   { href: "/admin/api-keys", icon: Shield, label: "API Keys", desc: "Manage all keys" },
 ];

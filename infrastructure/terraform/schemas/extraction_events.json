@@ -1,0 +1,10 @@
+[
+  {"name": "workspace_id", "type": "STRING", "mode": "REQUIRED", "description": "Workspace that triggered the extraction"},
+  {"name": "tenant_id", "type": "STRING", "mode": "REQUIRED", "description": "Tenant owning the workspace"},
+  {"name": "nodes_extracted", "type": "INT64", "mode": "REQUIRED", "description": "Number of graph nodes extracted"},
+  {"name": "edges_extracted", "type": "INT64", "mode": "REQUIRED", "description": "Number of graph edges extracted"},
+  {"name": "processing_time_ms", "type": "FLOAT64", "mode": "REQUIRED", "description": "Total extraction pipeline duration in milliseconds"},
+  {"name": "tier", "type": "STRING", "mode": "REQUIRED", "description": "Extraction tier (quick, standard, deep)"},
+  {"name": "errors", "type": "INT64", "mode": "REQUIRED", "description": "Number of errors during extraction"},
+  {"name": "timestamp", "type": "TIMESTAMP", "mode": "REQUIRED", "description": "Event timestamp (UTC)"}
+]

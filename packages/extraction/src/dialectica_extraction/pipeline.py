@@ -525,7 +525,12 @@ def check_review_needed(state: ExtractionState) -> ExtractionState:
 
 
 def write_to_graph(state: ExtractionState) -> ExtractionState:
-    """Step 10: Batch upsert all nodes and edges to graph database."""
+    """Step 10: Batch upsert all nodes and edges to graph database (sync stub).
+
+    In synchronous LangGraph mode, this stores extraction data in state
+    for the caller to persist. Use ``write_to_graph_async`` when an async
+    ``GraphClient`` is available.
+    """
     start = time.time()
     nodes = state.get("_nodes", [])
     edges = state.get("_edges", [])
@@ -536,13 +541,70 @@ def write_to_graph(state: ExtractionState) -> ExtractionState:
         "errors": len(state.get("errors", [])),
     }
 
-    # Note: actual graph write requires an async GraphClient.
-    # In production, this step calls:
-    #   await graph_client.batch_upsert_nodes(nodes, workspace_id, tenant_id)
-    #   await graph_client.batch_upsert_edges(edges, workspace_id, tenant_id)
-    # For the synchronous LangGraph pipeline, we store the data for
-    # the caller to persist.
+    state["processing_time"]["write_to_graph"] = time.time() - start
+    return state
 
+
+async def write_to_graph_async(
+    state: ExtractionState,
+    graph_client: object | None,
+) -> ExtractionState:
+    """Step 10 (async): Batch upsert all nodes and edges to graph database.
+
+    Args:
+        state: Current extraction pipeline state.
+        graph_client: An async GraphClient instance, or ``None`` to skip
+            persistence (data is still returned in state).
+
+    Returns:
+        Updated ExtractionState with ``ingestion_stats`` populated.
+    """
+    start = time.time()
+    nodes = state.get("_nodes", [])
+    edges = state.get("_edges", [])
+    workspace_id = state.get("workspace_id", "")
+    tenant_id = state.get("tenant_id", "")
+
+    stats: dict[str, int] = {
+        "nodes_written": 0,
+        "edges_written": 0,
+        "errors": len(state.get("errors", [])),
+    }
+
+    if graph_client is None:
+        logger.warning(
+            "No graph_client provided — skipping persistence "
+            "(%d nodes, %d edges retained in state)",
+            len(nodes),
+            len(edges),
+        )
+        stats["nodes_written"] = len(nodes)
+        stats["edges_written"] = len(edges)
+        state["ingestion_stats"] = stats
+        state["processing_time"]["write_to_graph"] = time.time() - start
+        return state
+
+    # Persist nodes
+    try:
+        node_ids = await graph_client.batch_upsert_nodes(nodes, workspace_id, tenant_id)  # type: ignore[union-attr]
+        stats["nodes_written"] = len(node_ids)
+    except Exception as exc:
+        logger.error("batch_upsert_nodes failed: %s", exc)
+        state.setdefault("errors", []).append(
+            {"step": "write_to_graph", "message": f"Node upsert failed: {exc}"}
+        )
+
+    # Persist edges
+    try:
+        edge_ids = await graph_client.batch_upsert_edges(edges, workspace_id, tenant_id)  # type: ignore[union-attr]
+        stats["edges_written"] = len(edge_ids)
+    except Exception as exc:
+        logger.error("batch_upsert_edges failed: %s", exc)
+        state.setdefault("errors", []).append(
+            {"step": "write_to_graph", "message": f"Edge upsert failed: {exc}"}
+        )
+
+    state["ingestion_stats"] = stats
     state["processing_time"]["write_to_graph"] = time.time() - start
     return state
 
@@ -666,6 +728,7 @@ class ExtractionPipeline:
         tier: OntologyTier = OntologyTier.ESSENTIAL,
         workspace_id: str = "",
         tenant_id: str = "",
+        graph_client: object | None = None,
     ) -> ExtractionState:
         """Run the extraction pipeline on input text.
 
@@ -674,10 +737,13 @@ class ExtractionPipeline:
             tier: Ontology tier for extraction.
             workspace_id: Target workspace.
             tenant_id: Owning tenant.
+            graph_client: Optional async GraphClient for persisting results.
+                Stored in state and used by ``write_to_graph_async``.
 
         Returns:
             ExtractionState with all extraction results.
         """
+        self._graph_client = graph_client
         initial_state: ExtractionState = {
             "text": text,
             "tier": tier.value,

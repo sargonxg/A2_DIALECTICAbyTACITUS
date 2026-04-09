@@ -138,6 +138,24 @@ export const api = {
   listUsers: () => request<UserProfile[]>("/v1/admin/users"),
   adminListWorkspaces: () =>
     request<PaginatedResponse<Workspace>>("/v1/admin/workspaces"),
+
+  // Benchmarks
+  runBenchmark: (params: {
+    corpus_id: string;
+    tier: string;
+    model: string;
+    include_graph_augmented: boolean;
+  }) =>
+    request<Record<string, unknown>>("/v1/admin/benchmark/run", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
+  getBenchmarkHistory: (limit = 50) =>
+    request<Record<string, unknown>[]>(
+      `/v1/admin/benchmark/history?limit=${limit}`,
+    ),
+  getBenchmarkResult: (id: string) =>
+    request<Record<string, unknown>>(`/v1/admin/benchmark/${id}`),
 };
 
 export { ApiError };

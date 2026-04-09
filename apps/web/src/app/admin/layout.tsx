@@ -14,6 +14,7 @@ import {
   Heart,
   BarChart3,
   ExternalLink,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ const ADMIN_NAV = [
   { href: "/admin/ontology", label: "Ontology", icon: Layers },
   { href: "/admin/extraction", label: "Extraction", icon: Cpu },
   { href: "/admin/graph-health", label: "Graph Health", icon: Heart },
+  { href: "/admin/benchmarks", label: "Benchmarks", icon: Target },
   { href: "/admin/usage", label: "Usage", icon: BarChart3 },
   { href: "/admin/api-keys", label: "API Keys", icon: Shield },
 ];
