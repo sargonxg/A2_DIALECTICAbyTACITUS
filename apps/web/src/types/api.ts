@@ -161,7 +161,15 @@ export interface ReasoningTracesResponse {
 }
 
 export interface ValidateTraceRequest {
-  verdict: "confirmed" | "rejected";
+  verdict: "confirmed" | "rejected" | "modified";
+  notes?: string;
+}
+
+export interface ValidationResponse {
+  trace_id: string;
+  workspace_id: string;
+  verdict: "confirmed" | "rejected" | "modified";
+  validated_at: string;
   notes?: string;
 }
 

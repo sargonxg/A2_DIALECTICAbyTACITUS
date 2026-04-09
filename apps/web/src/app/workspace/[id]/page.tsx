@@ -171,7 +171,11 @@ export default function WorkspaceDashboardPage() {
     ) => {
       const updated = await api.validateTrace(workspaceId, traceId, verdict, notes);
       setTraces((prev) =>
-        prev.map((t) => (t.id === traceId ? { ...t, ...updated } : t)),
+        prev.map((t) =>
+          t.id === traceId
+            ? { ...t, human_validated: true, human_verdict: updated.verdict }
+            : t,
+        ),
       );
     },
     [workspaceId],

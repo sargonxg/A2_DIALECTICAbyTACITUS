@@ -13,9 +13,9 @@ import type {
   WorkspaceGraphResponse,
   GraphNode,
   GraphEdge,
-  ReasoningTrace,
   ReasoningTracesResponse,
   ValidateTraceRequest,
+  ValidationResponse,
   TheoryAssessment,
   TheoryAssessmentsResponse,
   AddEntityRequest,
@@ -109,10 +109,10 @@ export const api = {
   validateTrace: (
     workspaceId: string,
     traceId: string,
-    verdict: "confirmed" | "rejected",
+    verdict: "confirmed" | "rejected" | "modified",
     notes?: string,
   ) =>
-    request<ReasoningTrace>(
+    request<ValidationResponse>(
       `/v1/workspaces/${workspaceId}/reasoning/${traceId}/validate`,
       {
         method: "POST",
@@ -122,9 +122,19 @@ export const api = {
 
   // Theory assessments
   getTheoryAssessments: (workspaceId: string) =>
-    request<TheoryAssessmentsResponse>(
-      `/v1/workspaces/${workspaceId}/theory/assessments`,
-    ),
+    request<{ workspace_id: string; assessments: Array<Record<string, unknown>> }>(
+      `/v1/workspaces/${workspaceId}/theory`,
+    ).then((data): TheoryAssessmentsResponse => {
+      const assessments: TheoryAssessment[] = (data.assessments ?? []).map((a) => ({
+        framework_id: (a.framework_id ?? "") as string,
+        display_name: (a.name ?? a.display_name ?? "") as string,
+        score: (a.applicability ?? a.score ?? 0) as number,
+        primary_questions: (a.insights ?? a.primary_questions ?? []) as string[],
+        key_propositions: (a.indicators ?? a.key_propositions ?? []) as string[],
+        domain: (a.domain ?? "universal") as string,
+      }));
+      return { assessments };
+    }),
 
   // Entities
   getEntities: (workspaceId: string, nodeType?: string) =>
