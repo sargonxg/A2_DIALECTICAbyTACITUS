@@ -1,0 +1,41 @@
+resources:
+  jobs:
+    dialectica_core_v1_ingest_documents:
+      name: dialectica-core-v1-ingest-documents
+      description: Optional Databricks batch backend for TACITUS core v1 document ingestion.
+      max_concurrent_runs: 1
+      tags:
+        project: tacitus-dialectica
+        stack: core-v1
+        backend: optional-databricks
+      tasks:
+        - task_key: ingest_documents
+          spark_python_task:
+            python_file: ../src/ingest_documents.py
+            parameters:
+              - --catalog
+              - dialectica
+              - --schema
+              - conflict_graphs
+
+        - task_key: extract_to_delta
+          depends_on:
+            - task_key: ingest_documents
+          spark_python_task:
+            python_file: ../src/extract_to_delta.py
+            parameters:
+              - --catalog
+              - dialectica
+              - --schema
+              - conflict_graphs
+
+        - task_key: evaluate_extractions
+          depends_on:
+            - task_key: extract_to_delta
+          spark_python_task:
+            python_file: ../src/evaluate_extractions.py
+            parameters:
+              - --catalog
+              - dialectica
+              - --schema
+              - conflict_graphs

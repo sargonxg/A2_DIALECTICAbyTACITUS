@@ -70,6 +70,42 @@ NEO4J_URI=bolt://localhost:7687 NEO4J_PASSWORD=dialectica-dev \
 uv run python infrastructure/scripts/seed_sample_data.py
 ```
 
+### TACITUS Core v1 CLI Slice
+
+This local vertical slice is the fastest way to see the new
+provenance-first graph pipeline without Databricks or cloud credentials:
+
+```bash
+uv run dialectica ingest data/sample_docs \
+  --workspace-id local-workspace \
+  --case-id demo \
+  --dry-run
+```
+
+It writes JSONL primitives to `.dialectica/runs/latest.jsonl` and preserves:
+`workspace_id`, `case_id`, `episode_id`, `ontology_version`, `source_id`,
+`extraction_run_id`, `confidence`, `provenance_span`, `valid_from`, and
+`valid_to` where applicable.
+
+To initialize and write to local Neo4j:
+
+```bash
+docker compose -f docker-compose.local.yml up neo4j
+
+$env:NEO4J_URI="bolt://localhost:7687"
+$env:NEO4J_USERNAME="neo4j"
+$env:NEO4J_PASSWORD="dialectica-dev"
+$env:NEO4J_DATABASE="neo4j"
+
+uv run dialectica graph init
+uv run dialectica ingest data/sample_docs --workspace-id local-workspace --case-id demo --backend neo4j
+uv run dialectica graph query "What commitments constrain Actor X?" --workspace-id local-workspace --case-id demo
+uv run dialectica graph episodes --case-id demo --workspace-id local-workspace
+```
+
+The canonical v1 contract is in `ontology/tacitus_core_v1.yaml`. The broader
+ACO v2 package remains under `packages/ontology`.
+
 ### Frontend
 
 ```bash

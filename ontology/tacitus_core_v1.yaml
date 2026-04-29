@@ -1,0 +1,99 @@
+version: tacitus_core_v1
+description: >
+  TACITUS Dialectica core ontology for auditable conflict graphs. Dynamic
+  extensions are allowed only when mapped back to one of these primitives.
+required_separation_fields:
+  - workspace_id
+  - case_id
+  - ontology_version
+  - source_id
+  - extraction_run_id
+required_temporal_fields:
+  - valid_from
+  - valid_to
+  - observed_at
+required_provenance_fields:
+  - evidence_span_id
+  - provenance_span
+  - confidence
+core_primitives:
+  Actor:
+    description: Person, organization, state, coalition, institution, or informal group with agency.
+  Claim:
+    description: Source-backed or inferred assertion that can be verified, rejected, superseded, or contested.
+  Interest:
+    description: Need, fear, value, incentive, or priority behind a position.
+  Constraint:
+    description: Rule, red line, capacity limit, legal condition, deadline, or social restriction.
+  Leverage:
+    description: Ability to impose cost, grant benefit, block action, or shape options.
+  Commitment:
+    description: Promise, obligation, concession, threat, pledge, or agreed next step.
+  Event:
+    description: Time-bounded occurrence that changes or reveals the situation.
+  Narrative:
+    description: Story, frame, rumor, public justification, or identity claim.
+  Episode:
+    description: Bounded phase of a case or situation with temporal scope and analytical purpose.
+  ActorState:
+    description: Append-only temporal state of an actor during an episode.
+  SourceDocument:
+    description: Original document, note, transcript, report, book, or file.
+  SourceChunk:
+    description: Chunk of a source document with stable character offsets.
+  EvidenceSpan:
+    description: Specific text span grounding a graph item.
+  ExtractionRun:
+    description: Record of model, method, prompt/schema version, and extraction timestamp.
+relationships:
+  EVIDENCED_BY:
+    source: [Actor, Claim, Interest, Constraint, Leverage, Commitment, Event, Narrative, ActorState]
+    target: [EvidenceSpan]
+  FROM_CHUNK:
+    source: [EvidenceSpan]
+    target: [SourceChunk]
+  FROM_DOCUMENT:
+    source: [SourceChunk]
+    target: [SourceDocument]
+  PRODUCED_BY:
+    source: [Actor, Claim, Interest, Constraint, Leverage, Commitment, Event, Narrative, ActorState]
+    target: [ExtractionRun]
+  IN_EPISODE:
+    source: [Claim, Interest, Constraint, Leverage, Commitment, Event, Narrative, ActorState]
+    target: [Episode]
+  ABOUT_ACTOR:
+    source: [Claim, Interest, Constraint, Leverage, Commitment, Narrative, ActorState]
+    target: [Actor]
+  CONSTRAINS:
+    source: [Constraint, Commitment]
+    target: [Actor]
+  CREATES_LEVERAGE:
+    source: [Constraint, Commitment, Event]
+    target: [Leverage]
+  CAUSED:
+    source: [Event]
+    target: [Event]
+  SUPPORTS:
+    source: [EvidenceSpan, Claim]
+    target: [Claim]
+dynamic_extension_contract:
+  required_fields:
+    - workspace_id
+    - ontology_version
+    - core_mapping
+    - created_by
+    - schema_validation_status
+  valid_core_mappings:
+    - Actor
+    - Claim
+    - Interest
+    - Constraint
+    - Leverage
+    - Commitment
+    - Event
+    - Narrative
+    - Source
+    - Episode
+    - ActorState
+    - ExtractionRun
+    - EvidenceSpan
