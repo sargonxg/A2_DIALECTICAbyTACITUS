@@ -1018,6 +1018,13 @@ export default function GraphOpsConsole() {
             graph-memory contract that Praxis, policy tools, mediation tools, and
             benchmark labs can call.
           </p>
+          <Link
+            href="/api/graphops/manifest"
+            className="mt-4 inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs text-text-secondary hover:text-accent"
+          >
+            Open GraphOps manifest
+            <ArrowRight size={13} />
+          </Link>
           <div className="mt-4 space-y-3">
             {embeddableSurfaces.map((surface) => (
               <div key={surface.product} className="rounded-lg border border-border bg-background p-4">
