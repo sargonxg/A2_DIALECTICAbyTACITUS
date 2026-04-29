@@ -210,3 +210,25 @@ resources:
               schema: conflict_graphs
               model_endpoint: databricks-meta-llama-3-3-70b-instruct
               max_graph_facts: "80"
+
+    tacitus_pipeline_artifact_ingestion:
+      name: tacitus-dialectica-pipeline-artifact-ingestion
+      description: Reads GraphOps pipeline-plan artifacts staged by the frontend and writes normalized Delta control-plane tables.
+      max_concurrent_runs: 1
+      timeout_seconds: 900
+      tags:
+        project: tacitus-dialectica
+        cost_guardrail: low
+        workload: pipeline-control-plane
+      queue:
+        enabled: true
+      tasks:
+        - task_key: ingest_pipeline_artifacts
+          timeout_seconds: 900
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/06_ingest_pipeline_artifacts.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              artifact_root: /Workspace/Shared/tacitus/dialectica/artifacts
+              workspace_id: ""

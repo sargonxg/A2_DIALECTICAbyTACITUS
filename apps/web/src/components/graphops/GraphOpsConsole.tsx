@@ -60,7 +60,9 @@ import {
   safetyBoundaries,
   sourcePacks,
   nextSprintPriorities,
+  pipelineConfigurationExamples,
   pipelineBlockCatalog,
+  pipelineStageGuide,
   topTenBuildPriorities,
   workspaceProjectTemplates,
 } from "@/data/graphops";
@@ -92,6 +94,21 @@ const layerCards = [
     detail: "Databricks features, review queues, centrality, link candidates, quality scores.",
   },
 ];
+
+const stageStyles: Record<string, string> = {
+  Ingest: "border-blue-500/30 bg-blue-500/10 text-blue-200",
+  Ontology: "border-violet-500/30 bg-violet-500/10 text-violet-200",
+  Temporal: "border-amber-500/30 bg-amber-500/10 text-amber-200",
+  Structure: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+  Graph: "border-cyan-500/30 bg-cyan-500/10 text-cyan-200",
+  Reason: "border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200",
+  Act: "border-rose-500/30 bg-rose-500/10 text-rose-200",
+  Benchmark: "border-slate-400/30 bg-slate-400/10 text-slate-200",
+};
+
+function stageClass(stage: string) {
+  return stageStyles[stage] ?? "border-border bg-background text-text-secondary";
+}
 
 const bookStarts = [
   {
@@ -584,7 +601,16 @@ export default function GraphOpsConsole() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="mt-5 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
+          {pipelineStageGuide.map((item) => (
+            <div key={item.stage} className={`rounded-lg border p-3 ${stageClass(item.stage)}`}>
+              <p className="text-sm font-semibold">{item.stage}</p>
+              <p className="mt-2 text-[11px] leading-5 opacity-90">{item.purpose}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
           <div className="space-y-3">
             {workspaceProjectTemplates.map((template) => (
               <button
@@ -695,13 +721,59 @@ export default function GraphOpsConsole() {
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {pipelineBlockCatalog.map((block) => (
-            <div key={block.id} className="rounded-lg border border-border bg-background p-4">
+            <div key={block.id} className={`rounded-lg border p-4 ${stageClass(block.stage)}`}>
               <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-semibold text-text-primary">{block.name}</p>
-                <span className="rounded-md bg-surface px-2 py-1 text-[10px] text-text-secondary">{block.status}</span>
+                <p className="text-sm font-semibold">{block.name}</p>
+                <span className="rounded-md bg-black/20 px-2 py-1 text-[10px]">{block.status}</span>
               </div>
-              <p className="mt-1 text-[11px] uppercase tracking-wide text-accent">{block.stage}</p>
-              <p className="mt-2 text-xs leading-5 text-text-secondary">{block.description}</p>
+              <p className="mt-1 text-[11px] uppercase tracking-wide opacity-80">{block.stage} / {block.backend}</p>
+              <p className="mt-2 text-xs leading-5 opacity-90">{block.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+          <Layers size={18} className="text-accent" />
+          Pipeline configuration examples
+        </h2>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+          These are not generic RAG flows. Each configuration defines the user,
+          objective, sources, ontology focus, temporal episodes, graph outputs, and
+          benchmark target before any extraction happens.
+        </p>
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+          {pipelineConfigurationExamples.map((example) => (
+            <div key={example.id} className="rounded-lg border border-border bg-background p-4">
+              <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">{example.title}</p>
+                  <p className="mt-1 text-xs text-accent">{example.user}</p>
+                </div>
+                <span className="rounded-md bg-accent/10 px-2 py-1 text-[10px] text-accent">
+                  {example.benchmark}
+                </span>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-text-secondary">{example.objective}</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Sources</p>
+                  <p className="mt-1 text-xs leading-5 text-text-primary">{example.sources.join(", ")}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Ontology focus</p>
+                  <p className="mt-1 text-xs leading-5 text-text-primary">{example.ontologyFocus.join(", ")}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Episodes</p>
+                  <p className="mt-1 text-xs leading-5 text-text-primary">{example.episodes.join(" -> ")}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Graph outputs</p>
+                  <p className="mt-1 text-xs leading-5 text-text-primary">{example.graphOutputs.join(", ")}</p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -738,6 +810,31 @@ export default function GraphOpsConsole() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+          <Sparkles size={18} className="text-accent" />
+          Next sprint: pipeline configuration studio
+        </h2>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+          For the next two days the work should concentrate on turning the console
+          into a real pipeline studio: create a workspace, choose sources, generate
+          Aletheia ontology, build graph layers, run agents, and benchmark outputs.
+        </p>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {nextSprintPriorities.map((priority, index) => (
+            <div key={priority.item} className="rounded-lg border border-border bg-background p-4">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-text-primary">{index + 1}. {priority.item}</p>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-text-secondary">{priority.why}</p>
+              <p className="mt-3 rounded-md bg-accent/10 px-2 py-1 text-[11px] leading-5 text-accent">
+                {priority.deliverable}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 

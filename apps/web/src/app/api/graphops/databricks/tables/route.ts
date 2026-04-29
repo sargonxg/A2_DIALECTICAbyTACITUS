@@ -20,6 +20,11 @@ UNION ALL SELECT 'ontology_profile_coverage', count(*) FROM dialectica.conflict_
 UNION ALL SELECT 'source_reliability_signals', count(*) FROM dialectica.conflict_graphs.source_reliability_signals
 UNION ALL SELECT 'temporal_event_signals', count(*) FROM dialectica.conflict_graphs.temporal_event_signals
 UNION ALL SELECT 'claim_review_queue', count(*) FROM dialectica.conflict_graphs.claim_review_queue
+UNION ALL SELECT 'pipeline_plans', count(*) FROM dialectica.conflict_graphs.pipeline_plans
+UNION ALL SELECT 'pipeline_blocks', count(*) FROM dialectica.conflict_graphs.pipeline_blocks
+UNION ALL SELECT 'pipeline_ontology_profiles', count(*) FROM dialectica.conflict_graphs.pipeline_ontology_profiles
+UNION ALL SELECT 'pipeline_benchmark_blocks', count(*) FROM dialectica.conflict_graphs.pipeline_benchmark_blocks
+UNION ALL SELECT 'pipeline_terminal_agents', count(*) FROM dialectica.conflict_graphs.pipeline_terminal_agents
 `;
 
 export async function GET() {
@@ -50,14 +55,11 @@ export async function GET() {
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || payload?.status?.state !== "SUCCEEDED") {
-    return NextResponse.json(
-      {
-        mode: "fallback",
-        message: `Could not read Databricks table counts. Status: ${payload?.status?.state ?? response.status}`,
-        tables: liveDeltaTables,
-      },
-      { status: 502 },
-    );
+    return NextResponse.json({
+      mode: "fallback",
+      message: `Could not read Databricks table counts. Status: ${payload?.status?.state ?? response.status}`,
+      tables: liveDeltaTables,
+    });
   }
 
   const rows = Array.isArray(payload?.result?.data_array) ? payload.result.data_array : [];

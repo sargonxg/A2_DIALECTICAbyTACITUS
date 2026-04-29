@@ -337,6 +337,16 @@ export const databricksJobs = [
     purpose: "Runs graph embedding/link prediction on Delta edge tables after enough graph data exists.",
     output: "kge_link_candidates",
   },
+  {
+    name: "Pipeline Artifact Ingestion",
+    jobId: "238139876238377",
+    actionKey: "pipeline-artifacts",
+    status: "Succeeded",
+    purpose: "Reads GraphOps pipeline-plan artifacts staged by the frontend and writes normalized Delta control-plane tables.",
+    output: "pipeline_plans, pipeline_blocks, pipeline_ontology_profiles, pipeline_benchmark_blocks, pipeline_terminal_agents",
+    runUrl:
+      "https://dbc-69e04818-40fb.cloud.databricks.com/?o=7474658425841042#job/238139876238377/run/108767554485462",
+  },
 ];
 
 export const liveDeltaTables = [
@@ -369,6 +379,31 @@ export const liveDeltaTables = [
     table: "claim_review_queue",
     rows: 216,
     role: "Low-confidence, weak-evidence, and audit-sampled claims for human review.",
+  },
+  {
+    table: "pipeline_plans",
+    rows: 1,
+    role: "Frontend-created workspace pipeline artifacts normalized into Delta.",
+  },
+  {
+    table: "pipeline_blocks",
+    rows: 9,
+    role: "Block-by-block pipeline configuration for ingestion, ontology, graph, agents, and benchmark stages.",
+  },
+  {
+    table: "pipeline_ontology_profiles",
+    rows: 1,
+    role: "Aletheia dynamic ontology profiles with required nodes, edges, and core mappings.",
+  },
+  {
+    table: "pipeline_benchmark_blocks",
+    rows: 6,
+    role: "Benchmark requirements attached to each pipeline plan.",
+  },
+  {
+    table: "pipeline_terminal_agents",
+    rows: 6,
+    role: "Planned terminal agents for verification, GraphRAG planning, and benchmark judging.",
   },
 ];
 
@@ -606,6 +641,36 @@ export const workspaceProjectTemplates = [
     recommendedProfile: "field-intelligence",
     sourceExamples: "Situation reports, interviews, public records, local observations",
   },
+  {
+    id: "labor-union-mediation",
+    name: "Labor Union Mediation",
+    workspacePrefix: "labor",
+    description: "Union, employer, regulator, and mediator materials structured for negotiation readiness.",
+    defaultObjective:
+      "Build a mediation graph for labor conflict: parties, commitments, disputed terms, leverage, legal constraints, process options, and trust repair.",
+    recommendedProfile: "mediation-resolution",
+    sourceExamples: "Collective agreement, bargaining notes, union statements, employer memos, media reports",
+  },
+  {
+    id: "regional-border-process",
+    name: "Regional Border Process",
+    workspacePrefix: "regional-border",
+    description: "Small territorial or administrative border dispute structured for meeting preparation and policy dialogue.",
+    defaultObjective:
+      "Prepare a meeting brief by mapping actors, jurisdictional claims, norms, territorial narratives, incidents, constraints, and de-escalation options.",
+    recommendedProfile: "policy-analysis",
+    sourceExamples: "Maps, meeting minutes, public statements, local media, legal documents, historical summaries",
+  },
+  {
+    id: "expert-method-graph",
+    name: "Expert Method Graph",
+    workspacePrefix: "expert-method",
+    description: "Abstract frameworks, mediator thinking, legal methods, HR processes, and negotiation doctrine as reusable knowledge graphs.",
+    defaultObjective:
+      "Extract abstract concepts, diagnostic methods, decision rules, intervention patterns, and expert reasoning traces from knowledge sources.",
+    recommendedProfile: "human-friction",
+    sourceExamples: "Mediator manuals, legal opinions, HR playbooks, conflict-resolution books, expert interview notes",
+  },
 ];
 
 export const pipelineBlockCatalog = [
@@ -689,6 +754,14 @@ export const pipelineBlockCatalog = [
     backend: "GraphOps allowlisted agents",
     description: "Run verifier, temporal analyst, GraphRAG planner, mediator brief writer, and benchmark judge agents.",
   },
+  {
+    id: "benchmark-evaluation",
+    stage: "Benchmark",
+    name: "Benchmark Evaluation",
+    status: "partial",
+    backend: "Databricks + evaluator prompts",
+    description: "Score baseline LLM answers against graph-grounded answers for provenance, causality, temporal accuracy, and ontology coverage.",
+  },
 ];
 
 export const benchmarkBlockCatalog = [
@@ -727,6 +800,100 @@ export const benchmarkBlockCatalog = [
     name: "Baseline vs Graph-Grounded Answer",
     metric: "Does DIALECTICA improve answer support, causal precision, ambiguity handling, and graph overlap?",
     appliesTo: "all benchmarked pipelines",
+  },
+];
+
+export const pipelineConfigurationExamples = [
+  {
+    id: "labor-union-mediation-live",
+    title: "Labor Union Mediation Pipeline",
+    user: "Mediator preparing for bargaining or shuttle diplomacy",
+    objective:
+      "Know what each side claims, what was promised, what constraints are legal or financial, and which trust repair options are credible.",
+    sources: ["Collective agreement", "union demands", "employer offer", "meeting notes", "local media"],
+    ontologyFocus: ["Actor", "Commitment", "Constraint", "Interest", "Leverage", "ActorState", "Episode"],
+    episodes: ["pre-bargaining", "strike threat", "mediated session", "tentative agreement", "compliance review"],
+    graphOutputs: ["commitment ledger", "red-line map", "trust-state timeline", "mediator option graph"],
+    benchmark: "Commitment recall + provenance fidelity + intervention usefulness",
+  },
+  {
+    id: "regional-border-meeting",
+    title: "Regional Border Process Pipeline",
+    user: "Policy analyst preparing a meeting on a small territorial dispute",
+    objective:
+      "Separate jurisdictional claims, historical narratives, incidents, legal norms, veto players, and de-escalation paths.",
+    sources: ["maps", "local media", "meeting transcript", "administrative law", "stakeholder letters"],
+    ontologyFocus: ["Actor", "Claim", "Narrative", "Constraint", "Event", "Source", "EvidenceSpan"],
+    episodes: ["historical claim", "administrative change", "public escalation", "closed-door meeting", "proposed settlement"],
+    graphOutputs: ["claim-evidence graph", "actor influence graph", "norm constraint map", "meeting prep brief"],
+    benchmark: "Causal precision + temporal accuracy + source reliability",
+  },
+  {
+    id: "romeo-human-friction",
+    title: "Romeo and Juliet Human Friction Pipeline",
+    user: "Researcher testing whether literature can become a deterministic conflict graph",
+    objective:
+      "Model love, power, family identity, banishment, secrecy, escalation, and failed mediation as queryable graph structure.",
+    sources: ["Project Gutenberg Romeo and Juliet", "scene summaries", "optional scholarly notes"],
+    ontologyFocus: ["Actor", "Narrative", "Event", "Constraint", "Commitment", "ActorState", "Episode"],
+    episodes: ["family feud", "secret bond", "violent escalation", "banishment", "failed intervention"],
+    graphOutputs: ["character conflict graph", "love-power-constraint map", "escalation timeline", "counterfactual question set"],
+    benchmark: "Ontology coverage + temporal accuracy + graph-grounded answer quality",
+  },
+  {
+    id: "expert-mediator-methods",
+    title: "Expert Mediator Method Graph",
+    user: "TACITUS developer building reusable expert reasoning substrate",
+    objective:
+      "Turn mediation and legal reasoning frameworks into reusable abstract knowledge graphs that can be applied to new cases.",
+    sources: ["mediation manuals", "legal opinions", "HR playbooks", "expert notes"],
+    ontologyFocus: ["Claim", "Interest", "Constraint", "Leverage", "Narrative", "EvidenceSpan", "ExtractionRun"],
+    episodes: ["diagnosis", "option generation", "risk review", "intervention design", "post-agreement learning"],
+    graphOutputs: ["method graph", "diagnostic checklist graph", "intervention pattern graph", "expert reasoning trace"],
+    benchmark: "Recommendation groundedness + framework recall + analyst review score",
+  },
+];
+
+export const pipelineStageGuide = [
+  {
+    stage: "Ingest",
+    color: "blue",
+    purpose: "Bring sources into a scoped workspace with provenance, trust, license, and source type.",
+  },
+  {
+    stage: "Ontology",
+    color: "violet",
+    purpose: "Select or generate the Aletheia ontology profile for the user objective and case type.",
+  },
+  {
+    stage: "Temporal",
+    color: "amber",
+    purpose: "Split the situation into episodes, phases, turning points, and valid time ranges.",
+  },
+  {
+    stage: "Structure",
+    color: "emerald",
+    purpose: "Extract TACITUS primitives and map custom case concepts back to core primitives.",
+  },
+  {
+    stage: "Graph",
+    color: "cyan",
+    purpose: "Write situation, source, temporal, knowledge, reasoning, and activity graph layers.",
+  },
+  {
+    stage: "Reason",
+    color: "fuchsia",
+    purpose: "Apply abstract knowledge graphs, frameworks, symbolic checks, and graph retrieval.",
+  },
+  {
+    stage: "Act",
+    color: "rose",
+    purpose: "Run task-specific agents and produce briefs, questions, review queues, and user artifacts.",
+  },
+  {
+    stage: "Benchmark",
+    color: "slate",
+    purpose: "Measure whether graph-grounded answers beat baseline LLM answers for the selected task.",
   },
 ];
 

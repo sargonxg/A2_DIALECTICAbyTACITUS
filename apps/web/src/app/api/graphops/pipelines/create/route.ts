@@ -15,7 +15,12 @@ function safeId(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
 }
 
-function selectBlockIds(mode: string, includeTemporal: boolean, includeAbstractKnowledge: boolean) {
+function selectBlockIds(
+  mode: string,
+  includeTemporal: boolean,
+  includeAbstractKnowledge: boolean,
+  includeBenchmarks: boolean,
+) {
   const ids = [
     "source-upload",
     mode === "local-python" ? "local-python-digestion" : "lakehouse-chunking",
@@ -26,6 +31,7 @@ function selectBlockIds(mode: string, includeTemporal: boolean, includeAbstractK
   ];
   if (includeTemporal) ids.splice(3, 0, "temporal-episode-splitter");
   if (includeAbstractKnowledge) ids.splice(ids.length - 1, 0, "abstract-knowledge-graph");
+  if (includeBenchmarks) ids.push("benchmark-evaluation");
   return ids;
 }
 
@@ -82,7 +88,7 @@ export async function POST(request: Request) {
   const caseId = safeId(String(body.caseId ?? caseName));
   const objective = String(body.objective ?? template.defaultObjective);
   const pipelineId = `pipeline_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  const blockIds = selectBlockIds(backendMode, includeTemporal, includeAbstractKnowledge);
+  const blockIds = selectBlockIds(backendMode, includeTemporal, includeAbstractKnowledge, includeBenchmarks);
   const blocks = blockIds
     .map((id, order) => {
       const block = pipelineBlockCatalog.find((item) => item.id === id);

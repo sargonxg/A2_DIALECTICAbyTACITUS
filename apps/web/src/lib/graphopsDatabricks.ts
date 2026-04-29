@@ -2,6 +2,7 @@ export const DATABRICKS_RUN_ALLOWLIST = new Map([
   ["book-demo", "136658630245751"],
   ["complex-demo", "261036137711214"],
   ["benchmark", "278369455996320"],
+  ["pipeline-artifacts", "238139876238377"],
 ]);
 
 export function databricksConfig() {
