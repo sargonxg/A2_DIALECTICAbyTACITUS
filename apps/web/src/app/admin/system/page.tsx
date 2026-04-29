@@ -37,8 +37,8 @@ interface HealthResponse {
   status: string;
   version?: string;
   uptime_seconds?: number;
-  neo4j?: { status: string; latency_ms?: number };
-  redis?: { status: string; latency_ms?: number };
+  neo4j?: { status: string; latency_ms?: number; details?: string };
+  databricks?: { status: string; latency_ms?: number; details?: string };
   timestamp?: string;
 }
 
@@ -46,7 +46,7 @@ type StatusColor = "green" | "yellow" | "red" | "gray";
 
 function statusToColor(status: string): StatusColor {
   if (status === "healthy" || status === "ok" || status === "connected") return "green";
-  if (status === "degraded" || status === "slow") return "yellow";
+  if (status === "degraded" || status === "slow" || status === "not_configured") return "yellow";
   if (status === "down" || status === "error" || status === "disconnected") return "red";
   return "gray";
 }
@@ -65,30 +65,30 @@ const STATUS_STYLES: Record<StatusColor, { dot: string; badge: string; text: str
 const ARCHITECTURE_LAYERS = [
   {
     number: 1,
-    name: "Neural Ingestion",
+    name: "Document Ingestion",
     color: "#3b82f6",
-    steps: ["GLiNER NER", "Gemini 2.5 Flash", "Pydantic validation"],
+    steps: ["TXT/PDF upload", "source chunks", "evidence spans"],
     icon: Brain,
   },
   {
     number: 2,
-    name: "Symbolic Representation",
+    name: "TACITUS Ontology",
     color: "#6366f1",
-    steps: ["Conflict Grammar", "Neo4j Graph", "15 node types, 20 edge types"],
+    steps: ["actors", "claims", "commitments", "constraints"],
     icon: Database,
   },
   {
     number: 3,
-    name: "Reasoning & Inference",
+    name: "Graph Memory",
     color: "#f59e0b",
-    steps: ["25+ symbolic rules", "GNN/KGE neural", "Human validates"],
+    steps: ["Neo4j scopes", "provenance", "episodes"],
     icon: Zap,
   },
   {
     number: 4,
-    name: "Decision Support",
+    name: "Lakehouse Operations",
     color: "#10b981",
-    steps: ["6 AI agents", "MCP server"],
+    steps: ["Databricks jobs", "Delta tables", "benchmarks"],
     icon: Users,
   },
 ];
@@ -134,17 +134,17 @@ export default function SystemPage() {
           name: "Neo4j Database",
           status: data.neo4j?.status === "connected" || data.neo4j?.status === "healthy" || data.neo4j?.status === "ok"
             ? "healthy"
-            : data.neo4j?.status === "degraded" ? "degraded" : data.neo4j ? "down" : "unknown",
+            : data.neo4j?.status === "not_configured" || data.neo4j?.status === "degraded" ? "degraded" : data.neo4j ? "down" : "unknown",
           latency_ms: data.neo4j?.latency_ms,
-          details: data.neo4j?.status,
+          details: data.neo4j?.details ?? data.neo4j?.status,
         },
         {
-          name: "Redis Cache",
-          status: data.redis?.status === "connected" || data.redis?.status === "healthy" || data.redis?.status === "ok"
+          name: "Databricks Jobs",
+          status: data.databricks?.status === "connected" || data.databricks?.status === "healthy" || data.databricks?.status === "ok"
             ? "healthy"
-            : data.redis?.status === "degraded" ? "degraded" : data.redis ? "down" : "unknown",
-          latency_ms: data.redis?.latency_ms,
-          details: data.redis?.status,
+            : data.databricks?.status === "not_configured" || data.databricks?.status === "degraded" ? "degraded" : data.databricks ? "down" : "unknown",
+          latency_ms: data.databricks?.latency_ms,
+          details: data.databricks?.details ?? data.databricks?.status,
         },
       ];
       setServices(svcList);
@@ -156,7 +156,7 @@ export default function SystemPage() {
       setServices([
         { name: "API Server", status: "down", details: msg },
         { name: "Neo4j Database", status: "unknown" },
-        { name: "Redis Cache", status: "unknown" },
+        { name: "Databricks Jobs", status: "unknown" },
       ]);
       setLastCheck(new Date());
     } finally {
@@ -229,8 +229,8 @@ export default function SystemPage() {
         <div className="flex-1">
           <p className={cn("font-semibold", STATUS_STYLES[overallStatus].text)}>
             {overallStatus === "green" && "All Systems Operational"}
-            {overallStatus === "yellow" && "Partial Degradation"}
-            {overallStatus === "red" && (error ? "Backend Offline" : "Service Outage")}
+            {overallStatus === "yellow" && "Partial Configuration"}
+            {overallStatus === "red" && (error ? "GraphOps API Offline" : "Service Outage")}
             {overallStatus === "gray" && "Checking..."}
           </p>
           {error && (
@@ -261,30 +261,30 @@ export default function SystemPage() {
         <div className="card space-y-3">
           <h3 className="font-semibold text-text-primary flex items-center gap-2">
             <AlertTriangle size={16} className="text-warning" />
-            Backend Offline — Getting Started
+            GraphOps API Offline — Getting Started
           </h3>
           <div className="space-y-2 text-sm text-text-secondary">
-            <p>The DIALECTICA API is not reachable. To start the backend locally:</p>
+            <p>The DIALECTICA GraphOps API is not reachable from this page. To test locally:</p>
             <div className="bg-background rounded-lg border border-border p-3 font-mono text-xs space-y-1">
               <p className="text-accent">
-                # 1. Start services with Docker Compose
+                # 1. Start the web app
               </p>
-              <p className="text-text-primary">make dev-local</p>
+              <p className="text-text-primary">cd apps/web && npm run dev</p>
               <p className="text-accent mt-2">
-                # 2. Seed sample data
+                # 2. Test the health endpoint
               </p>
-              <p className="text-text-primary">make seed</p>
+              <p className="text-text-primary">curl http://localhost:3000/api/health</p>
               <p className="text-accent mt-2">
-                # 3. API will be available at
+                # 3. Test the GraphOps console
               </p>
-              <p className="text-text-primary">http://localhost:8080/docs</p>
+              <p className="text-text-primary">http://localhost:3000/graphops</p>
             </div>
             <p>
               Or set{" "}
               <code className="text-xs font-mono bg-surface-active px-1 rounded">
                 NEXT_PUBLIC_API_URL
               </code>{" "}
-              to your deployed Cloud Run URL.
+              to another deployed GraphOps API base URL.
             </p>
             <p className="mt-2">
               Learn more at{" "}
@@ -345,10 +345,10 @@ export default function SystemPage() {
       <div className="card space-y-4">
         <h3 className="font-semibold text-text-primary flex items-center gap-2">
           <Layers size={16} className="text-accent" />
-          Backend Architecture — 4 Layers
+          GraphOps Architecture — 4 Layers
         </h3>
         <p className="text-xs text-text-secondary">
-          The neurosymbolic pipeline processes conflict data through four distinct layers.{" "}
+          The neurosymbolic pipeline turns unstructured text into scoped, queryable conflict graph memory.{" "}
           <a
             href="https://tacitus.me"
             target="_blank"
@@ -419,9 +419,9 @@ export default function SystemPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "TACITUS Website", href: "https://tacitus.me", external: true },
-            { label: "API Docs (Swagger)", href: `${getApiUrl()}/docs`, external: true },
-            { label: "Architecture", href: "/admin/architecture", external: false },
-            { label: "Graph Explorer", href: "/admin/graph", external: false },
+            { label: "GraphOps Console", href: "/graphops", external: false },
+            { label: "Manifest API", href: "/api/graphops/manifest", external: false },
+            { label: "Ingest API", href: "/api/graphops/ingest", external: false },
           ].map((link) => (
             <a
               key={link.label}

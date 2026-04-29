@@ -19,6 +19,7 @@ import {
   Play,
   Shield,
   Sparkles,
+  Upload,
   Workflow,
 } from "lucide-react";
 import ForceGraph from "@/components/graph/ForceGraph";
@@ -39,6 +40,7 @@ import {
   demoGraph,
   graphCategories,
   graphOpsPipeline,
+  ingestionTreeTemplate,
   liveDeltaTables,
   neo4jStatus,
   ontologyContracts,
@@ -48,6 +50,7 @@ import {
   ontologyProfileOptions,
   ontologyTiers,
   orchestrationEvents,
+  precompiledNeeds,
   qualityGates,
   researchSignals,
   sampleCypherQueries,
@@ -123,16 +126,28 @@ type TableState =
   | { status: "ready"; mode: string; message?: string; tables: typeof liveDeltaTables }
   | { status: "error"; message: string; tables: typeof liveDeltaTables };
 
+type IngestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
   const [activeProfileId, setActiveProfileId] = useState(ontologyProfileOptions[0].id);
+  const [activeNeedId, setActiveNeedId] = useState(precompiledNeeds[0].id);
   const [activeUseCaseName, setActiveUseCaseName] = useState(conflictUseCases[0].name);
   const [activeSourcePackId, setActiveSourcePackId] = useState(sourcePacks[0].id);
   const [workspaceId, setWorkspaceId] = useState("books-romeo-juliet");
+  const [caseId, setCaseId] = useState("romeo-juliet-conflict");
+  const [objective, setObjective] = useState(precompiledNeeds[0].objective);
+  const [sourceText, setSourceText] = useState("");
+  const [writeGraph, setWriteGraph] = useState(false);
   const [queryState, setQueryState] = useState<QueryState>({ status: "idle" });
   const [databricksState, setDatabricksState] = useState<DatabricksState>({ status: "loading" });
   const [tableState, setTableState] = useState<TableState>({ status: "loading" });
+  const [ingestState, setIngestState] = useState<IngestState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -148,6 +163,10 @@ export default function GraphOpsConsole() {
   const activeProfile = useMemo(
     () => ontologyProfileOptions.find((item) => item.id === activeProfileId) ?? ontologyProfileOptions[0],
     [activeProfileId],
+  );
+  const activeNeed = useMemo(
+    () => precompiledNeeds.find((item) => item.id === activeNeedId) ?? precompiledNeeds[0],
+    [activeNeedId],
   );
   const activeUseCase = useMemo(
     () => conflictUseCases.find((item) => item.name === activeUseCaseName) ?? conflictUseCases[0],
@@ -246,6 +265,76 @@ export default function GraphOpsConsole() {
         status: "error",
         message: error instanceof Error ? error.message : "Query failed",
         cypher: query.cypher,
+      });
+    }
+  }
+
+  function applyNeed(needId: string) {
+    const need = precompiledNeeds.find((item) => item.id === needId) ?? precompiledNeeds[0];
+    setActiveNeedId(need.id);
+    setWorkspaceId(need.workspaceId);
+    setCaseId(need.caseId);
+    setObjective(need.objective);
+    const profile = ontologyProfileOptions.find((item) => item.id === need.profile);
+    if (profile) setActiveProfileId(profile.id);
+  }
+
+  async function runIngest(sample = false) {
+    setIngestState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspaceId,
+          caseId,
+          objective,
+          ontologyProfile: activeProfile.id,
+          sampleKey: sample ? activeNeed.sampleKey : "",
+          text: sample ? "" : sourceText,
+          sourceTitle: sample ? activeNeed.label : "GraphOps pasted text",
+          writeGraph,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setIngestState({ status: "error", message: payload?.error ?? "Ingestion failed." });
+        return;
+      }
+      setIngestState({ status: "ok", result: payload });
+    } catch (error) {
+      setIngestState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Ingestion failed.",
+      });
+    }
+  }
+
+  async function runFileIngest(file: File | null) {
+    if (!file) return;
+    setIngestState({ status: "loading" });
+    const form = new FormData();
+    form.set("file", file);
+    form.set("workspaceId", workspaceId);
+    form.set("caseId", caseId);
+    form.set("objective", objective);
+    form.set("ontologyProfile", activeProfile.id);
+    form.set("writeGraph", String(writeGraph));
+    try {
+      const response = await fetch("/api/graphops/ingest", {
+        method: "POST",
+        body: form,
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setIngestState({ status: "error", message: payload?.error ?? "File ingestion failed." });
+        return;
+      }
+      setIngestState({ status: "ok", result: payload });
+    } catch (error) {
+      setIngestState({
+        status: "error",
+        message: error instanceof Error ? error.message : "File ingestion failed.",
       });
     }
   }
@@ -413,6 +502,157 @@ export default function GraphOpsConsole() {
             <p className="mt-2 text-sm text-text-primary">{activeSourcePack.sources}</p>
             <p className="mt-2 text-xs text-text-secondary">Recommended run: {activeSourcePack.nextRun}</p>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <Upload size={18} className="text-accent" />
+              Ingest, structure, and build graph memory
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              Choose a need, select the ontology profile, upload TXT/PDF or paste
+              text, then preview TACITUS primitives with source spans. If Neo4j
+              secrets are configured, the same action can persist the case into the
+              graph so users keep expanding it with new books and documents.
+            </p>
+          </div>
+          <div className="rounded-lg border border-border bg-background px-4 py-3 text-xs leading-5 text-text-secondary xl:max-w-md">
+            Current write mode: {writeGraph ? "attempt Neo4j write" : "preview only"}.
+            Live Neo4j writes require fresh rotated production secrets.
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
+          <div className="space-y-3">
+            {precompiledNeeds.map((need) => (
+              <button
+                key={need.id}
+                onClick={() => applyNeed(need.id)}
+                className={`w-full rounded-lg border px-3 py-3 text-left transition-colors ${
+                  activeNeed.id === need.id
+                    ? "border-accent bg-accent/10"
+                    : "border-border bg-background hover:border-border-hover"
+                }`}
+              >
+                <p className="text-sm font-semibold text-text-primary">{need.label}</p>
+                <p className="mt-1 text-xs leading-5 text-text-secondary">{need.objective}</p>
+                <p className="mt-2 text-[11px] text-accent">{need.defaultQuestion}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Workspace</span>
+                <input value={workspaceId} onChange={(event) => setWorkspaceId(event.target.value)} className="input-base mt-2 w-full" />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Case</span>
+                <input value={caseId} onChange={(event) => setCaseId(event.target.value)} className="input-base mt-2 w-full" />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Ontology</span>
+                <select value={activeProfileId} onChange={(event) => setActiveProfileId(event.target.value)} className="input-base mt-2 w-full">
+                  {ontologyProfileOptions.map((profile) => (
+                    <option key={profile.id} value={profile.id}>{profile.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Objective</span>
+              <textarea value={objective} onChange={(event) => setObjective(event.target.value)} className="input-base mt-2 min-h-[80px] w-full" />
+            </label>
+
+            <label className="block">
+              <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Paste text</span>
+              <textarea
+                value={sourceText}
+                onChange={(event) => setSourceText(event.target.value)}
+                placeholder="Paste a book passage, mediation notes, policy memo, transcript, or field report..."
+                className="input-base mt-2 min-h-[140px] w-full"
+              />
+            </label>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={() => runIngest(false)} className="btn-primary inline-flex items-center gap-2">
+                <Play size={15} />
+                Structure pasted text
+              </button>
+              <button onClick={() => runIngest(true)} className="btn-secondary inline-flex items-center gap-2">
+                Run selected sample
+                <Sparkles size={15} />
+              </button>
+              <label className="btn-secondary inline-flex cursor-pointer items-center gap-2">
+                Upload TXT/PDF
+                <Upload size={15} />
+                <input
+                  type="file"
+                  accept=".txt,.pdf,text/plain,application/pdf"
+                  className="hidden"
+                  onChange={(event) => runFileIngest(event.target.files?.[0] ?? null)}
+                />
+              </label>
+              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                <input
+                  type="checkbox"
+                  checked={writeGraph}
+                  onChange={(event) => setWriteGraph(event.target.checked)}
+                />
+                Write to Neo4j when configured
+              </label>
+            </div>
+
+            {ingestState.status === "loading" && (
+              <div className="rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-accent">
+                Structuring document into TACITUS primitives...
+              </div>
+            )}
+            {ingestState.status === "error" && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+                {ingestState.message}
+              </div>
+            )}
+            {ingestState.status === "ok" && (
+              <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+                <div className="rounded-lg border border-border bg-background p-4">
+                  <p className="text-sm font-semibold text-text-primary">Extraction result</p>
+                  <p className="mt-2 text-xs text-text-secondary">
+                    run {String(ingestState.result.extractionRunId)}
+                  </p>
+                  <p className="mt-2 text-xs text-accent">
+                    {String((ingestState.result.graphWrite as { message?: string })?.message ?? "")}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {Object.entries((ingestState.result.counts as Record<string, number>) ?? {}).map(([key, value]) => (
+                      <div key={key} className="rounded-md bg-surface px-2 py-2">
+                        <p className="text-[11px] text-text-secondary">{key}</p>
+                        <p className="text-lg font-semibold text-text-primary">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <pre className="max-h-[360px] overflow-auto rounded-lg border border-border bg-background p-4 text-xs leading-5 text-text-secondary">
+                  <code>{JSON.stringify((ingestState.result.primitives as unknown[]).slice(0, 10), null, 2)}</code>
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {ingestionTreeTemplate.map((item) => (
+            <div key={item.level} className="rounded-lg border border-border bg-background p-4">
+              <p className="text-sm font-semibold text-text-primary">{item.level}</p>
+              <p className="mt-2 text-[11px] text-accent">{item.output}</p>
+              <p className="mt-2 text-xs leading-5 text-text-secondary">{item.purpose}</p>
+            </div>
+          ))}
         </div>
       </section>
 

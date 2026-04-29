@@ -411,6 +411,82 @@ export const sourcePacks = [
   },
 ];
 
+export const precompiledNeeds = [
+  {
+    id: "understand-literary-conflict",
+    label: "Understand a book conflict",
+    objective: "Extract actors, episodes, commitments, constraints, events, narratives, and actor states from a book.",
+    profile: "literary-conflict",
+    sampleKey: "romeo-juliet-conflict",
+    caseId: "romeo-juliet-conflict",
+    workspaceId: "books-romeo-juliet",
+    defaultQuestion: "Which events and commitments intensify the conflict in Romeo and Juliet?",
+  },
+  {
+    id: "mediate-human-friction",
+    label: "Prepare a mediator brief",
+    objective: "Extract commitments, contested scope, trust state, constraints, interests, and next verification questions.",
+    profile: "mediation-resolution",
+    sampleKey: "mediation-commitments",
+    caseId: "mediation-commitments",
+    workspaceId: "praxis-human-friction",
+    defaultQuestion: "What commitments constrain Alex and what should a mediator verify first?",
+  },
+  {
+    id: "policy-constraint-map",
+    label: "Map policy constraints",
+    objective: "Extract institutions, norms, constraints, leverage, implementation risks, and required process steps.",
+    profile: "policy-analysis",
+    sampleKey: "",
+    caseId: "policy-constraint-map",
+    workspaceId: "policy-friction-lab",
+    defaultQuestion: "Which constraints block the feasible policy options?",
+  },
+  {
+    id: "field-intelligence-brief",
+    label: "Structure field reports",
+    objective: "Separate source claims, direct observations, inferred claims, actor states, events, locations, and gaps.",
+    profile: "field-intelligence",
+    sampleKey: "",
+    caseId: "field-intelligence-brief",
+    workspaceId: "conflict-desk-field",
+    defaultQuestion: "What changed, what is verified, and what remains uncertain?",
+  },
+];
+
+export const ingestionTreeTemplate = [
+  {
+    level: "Document",
+    output: "SourceDocument",
+    purpose: "Preserve title, file type, trust level, source id, license, and case/workspace ownership.",
+  },
+  {
+    level: "Chunk",
+    output: "SourceChunk",
+    purpose: "Split text or PDF content into character-offset chunks for repeatable extraction.",
+  },
+  {
+    level: "Evidence",
+    output: "EvidenceSpan",
+    purpose: "Bind each extracted graph item to a specific source span.",
+  },
+  {
+    level: "Ontology Profile",
+    output: "Profile requirements",
+    purpose: "Choose what to look for based on the user objective: literary conflict, mediation, policy, or intelligence.",
+  },
+  {
+    level: "Primitive Extraction",
+    output: "Actor, Claim, Commitment, Constraint, Event, Narrative, ActorState",
+    purpose: "Create TACITUS primitives with confidence, source id, extraction run id, and case separation.",
+  },
+  {
+    level: "Graph Memory",
+    output: "Neo4j TacitusCoreV1 nodes and relationships",
+    purpose: "Store the case so users can keep adding books, reports, episodes, and new ontology extensions.",
+  },
+];
+
 export const analystFlow = [
   {
     step: "1. Define the mission",

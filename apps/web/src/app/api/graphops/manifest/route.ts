@@ -27,6 +27,7 @@ export async function GET() {
       console: "/graphops",
       databricksJobs: "/api/graphops/databricks/jobs",
       databricksTables: "/api/graphops/databricks/tables",
+      ingest: "/api/graphops/ingest",
       triggerWorkflow: "/api/graphops/databricks/run",
       neo4jQuery: "/api/graphops/query",
       manifest: "/api/graphops/manifest",
