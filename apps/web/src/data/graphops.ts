@@ -507,6 +507,246 @@ export const topTenBuildPriorities = [
   },
 ];
 
+export const nextSprintPriorities = [
+  {
+    item: "Workspace-as-project model",
+    why: "Every book, conflict, mediation file, policy case, or argument map should become a workspace with repeatable pipelines.",
+    deliverable: "Workspace template picker and scoped pipeline plan.",
+  },
+  {
+    item: "Composable pipeline blocks",
+    why: "Users should assemble ingestion, ontology, graph, agent, and benchmark steps block by block.",
+    deliverable: "Block catalog with implemented, partial, and planned states.",
+  },
+  {
+    item: "Temporal episode builder",
+    why: "Conflict analysis depends on phases, turning points, commitments, and state changes over time.",
+    deliverable: "Episode segmentation block and episode-scoped graph writes.",
+  },
+  {
+    item: "Dynamic ontology engine",
+    why: "Ontology should adapt to the user role, objective, source type, situation, and question pattern.",
+    deliverable: "Aletheia profile generator with core mappings and validation gates.",
+  },
+  {
+    item: "Knowledge graph strategy graph",
+    why: "DIALECTICA should not only store facts; it should store reusable analytical methods and resolution frameworks.",
+    deliverable: "Situation graph plus abstract knowledge graph plus reasoning graph.",
+  },
+  {
+    item: "Databricks upload ingestion job",
+    why: "Frontend-staged uploads need an automated lakehouse job to convert JSON artifacts into Delta tables.",
+    deliverable: "Workspace-file ingestion notebook and bundle job.",
+  },
+  {
+    item: "Neo4j pipeline artifact writeback",
+    why: "Pipeline plans, ontology versions, and benchmark runs should be queryable graph objects.",
+    deliverable: "PipelineRun, PipelineBlock, OntologyProfile, BenchmarkRun nodes.",
+  },
+  {
+    item: "Agent terminal blocks",
+    why: "Pipelines should end in concrete agents: verifier, mediator brief writer, GraphRAG planner, benchmark judge.",
+    deliverable: "Allowlisted agent actions and result artifacts.",
+  },
+  {
+    item: "Benchmark block library",
+    why: "Each workflow needs measurable tests: provenance, causal precision, graph coverage, temporal accuracy.",
+    deliverable: "Benchmark block templates attached to pipeline plans.",
+  },
+  {
+    item: "Connector-neutral backend plan",
+    why: "Databricks is powerful, but the architecture should also support Python/DuckDB, Neo4j-only, FalkorDB, and local mode.",
+    deliverable: "Backend mode selector with block compatibility rules.",
+  },
+];
+
+export const workspaceProjectTemplates = [
+  {
+    id: "book-conflict-lab",
+    name: "Book Conflict Lab",
+    workspacePrefix: "books",
+    description: "Public-domain books or chapters turned into character, episode, narrative, and escalation graphs.",
+    defaultObjective: "Understand conflict dynamics, turning points, commitments, constraints, and narratives in a book.",
+    recommendedProfile: "literary-conflict",
+    sourceExamples: "Romeo and Juliet, War and Peace, Crime and Punishment",
+  },
+  {
+    id: "mediation-case-file",
+    name: "Mediation Case File",
+    workspacePrefix: "mediation",
+    description: "Meeting notes, emails, transcripts, and position statements structured for a mediator.",
+    defaultObjective: "Separate positions, interests, commitments, trust problems, constraints, and viable intervention options.",
+    recommendedProfile: "mediation-resolution",
+    sourceExamples: "Intake notes, party statements, negotiation transcript",
+  },
+  {
+    id: "policy-friction-map",
+    name: "Policy Friction Map",
+    workspacePrefix: "policy",
+    description: "Policy proposals, statutes, public comments, and implementation memos structured as constraint graphs.",
+    defaultObjective: "Map actors, rules, constraints, veto points, implementation risks, and policy options.",
+    recommendedProfile: "policy-analysis",
+    sourceExamples: "Statute, agency memo, hearing transcript, public consultation",
+  },
+  {
+    id: "argument-claim-graph",
+    name: "Argument Claim Graph",
+    workspacePrefix: "arguments",
+    description: "Debates, essays, legal arguments, or analytic claims decomposed into claim, evidence, objection, and warrant graphs.",
+    defaultObjective: "Extract claims, warrants, evidence, counterclaims, assumptions, and unresolved disputes.",
+    recommendedProfile: "human-friction",
+    sourceExamples: "Debate transcript, op-ed corpus, legal memo, research dispute",
+  },
+  {
+    id: "field-situation-portal",
+    name: "Field Situation Portal",
+    workspacePrefix: "situation",
+    description: "Reports and observations structured into actors, events, source trust, uncertainty, and collection gaps.",
+    defaultObjective: "Identify verified events, actor states, uncertain claims, source reliability, and what changed.",
+    recommendedProfile: "field-intelligence",
+    sourceExamples: "Situation reports, interviews, public records, local observations",
+  },
+];
+
+export const pipelineBlockCatalog = [
+  {
+    id: "source-upload",
+    stage: "Ingest",
+    name: "Source Upload",
+    status: "implemented",
+    backend: "frontend + Databricks staging",
+    description: "Accept TXT/PDF/pasted text and preserve workspace, case, objective, ontology profile, and source metadata.",
+  },
+  {
+    id: "lakehouse-chunking",
+    stage: "Ingest",
+    name: "Lakehouse Chunking",
+    status: "partial",
+    backend: "Databricks Delta",
+    description: "Convert staged uploads into raw_text_chunks with offsets, source IDs, and extraction run IDs.",
+  },
+  {
+    id: "local-python-digestion",
+    stage: "Ingest",
+    name: "Local Python Digestion",
+    status: "implemented",
+    backend: "Python CLI",
+    description: "Run the local TACITUS core v1 ingestion pipeline without Databricks for low-cost in-house mode.",
+  },
+  {
+    id: "aletheia-ontology-profile",
+    stage: "Ontology",
+    name: "Aletheia Dynamic Ontology",
+    status: "partial",
+    backend: "frontend + validators",
+    description: "Generate a case-specific ontology profile that maps custom concepts back to TACITUS core primitives.",
+  },
+  {
+    id: "temporal-episode-splitter",
+    stage: "Temporal",
+    name: "Temporal Episode Splitter",
+    status: "planned",
+    backend: "Databricks or Python",
+    description: "Segment sources into episodes, phases, turning points, valid_from/valid_to, and observed_at timelines.",
+  },
+  {
+    id: "primitive-extraction",
+    stage: "Structure",
+    name: "TACITUS Primitive Extraction",
+    status: "implemented",
+    backend: "frontend API + Python CLI + Databricks AI",
+    description: "Extract actors, claims, commitments, constraints, events, narratives, actor states, and evidence spans.",
+  },
+  {
+    id: "neo4j-memory-write",
+    stage: "Graph",
+    name: "Neo4j Graph Memory",
+    status: "blocked on rotated secrets",
+    backend: "Neo4j Aura",
+    description: "Write scoped nodes and relationships with provenance, episodes, ontology versions, and extraction run IDs.",
+  },
+  {
+    id: "falkordb-alternative",
+    stage: "Graph",
+    name: "FalkorDB Adapter",
+    status: "planned",
+    backend: "FalkorDB",
+    description: "Optional RedisGraph-compatible graph backend for lighter deployments where Neo4j is not required.",
+  },
+  {
+    id: "abstract-knowledge-graph",
+    stage: "Reason",
+    name: "Abstract Knowledge Graph",
+    status: "planned",
+    backend: "Neo4j + ontology files",
+    description: "Store reusable conflict-resolution concepts, frameworks, diagnostics, and intervention patterns.",
+  },
+  {
+    id: "agent-result-terminal",
+    stage: "Act",
+    name: "Agent Result Terminal",
+    status: "partial",
+    backend: "GraphOps allowlisted agents",
+    description: "Run verifier, temporal analyst, GraphRAG planner, mediator brief writer, and benchmark judge agents.",
+  },
+];
+
+export const benchmarkBlockCatalog = [
+  {
+    id: "provenance-fidelity",
+    name: "Provenance Fidelity",
+    metric: "Can every answer cite the exact source span and extraction run?",
+    appliesTo: "all workflows",
+  },
+  {
+    id: "temporal-accuracy",
+    name: "Temporal Accuracy",
+    metric: "Does the answer distinguish before/after, valid_from/valid_to, and episode transitions?",
+    appliesTo: "conflict, policy, field reports",
+  },
+  {
+    id: "causal-precision",
+    name: "Causal Precision",
+    metric: "Does the system separate chronology from asserted or inferred causation?",
+    appliesTo: "conflict escalation and policy analysis",
+  },
+  {
+    id: "commitment-recall",
+    name: "Commitment Recall",
+    metric: "Are promises, denials, constraints, and contested scope captured with actor links?",
+    appliesTo: "mediation and human friction",
+  },
+  {
+    id: "ontology-coverage",
+    name: "Ontology Coverage",
+    metric: "Does the graph contain the required nodes and edges for the selected user objective?",
+    appliesTo: "dynamic ontology workflows",
+  },
+  {
+    id: "baseline-vs-graph",
+    name: "Baseline vs Graph-Grounded Answer",
+    metric: "Does DIALECTICA improve answer support, causal precision, ambiguity handling, and graph overlap?",
+    appliesTo: "all benchmarked pipelines",
+  },
+];
+
+export const dynamicOntologyEngine = {
+  name: "Aletheia Dynamic Ontology Engine",
+  shortName: "Aletheia",
+  purpose:
+    "Create, maintain, and modify case-specific ontologies while forcing every extension to map back to TACITUS core primitives.",
+  inputs: ["user role", "objective", "source type", "case type", "question pattern", "risk tolerance"],
+  outputs: [
+    "OntologyProfile",
+    "ProfileRequirement",
+    "CustomType -> CorePrimitive mapping",
+    "validation gates",
+    "benchmark expectations",
+  ],
+  coreRule:
+    "A custom type is allowed only if it maps to Actor, Claim, Interest, Constraint, Leverage, Commitment, Event, Narrative, Source, Episode, ActorState, ExtractionRun, or EvidenceSpan.",
+};
+
 export const ingestionTreeTemplate = [
   {
     level: "Document",

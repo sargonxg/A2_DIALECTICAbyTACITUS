@@ -178,3 +178,72 @@ export async function stageGraphOpsUploadToDatabricks(input: {
     message: "Staged source and extraction metadata to Databricks Workspace files.",
   };
 }
+
+export async function stageGraphOpsArtifactToDatabricks(input: {
+  workspaceId: string;
+  caseId: string;
+  artifactType: string;
+  artifactId: string;
+  payload: Record<string, unknown>;
+}) {
+  const { host, token } = databricksConfig();
+  if (!token) {
+    return {
+      requested: true,
+      enabled: false,
+      uploaded: false,
+      message: "DATABRICKS_TOKEN is not configured in the deployment environment.",
+    };
+  }
+
+  const workspacePath = [
+    "/Shared/tacitus/dialectica/artifacts",
+    safePathSegment(input.workspaceId),
+    safePathSegment(input.caseId),
+    safePathSegment(input.artifactType),
+    `${safePathSegment(input.artifactId)}.json`,
+  ].join("/");
+  const contents = Buffer.from(JSON.stringify(input.payload, null, 2), "utf8").toString("base64");
+  const parentPath = workspacePath.split("/").slice(0, -1).join("/");
+
+  await fetch(`${host}/api/2.0/workspace/mkdirs`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ path: parentPath }),
+  });
+  const response = await fetch(`${host}/api/2.0/workspace/import`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      path: workspacePath,
+      format: "AUTO",
+      contents,
+      overwrite: true,
+    }),
+  });
+  const details = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    return {
+      requested: true,
+      enabled: true,
+      uploaded: false,
+      path: workspacePath,
+      message: `Databricks artifact staging returned HTTP ${response.status}.`,
+      details,
+    };
+  }
+  return {
+    requested: true,
+    enabled: true,
+    uploaded: true,
+    storage: "workspace",
+    path: workspacePath,
+    message: "Staged GraphOps artifact to Databricks Workspace files.",
+  };
+}

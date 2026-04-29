@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import {
   agenticTools,
+  benchmarkBlockCatalog,
+  dynamicOntologyEngine,
   embeddableSurfaces,
   graphCategories,
   ontologyProfileOptions,
   orchestrationEvents,
+  pipelineBlockCatalog,
   qualityGates,
   sourcePacks,
   topTenBuildPriorities,
+  workspaceProjectTemplates,
 } from "@/data/graphops";
 
 export const runtime = "nodejs";
@@ -29,6 +33,7 @@ export async function GET() {
       databricksJobs: "/api/graphops/databricks/jobs",
       databricksTables: "/api/graphops/databricks/tables",
       ingest: "/api/graphops/ingest",
+      createPipeline: "/api/graphops/pipelines/create",
       spawnAgent: "/api/graphops/agents/run",
       triggerWorkflow: "/api/graphops/databricks/run",
       neo4jQuery: "/api/graphops/query",
@@ -43,6 +48,10 @@ export async function GET() {
     ],
     capabilities: agenticTools,
     topTenBuildPriorities,
+    workspaceProjectTemplates,
+    pipelineBlockCatalog,
+    benchmarkBlockCatalog,
+    dynamicOntologyEngine,
     embeddableSurfaces,
     ontologyProfiles: ontologyProfileOptions,
     graphCategories,

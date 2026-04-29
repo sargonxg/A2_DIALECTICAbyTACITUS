@@ -26,6 +26,7 @@ import ForceGraph from "@/components/graph/ForceGraph";
 import {
   analystFlow,
   benchmarkPlan,
+  benchmarkBlockCatalog,
   benchmarkRunCards,
   benchmarkScenarios,
   conflictOntologyExtensions,
@@ -35,6 +36,7 @@ import {
   ambitionRoadmap,
   databricksJobs,
   databricksNeo4jExplanation,
+  dynamicOntologyEngine,
   dynamicOntologyTables,
   embeddableSurfaces,
   demoGraph,
@@ -57,7 +59,10 @@ import {
   situationPortalBlueprint,
   safetyBoundaries,
   sourcePacks,
+  nextSprintPriorities,
+  pipelineBlockCatalog,
   topTenBuildPriorities,
+  workspaceProjectTemplates,
 } from "@/data/graphops";
 
 const layerCards = [
@@ -139,11 +144,18 @@ type AgentRunState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type PipelineState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
   const [activeProfileId, setActiveProfileId] = useState(ontologyProfileOptions[0].id);
   const [activeNeedId, setActiveNeedId] = useState(precompiledNeeds[0].id);
+  const [activeTemplateId, setActiveTemplateId] = useState(workspaceProjectTemplates[0].id);
   const [activeUseCaseName, setActiveUseCaseName] = useState(conflictUseCases[0].name);
   const [activeSourcePackId, setActiveSourcePackId] = useState(sourcePacks[0].id);
   const [workspaceId, setWorkspaceId] = useState("books-romeo-juliet");
@@ -154,11 +166,17 @@ export default function GraphOpsConsole() {
   const [sendToDatabricks, setSendToDatabricks] = useState(false);
   const [triggerWorkflowAfterIngest, setTriggerWorkflowAfterIngest] = useState(false);
   const [databricksWorkflowKey, setDatabricksWorkflowKey] = useState("book-demo");
+  const [pipelineBackendMode, setPipelineBackendMode] = useState("databricks-neo4j");
+  const [pipelineStageToDatabricks, setPipelineStageToDatabricks] = useState(true);
+  const [pipelineTemporal, setPipelineTemporal] = useState(true);
+  const [pipelineKnowledge, setPipelineKnowledge] = useState(true);
+  const [pipelineBenchmarks, setPipelineBenchmarks] = useState(true);
   const [queryState, setQueryState] = useState<QueryState>({ status: "idle" });
   const [databricksState, setDatabricksState] = useState<DatabricksState>({ status: "loading" });
   const [tableState, setTableState] = useState<TableState>({ status: "loading" });
   const [ingestState, setIngestState] = useState<IngestState>({ status: "idle" });
   const [agentRunState, setAgentRunState] = useState<AgentRunState>({ status: "idle" });
+  const [pipelineState, setPipelineState] = useState<PipelineState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -178,6 +196,10 @@ export default function GraphOpsConsole() {
   const activeNeed = useMemo(
     () => precompiledNeeds.find((item) => item.id === activeNeedId) ?? precompiledNeeds[0],
     [activeNeedId],
+  );
+  const activeTemplate = useMemo(
+    () => workspaceProjectTemplates.find((item) => item.id === activeTemplateId) ?? workspaceProjectTemplates[0],
+    [activeTemplateId],
   );
   const activeUseCase = useMemo(
     () => conflictUseCases.find((item) => item.name === activeUseCaseName) ?? conflictUseCases[0],
@@ -292,6 +314,40 @@ export default function GraphOpsConsole() {
     setObjective(need.objective);
     const profile = ontologyProfileOptions.find((item) => item.id === need.profile);
     if (profile) setActiveProfileId(profile.id);
+  }
+
+  async function createPipelinePlan() {
+    setPipelineState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/pipelines/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId: activeTemplate.id,
+          workspaceId,
+          caseId,
+          caseName: caseId,
+          objective,
+          ontologyProfile: activeProfile.id,
+          backendMode: pipelineBackendMode,
+          includeTemporal: pipelineTemporal,
+          includeAbstractKnowledge: pipelineKnowledge,
+          includeBenchmarks: pipelineBenchmarks,
+          stageToDatabricks: pipelineStageToDatabricks,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setPipelineState({ status: "error", message: payload?.error ?? "Could not create pipeline plan." });
+        return;
+      }
+      setPipelineState({ status: "ok", result: payload });
+    } catch (error) {
+      setPipelineState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not create pipeline plan.",
+      });
+    }
   }
 
   async function runIngest(sample = false) {
@@ -505,6 +561,183 @@ export default function GraphOpsConsole() {
               <p className="mt-2 text-xs leading-5 text-text-secondary">{priority.why}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <Workflow size={18} className="text-accent" />
+              Workspace pipeline builder
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              A project is a workspace. A workspace can be a book, mediation file,
+              policy dispute, argument corpus, or field situation. DIALECTICA turns
+              that workspace into a block pipeline: ingest sources, generate a dynamic
+              ontology, segment temporal episodes, write graph memory, run agents,
+              and benchmark the result.
+            </p>
+          </div>
+          <div className="rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-xs leading-5 text-accent xl:max-w-md">
+            {dynamicOntologyEngine.name}: {dynamicOntologyEngine.coreRule}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="space-y-3">
+            {workspaceProjectTemplates.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => {
+                  setActiveTemplateId(template.id);
+                  setWorkspaceId(`${template.workspacePrefix}-${caseId}`.replace(/[^A-Za-z0-9_.-]/g, "-").toLowerCase());
+                  setObjective(template.defaultObjective);
+                  const profile = ontologyProfileOptions.find((item) => item.id === template.recommendedProfile);
+                  if (profile) setActiveProfileId(profile.id);
+                }}
+                className={`w-full rounded-lg border px-3 py-3 text-left transition-colors ${
+                  template.id === activeTemplate.id
+                    ? "border-accent bg-accent/10"
+                    : "border-border bg-background hover:border-border-hover"
+                }`}
+              >
+                <p className="text-sm font-semibold text-text-primary">{template.name}</p>
+                <p className="mt-1 text-xs leading-5 text-text-secondary">{template.description}</p>
+                <p className="mt-2 text-[11px] text-accent">{template.sourceExamples}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Backend mode</span>
+                <select value={pipelineBackendMode} onChange={(event) => setPipelineBackendMode(event.target.value)} className="input-base mt-2 w-full">
+                  <option value="databricks-neo4j">Databricks + Neo4j</option>
+                  <option value="local-python">Local Python + files</option>
+                  <option value="neo4j-only">Neo4j-only</option>
+                  <option value="falkordb">FalkorDB experimental</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Workspace</span>
+                <input value={workspaceId} onChange={(event) => setWorkspaceId(event.target.value)} className="input-base mt-2 w-full" />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Case</span>
+                <input value={caseId} onChange={(event) => setCaseId(event.target.value)} className="input-base mt-2 w-full" />
+              </label>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-4">
+              {[
+                ["Temporal episodes", pipelineTemporal, setPipelineTemporal],
+                ["Abstract knowledge graph", pipelineKnowledge, setPipelineKnowledge],
+                ["Benchmark blocks", pipelineBenchmarks, setPipelineBenchmarks],
+                ["Stage plan to Databricks", pipelineStageToDatabricks, setPipelineStageToDatabricks],
+              ].map(([label, checked, setter]) => (
+                <label key={String(label)} className="rounded-lg border border-border bg-background p-3 text-xs text-text-secondary">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(checked)}
+                    onChange={(event) => (setter as (value: boolean) => void)(event.target.checked)}
+                    className="mr-2"
+                  />
+                  {String(label)}
+                </label>
+              ))}
+            </div>
+
+            <button onClick={createPipelinePlan} className="btn-primary inline-flex items-center gap-2">
+              <Play size={15} />
+              Create pipeline plan
+            </button>
+
+            {pipelineState.status === "loading" && (
+              <div className="rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-accent">
+                Building workspace pipeline artifact...
+              </div>
+            )}
+            {pipelineState.status === "error" && (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+                {pipelineState.message}
+              </div>
+            )}
+            {pipelineState.status === "ok" && (
+              <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+                <div className="rounded-lg border border-border bg-background p-4">
+                  <p className="text-sm font-semibold text-text-primary">
+                    {String(((pipelineState.result.artifact as Record<string, unknown>)?.pipeline_id) ?? "Pipeline")}
+                  </p>
+                  <p className="mt-2 text-xs text-text-secondary">
+                    {String(((pipelineState.result.artifact as Record<string, unknown>)?.backend_mode) ?? "")}
+                  </p>
+                  <p className="mt-3 text-xs leading-5 text-accent">
+                    {String(((pipelineState.result.databricks as { message?: string })?.message) ?? "Plan created locally.")}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    {(((pipelineState.result.artifact as { blocks?: Array<{ order: number; name: string; status: string }> })?.blocks) ?? []).map((block) => (
+                      <div key={`${block.order}-${block.name}`} className="rounded-md bg-surface px-3 py-2">
+                        <p className="text-xs font-semibold text-text-primary">{block.order}. {block.name}</p>
+                        <p className="text-[11px] text-text-secondary">{block.status}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <pre className="max-h-[460px] overflow-auto rounded-lg border border-border bg-background p-4 text-xs leading-5 text-text-secondary">
+                  <code>{JSON.stringify(pipelineState.result, null, 2)}</code>
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {pipelineBlockCatalog.map((block) => (
+            <div key={block.id} className="rounded-lg border border-border bg-background p-4">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-text-primary">{block.name}</p>
+                <span className="rounded-md bg-surface px-2 py-1 text-[10px] text-text-secondary">{block.status}</span>
+              </div>
+              <p className="mt-1 text-[11px] uppercase tracking-wide text-accent">{block.stage}</p>
+              <p className="mt-2 text-xs leading-5 text-text-secondary">{block.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+          <Brain size={18} className="text-accent" />
+          Dynamic ontology and benchmark blocks
+        </h2>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+          {dynamicOntologyEngine.shortName} creates case-specific ontology extensions
+          while keeping them grounded in TACITUS core primitives. Benchmark blocks
+          make each pipeline testable instead of merely impressive.
+        </p>
+        <div className="mt-5 grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">{dynamicOntologyEngine.name}</p>
+            <p className="mt-2 text-xs leading-5 text-text-secondary">{dynamicOntologyEngine.purpose}</p>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              {dynamicOntologyEngine.outputs.map((output) => (
+                <span key={output} className="rounded-md bg-surface px-2 py-1 text-[11px] text-accent">
+                  {output}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {benchmarkBlockCatalog.map((block) => (
+              <div key={block.id} className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">{block.name}</p>
+                <p className="mt-2 text-xs leading-5 text-text-secondary">{block.metric}</p>
+                <p className="mt-3 rounded-md bg-surface px-2 py-1 text-[11px] text-accent">{block.appliesTo}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
