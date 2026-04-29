@@ -1,6 +1,7 @@
 import neo4j from "neo4j-driver";
 import { NextResponse } from "next/server";
 import { extractGraphOpsPrimitives, sampleText } from "@/lib/graphopsExtraction";
+import { stageGraphOpsUploadToDatabricks, triggerDatabricksRun } from "@/lib/graphopsDatabricks";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -103,6 +104,8 @@ export async function POST(request: Request) {
   let objective = "Understand the conflict";
   let ontologyProfile = "human-friction";
   let writeGraph = false;
+  let sendToDatabricks = false;
+  let databricksWorkflowKey = "";
 
   if (contentType.includes("multipart/form-data")) {
     const form = await request.formData();
@@ -111,6 +114,8 @@ export async function POST(request: Request) {
     objective = String(form.get("objective") || objective);
     ontologyProfile = String(form.get("ontologyProfile") || ontologyProfile);
     writeGraph = String(form.get("writeGraph") || "false") === "true";
+    sendToDatabricks = String(form.get("sendToDatabricks") || "false") === "true";
+    databricksWorkflowKey = String(form.get("databricksWorkflowKey") || "");
     const sample = sampleText(String(form.get("sampleKey") || ""));
     const file = form.get("file");
     text = String(form.get("text") || sample || "");
@@ -132,6 +137,8 @@ export async function POST(request: Request) {
     objective = String(body.objective || objective);
     ontologyProfile = String(body.ontologyProfile || ontologyProfile);
     writeGraph = Boolean(body.writeGraph);
+    sendToDatabricks = Boolean(body.sendToDatabricks);
+    databricksWorkflowKey = String(body.databricksWorkflowKey || "");
     sourceTitle = String(body.sourceTitle || sourceTitle);
     sourceType = String(body.sourceType || sourceType);
     text = String(body.text || sampleText(String(body.sampleKey || "")) || "");
@@ -154,6 +161,26 @@ export async function POST(request: Request) {
   if (writeGraph) {
     const write = await writeToNeo4j(result.primitives as Array<Record<string, unknown>>);
     result.graphWrite = { requested: true, ...write };
+  }
+  if (sendToDatabricks || databricksWorkflowKey) {
+    const databricks: Record<string, unknown> = {};
+    if (sendToDatabricks) {
+      databricks.upload = await stageGraphOpsUploadToDatabricks({
+        workspaceId,
+        caseId,
+        extractionRunId: result.extractionRunId,
+        sourceTitle,
+        sourceType,
+        objective,
+        ontologyProfile,
+        text: text.slice(0, 120000),
+        counts: result.counts,
+      });
+    }
+    if (databricksWorkflowKey) {
+      databricks.workflow = await triggerDatabricksRun(databricksWorkflowKey);
+    }
+    result.databricks = databricks;
   }
 
   return NextResponse.json(result);

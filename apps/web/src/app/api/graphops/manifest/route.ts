@@ -7,6 +7,7 @@ import {
   orchestrationEvents,
   qualityGates,
   sourcePacks,
+  topTenBuildPriorities,
 } from "@/data/graphops";
 
 export const runtime = "nodejs";
@@ -28,6 +29,7 @@ export async function GET() {
       databricksJobs: "/api/graphops/databricks/jobs",
       databricksTables: "/api/graphops/databricks/tables",
       ingest: "/api/graphops/ingest",
+      spawnAgent: "/api/graphops/agents/run",
       triggerWorkflow: "/api/graphops/databricks/run",
       neo4jQuery: "/api/graphops/query",
       manifest: "/api/graphops/manifest",
@@ -40,6 +42,7 @@ export async function GET() {
       "Product asks graph-grounded questions through allowlisted query and GraphRAG planner APIs.",
     ],
     capabilities: agenticTools,
+    topTenBuildPriorities,
     embeddableSurfaces,
     ontologyProfiles: ontologyProfileOptions,
     graphCategories,

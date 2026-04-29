@@ -57,6 +57,7 @@ import {
   situationPortalBlueprint,
   safetyBoundaries,
   sourcePacks,
+  topTenBuildPriorities,
 } from "@/data/graphops";
 
 const layerCards = [
@@ -132,6 +133,12 @@ type IngestState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type AgentRunState =
+  | { status: "idle" }
+  | { status: "loading"; agent: string }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -144,10 +151,14 @@ export default function GraphOpsConsole() {
   const [objective, setObjective] = useState(precompiledNeeds[0].objective);
   const [sourceText, setSourceText] = useState("");
   const [writeGraph, setWriteGraph] = useState(false);
+  const [sendToDatabricks, setSendToDatabricks] = useState(false);
+  const [triggerWorkflowAfterIngest, setTriggerWorkflowAfterIngest] = useState(false);
+  const [databricksWorkflowKey, setDatabricksWorkflowKey] = useState("book-demo");
   const [queryState, setQueryState] = useState<QueryState>({ status: "idle" });
   const [databricksState, setDatabricksState] = useState<DatabricksState>({ status: "loading" });
   const [tableState, setTableState] = useState<TableState>({ status: "loading" });
   const [ingestState, setIngestState] = useState<IngestState>({ status: "idle" });
+  const [agentRunState, setAgentRunState] = useState<AgentRunState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -175,6 +186,10 @@ export default function GraphOpsConsole() {
   const activeSourcePack = useMemo(
     () => sourcePacks.find((item) => item.id === activeSourcePackId) ?? sourcePacks[0],
     [activeSourcePackId],
+  );
+  const workflowOptions = useMemo(
+    () => databricksJobs.filter((job) => "actionKey" in job && job.actionKey),
+    [],
   );
 
   async function refreshDatabricksJobs() {
@@ -294,6 +309,8 @@ export default function GraphOpsConsole() {
           text: sample ? "" : sourceText,
           sourceTitle: sample ? activeNeed.label : "GraphOps pasted text",
           writeGraph,
+          sendToDatabricks,
+          databricksWorkflowKey: triggerWorkflowAfterIngest ? databricksWorkflowKey : "",
         }),
       });
       const payload = await response.json();
@@ -320,6 +337,8 @@ export default function GraphOpsConsole() {
     form.set("objective", objective);
     form.set("ontologyProfile", activeProfile.id);
     form.set("writeGraph", String(writeGraph));
+    form.set("sendToDatabricks", String(sendToDatabricks));
+    form.set("databricksWorkflowKey", triggerWorkflowAfterIngest ? databricksWorkflowKey : "");
     try {
       const response = await fetch("/api/graphops/ingest", {
         method: "POST",
@@ -335,6 +354,35 @@ export default function GraphOpsConsole() {
       setIngestState({
         status: "error",
         message: error instanceof Error ? error.message : "File ingestion failed.",
+      });
+    }
+  }
+
+  async function runAgent(agentName: string, execute = false) {
+    setAgentRunState({ status: "loading", agent: agentName });
+    try {
+      const response = await fetch("/api/graphops/agents/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agent: agentName,
+          execute,
+          workspaceId,
+          caseId,
+          objective,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setAgentRunState({ status: "error", message: payload?.error ?? "Agent run failed." });
+        return;
+      }
+      setAgentRunState({ status: "ok", result: payload });
+      if (execute) await refreshDatabricksJobs();
+    } catch (error) {
+      setAgentRunState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Agent run failed.",
       });
     }
   }
@@ -435,6 +483,31 @@ export default function GraphOpsConsole() {
         </div>
       </section>
 
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+          <CheckCircle2 size={18} className="text-accent" />
+          Top 10 build priorities
+        </h2>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+          This is the immediate product backlog for making DIALECTICA a usable
+          neurosymbolic control plane: upload sources, run Databricks, write Neo4j,
+          launch agents, review claims, and benchmark graph-grounded answers.
+        </p>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {topTenBuildPriorities.map((priority, index) => (
+            <div key={priority.item} className="rounded-lg border border-border bg-background p-4">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-text-primary">{index + 1}. {priority.item}</p>
+                <span className="rounded-md bg-accent/10 px-2 py-1 text-[10px] text-accent">
+                  {priority.status}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-text-secondary">{priority.why}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <div className="rounded-lg border border-border bg-surface p-5">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
@@ -521,7 +594,7 @@ export default function GraphOpsConsole() {
           </div>
           <div className="rounded-lg border border-border bg-background px-4 py-3 text-xs leading-5 text-text-secondary xl:max-w-md">
             Current write mode: {writeGraph ? "attempt Neo4j write" : "preview only"}.
-            Live Neo4j writes require fresh rotated production secrets.
+            {sendToDatabricks ? " Source staging to Databricks is enabled." : " Enable Databricks staging to send upload metadata to the lakehouse."}
           </div>
         </div>
 
@@ -606,6 +679,34 @@ export default function GraphOpsConsole() {
                 />
                 Write to Neo4j when configured
               </label>
+              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                <input
+                  type="checkbox"
+                  checked={sendToDatabricks}
+                  onChange={(event) => setSendToDatabricks(event.target.checked)}
+                />
+                Stage source JSON to Databricks
+              </label>
+              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                <input
+                  type="checkbox"
+                  checked={triggerWorkflowAfterIngest}
+                  onChange={(event) => setTriggerWorkflowAfterIngest(event.target.checked)}
+                />
+                Trigger workflow after ingest
+              </label>
+              <select
+                value={databricksWorkflowKey}
+                onChange={(event) => setDatabricksWorkflowKey(event.target.value)}
+                className="input-base min-w-[220px]"
+                disabled={!triggerWorkflowAfterIngest}
+              >
+                {workflowOptions.map((job) => (
+                  <option key={job.jobId} value={job.actionKey}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {ingestState.status === "loading" && (
@@ -628,6 +729,11 @@ export default function GraphOpsConsole() {
                   <p className="mt-2 text-xs text-accent">
                     {String((ingestState.result.graphWrite as { message?: string })?.message ?? "")}
                   </p>
+                  {Boolean(ingestState.result.databricks) && (
+                    <pre className="mt-3 max-h-[180px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                      <code>{JSON.stringify(ingestState.result.databricks, null, 2) ?? ""}</code>
+                    </pre>
+                  )}
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {Object.entries((ingestState.result.counts as Record<string, number>) ?? {}).map(([key, value]) => (
                       <div key={key} className="rounded-md bg-surface px-2 py-2">
@@ -1191,9 +1297,38 @@ export default function GraphOpsConsole() {
                 </span>
               </div>
               <p className="mt-3 text-xs leading-5 text-text-secondary">{tool.purpose}</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => runAgent(tool.name, false)}
+                  className="rounded-md border border-border px-2 py-2 text-xs text-text-secondary hover:text-accent"
+                >
+                  Plan
+                </button>
+                <button
+                  onClick={() => runAgent(tool.name, true)}
+                  className="rounded-md border border-border px-2 py-2 text-xs text-text-secondary hover:text-accent"
+                >
+                  Spawn
+                </button>
+              </div>
             </div>
           ))}
         </div>
+        {agentRunState.status === "loading" && (
+          <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-accent">
+            Preparing {agentRunState.agent}...
+          </div>
+        )}
+        {agentRunState.status === "error" && (
+          <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+            {agentRunState.message}
+          </div>
+        )}
+        {agentRunState.status === "ok" && (
+          <pre className="mt-4 max-h-[320px] overflow-auto rounded-lg border border-border bg-background p-4 text-xs leading-5 text-text-secondary">
+            <code>{JSON.stringify(agentRunState.result, null, 2)}</code>
+          </pre>
+        )}
       </section>
 
       <section className="rounded-lg border border-border bg-surface p-5">

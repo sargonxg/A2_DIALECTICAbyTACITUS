@@ -454,6 +454,59 @@ export const precompiledNeeds = [
   },
 ];
 
+export const topTenBuildPriorities = [
+  {
+    item: "Upload-to-Databricks ingestion",
+    why: "Every TXT/PDF/source pack should be staged to the lakehouse with workspace, case, ontology, and objective metadata.",
+    status: "started",
+  },
+  {
+    item: "Neo4j production writeback",
+    why: "Graph memory becomes real when accepted primitives and relationships land in Aura with provenance and case separation.",
+    status: "blocked on rotated secrets",
+  },
+  {
+    item: "GraphOps agent launchpad",
+    why: "Operators need one-click Source Scout, Ontology Builder, Claim Verifier, Temporal Analyst, GraphRAG Planner, and Benchmark Judge runs.",
+    status: "started",
+  },
+  {
+    item: "Dynamic ontology builder",
+    why: "The user objective should choose required primitives, profile coverage gates, and extraction prompts.",
+    status: "next",
+  },
+  {
+    item: "Review queue UI",
+    why: "Low-confidence claims, missing evidence, contradictions, and inferred facts must become analyst work.",
+    status: "next",
+  },
+  {
+    item: "Live Neo4j graph explorer",
+    why: "Users should see the actual case graph, not only a static preview, after each ingestion run.",
+    status: "next",
+  },
+  {
+    item: "Databricks Delta ingestion tables for uploads",
+    why: "DBFS-staged uploads need a job that turns them into raw_text_chunks, extraction candidates, and quality tables.",
+    status: "next",
+  },
+  {
+    item: "Graph-grounded answer API",
+    why: "DIALECTICA should answer hard conflict questions with Cypher context, source spans, and confidence.",
+    status: "next",
+  },
+  {
+    item: "Benchmark workbench",
+    why: "Baseline LLM vs graph-grounded TACITUS comparisons should be runnable and inspectable from the frontend.",
+    status: "started",
+  },
+  {
+    item: "Embeddable product contract",
+    why: "Praxis and future TACITUS products need stable GraphOps endpoints, permissions, audit logs, and workspace scoping.",
+    status: "documented",
+  },
+];
+
 export const ingestionTreeTemplate = [
   {
     level: "Document",
