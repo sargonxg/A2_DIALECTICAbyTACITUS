@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { cn, NODE_COLORS } from "@/lib/utils";
+import { ontologyEdges, ontologyNodes, ontologyTiers } from "@/data/graphops";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -32,74 +33,23 @@ interface WorkspaceSummary {
 /*  Ontology data                                                      */
 /* ------------------------------------------------------------------ */
 
-const NODE_TYPES: { type: string; label: string; description: string }[] = [
-  { type: "actor", label: "Actor", description: "Person, group, organization, or state involved in a conflict" },
-  { type: "conflict", label: "Conflict", description: "Central conflict node with Glasl stage and status" },
-  { type: "event", label: "Event", description: "Timestamped occurrence that advances or de-escalates a conflict" },
-  { type: "issue", label: "Issue", description: "Substantive, procedural, or psychological matter in dispute" },
-  { type: "interest", label: "Interest", description: "Underlying need, desire, or concern of a party" },
-  { type: "norm", label: "Norm", description: "Legal rule, social norm, or organizational policy governing behavior" },
-  { type: "process", label: "Process", description: "Formal or informal procedure for managing the conflict" },
-  { type: "outcome", label: "Outcome", description: "Result, agreement, or state produced by a conflict process" },
-  { type: "narrative", label: "Narrative", description: "Frame, story, or interpretive lens applied to the conflict" },
-  { type: "emotional_state", label: "Emotional State", description: "Emotion experienced by a party (Plutchik wheel)" },
-  { type: "trust_state", label: "Trust State", description: "Trust level between parties (Mayer/Davis/Schoorman)" },
-  { type: "power_dynamic", label: "Power Dynamic", description: "Power asymmetry (French & Raven bases)" },
-  { type: "location", label: "Location", description: "Geographic context for events or actors" },
-  { type: "evidence", label: "Evidence", description: "Document, testimony, or artifact supporting claims" },
-  { type: "role", label: "Role", description: "Functional role (mediator, advocate, witness, etc.)" },
-];
+const NODE_TYPES = ontologyNodes.map((node) => ({
+  type: node.type,
+  label: node.label,
+  description: node.description,
+}));
 
-const EDGE_TYPES: { type: string; description: string }[] = [
-  { type: "PARTY_TO", description: "Actor is a party to a conflict" },
-  { type: "CAUSED", description: "One event caused another" },
-  { type: "PART_OF", description: "Issue or sub-entity belongs to a conflict" },
-  { type: "PARTICIPATES_IN", description: "Actor participates in a process" },
-  { type: "RESOLVED_THROUGH", description: "Conflict managed via a process" },
-  { type: "HAS_POWER_OVER", description: "Power asymmetry between actors" },
-  { type: "HAS_INTEREST", description: "Actor holds an interest" },
-  { type: "PERFORMED", description: "Actor performed an event" },
-  { type: "TARGETED", description: "Event targeted an actor" },
-  { type: "GOVERNS", description: "Norm governs a conflict or process" },
-  { type: "EXPERIENCES", description: "Actor experiences an emotional state" },
-  { type: "HAS_TRUST_STATE", description: "Actor has a trust relationship" },
-  { type: "HELD_BY", description: "Power dynamic held by an actor" },
-  { type: "MOTIVATED", description: "Emotional state motivated an event" },
-  { type: "ALLIES_WITH", description: "Coalition relationship between actors" },
-  { type: "OPPOSES", description: "Opposition relationship between actors" },
-  { type: "ESCALATES_TO", description: "Conflict escalates to a new stage" },
-  { type: "MEDIATES", description: "Actor mediates a conflict" },
-  { type: "CONSTRAINS", description: "Norm or factor constrains options" },
-  { type: "LEVERAGES", description: "Actor uses leverage in a conflict" },
-];
+const EDGE_TYPES = ontologyEdges.map((edge) => ({
+  type: edge.type,
+  description: `${edge.source} -> ${edge.target}: ${edge.description}`,
+}));
 
-const TIER_LEVELS = [
-  {
-    tier: "Lite",
-    description: "Quick extraction for simple disputes",
-    includes: ["actor", "conflict", "event", "issue", "interest"],
-    color: "#22c55e",
-  },
-  {
-    tier: "Standard",
-    description: "Full extraction for workplace and commercial disputes",
-    includes: [
-      "actor", "conflict", "event", "issue", "interest",
-      "norm", "process", "outcome", "emotional_state", "trust_state", "power_dynamic",
-    ],
-    color: "#3b82f6",
-  },
-  {
-    tier: "Deep",
-    description: "Exhaustive analysis for geopolitical and complex multi-party conflicts",
-    includes: [
-      "actor", "conflict", "event", "issue", "interest",
-      "norm", "process", "outcome", "emotional_state", "trust_state", "power_dynamic",
-      "narrative", "location", "evidence", "role",
-    ],
-    color: "#a855f7",
-  },
-];
+const TIER_LEVELS = ontologyTiers.map((tier) => ({
+  tier: tier.name,
+  description: tier.description,
+  includes: ontologyNodes.filter((node) => node.tier === tier.name).map((node) => node.type),
+  color: tier.color,
+}));
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */

@@ -19,6 +19,7 @@ import {
   Code2,
   Users,
   Database,
+  Network,
   Layers,
   Cpu,
   Heart,
@@ -44,44 +45,30 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    title: "WORKBENCH",
+    title: "GRAPHOPS",
     items: [
+      { label: "GraphOps", href: "/graphops", icon: Network },
       { label: "Workspaces", href: "/workspaces", icon: LayoutDashboard },
-      { label: "Demo Corpus", href: "/workspace/demo-workspace-001", icon: Layers },
       { label: "Ask", href: "/ask", icon: MessageSquare },
+      { label: "Graph Explorer", href: "/admin/graph", icon: Database },
+      { label: "Graph Health", href: "/admin/graph-health", icon: Heart },
+      { label: "Benchmarks", href: "/admin/benchmarks", icon: BarChart3 },
+    ],
+  },
+  {
+    title: "ONTOLOGY",
+    items: [
+      { label: "Ontology", href: "/admin/ontology", icon: Layers },
+      { label: "Theory", href: "/theory", icon: BookOpen },
       { label: "Compare", href: "/compare", icon: GitCompare },
-      { label: "Explore", href: "/explore", icon: Globe },
     ],
   },
   {
-    title: "THEORY",
-    items: [
-      { label: "Frameworks", href: "/theory", icon: BookOpen },
-      { label: "Glossary", href: "/theory?tab=glossary", icon: BookMarked },
-    ],
-  },
-  {
-    title: "DEVELOPERS",
-    items: [
-      { label: "API Docs", href: "/developers/docs", icon: FileCode },
-      { label: "Playground", href: "/developers/playground", icon: Play },
-      { label: "API Keys", href: "/developers/keys", icon: Key },
-      { label: "SDKs", href: "/developers/sdks", icon: Package },
-      { label: "Examples", href: "/developers/examples", icon: Code2 },
-    ],
-  },
-  {
-    title: "ADMIN",
+    title: "SYSTEM",
     items: [
       { label: "System Health", href: "/admin/system", icon: Settings },
-      { label: "Graph Explorer", href: "/admin/graph", icon: Database },
-      { label: "Architecture", href: "/admin/architecture", icon: Layers },
-      { label: "Users", href: "/admin/users", icon: Users },
-      { label: "Workspaces", href: "/admin/workspaces", icon: LayoutDashboard },
       { label: "Data", href: "/admin/data", icon: Database },
-      { label: "Ontology", href: "/admin/ontology", icon: Layers },
       { label: "Extraction", href: "/admin/extraction", icon: Cpu },
-      { label: "Graph Health", href: "/admin/graph-health", icon: Heart },
       { label: "Usage", href: "/admin/usage", icon: BarChart3 },
       { label: "API Keys", href: "/admin/api-keys", icon: Shield },
     ],

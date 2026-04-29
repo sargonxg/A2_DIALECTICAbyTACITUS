@@ -11,9 +11,9 @@ from datetime import datetime, timezone
 
 from neo4j import AsyncGraphDatabase
 
-NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://f53b9bee.databases.neo4j.io")
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "05NMpTmlUQ8FYGRk2aq5uZ6LihYpm7GH5Q4w2YIjeyM")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
 
@@ -817,6 +817,8 @@ async def seed_hr(session):
 # ═══════════════════════════════════════════════════════════════════
 
 async def main():
+    if not NEO4J_PASSWORD:
+        raise RuntimeError("Set NEO4J_PASSWORD before running this seed script.")
     print(f"Connecting to Neo4j: {NEO4J_URI}")
     driver = AsyncGraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 

@@ -1,0 +1,212 @@
+resources:
+  jobs:
+    tacitus_book_ai_extraction_demo:
+      name: tacitus-dialectica-book-ai-extraction-demo
+      description: No-secret demo that seeds open book chunks and extracts TACITUS ontology candidates with Databricks AI Functions.
+      max_concurrent_runs: 1
+      timeout_seconds: 1800
+      tags:
+        project: tacitus-dialectica
+        cost_guardrail: low-demo
+        workload: ai-extraction
+      queue:
+        enabled: true
+      tasks:
+        - task_key: seed_open_books
+          timeout_seconds: 600
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/00_seed_open_books_to_delta.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              workspace_id: books-romeo-juliet
+              tenant_id: tacitus-lab
+              gutenberg_ids: "1513"
+              max_chars_per_book: "80000"
+              chunk_chars: "2500"
+
+        - task_key: ai_extract_chunks
+          timeout_seconds: 1200
+          depends_on:
+            - task_key: seed_open_books
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/00_ai_extract_chunks_to_delta.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              model_endpoint: databricks-meta-llama-3-3-70b-instruct
+              max_chunks: "40"
+
+    tacitus_complex_book_graph_demo:
+      name: tacitus-dialectica-complex-book-graph-demo
+      description: Larger no-secret extraction demo across complex books for conflict, policy, and human-friction ontology development.
+      max_concurrent_runs: 1
+      timeout_seconds: 2400
+      tags:
+        project: tacitus-dialectica
+        cost_guardrail: medium-demo
+        workload: complex-ai-extraction
+      queue:
+        enabled: true
+      tasks:
+        - task_key: seed_complex_books
+          timeout_seconds: 900
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/00_seed_open_books_to_delta.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              workspace_id: books-complex-conflict-lab
+              tenant_id: tacitus-lab
+              gutenberg_ids: "2600,2554,1404"
+              max_chars_per_book: "120000"
+              chunk_chars: "2800"
+
+        - task_key: ai_extract_complex_chunks
+          timeout_seconds: 1500
+          depends_on:
+            - task_key: seed_complex_books
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/00_ai_extract_chunks_to_delta.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              model_endpoint: databricks-meta-llama-3-3-70b-instruct
+              max_chunks: "120"
+
+        - task_key: dynamic_ontology_quality
+          timeout_seconds: 600
+          depends_on:
+            - task_key: ai_extract_complex_chunks
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/05_dynamic_ontology_quality_and_profiles.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              workspace_id: books-complex-conflict-lab
+
+    tacitus_operational_loop:
+      name: tacitus-dialectica-operational-loop
+      description: Mirrors Neo4j into Delta and builds a human review queue. KGE is a separate manual job to control spend.
+      max_concurrent_runs: 1
+      timeout_seconds: 1800
+      tags:
+        project: tacitus-dialectica
+        cost_guardrail: low
+        workload: graph-quality
+      queue:
+        enabled: true
+      tasks:
+        - task_key: seed_open_books
+          timeout_seconds: 600
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/00_seed_open_books_to_delta.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              workspace_id: books-romeo-juliet
+              tenant_id: tacitus-lab
+              gutenberg_ids: "1513"
+              max_chars_per_book: "80000"
+              chunk_chars: "2500"
+
+        - task_key: ai_extract_chunks
+          timeout_seconds: 1200
+          depends_on:
+            - task_key: seed_open_books
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/00_ai_extract_chunks_to_delta.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              model_endpoint: databricks-meta-llama-3-3-70b-instruct
+              max_chunks: "40"
+
+        - task_key: write_candidates_to_neo4j
+          timeout_seconds: 900
+          depends_on:
+            - task_key: ai_extract_chunks
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/01_write_candidates_to_neo4j.py
+            base_parameters:
+              workspace_id: books-romeo-juliet
+              secret_scope: tacitus
+              catalog: dialectica
+              schema: conflict_graphs
+              max_rows: "60"
+
+        - task_key: neo4j_delta_snapshot
+          timeout_seconds: 900
+          depends_on:
+            - task_key: write_candidates_to_neo4j
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/01_neo4j_delta_operational_signals.py
+            base_parameters:
+              workspace_id: books-romeo-juliet
+              secret_scope: tacitus
+              catalog: dialectica
+              schema: conflict_graphs
+              write_back_to_neo4j: "false"
+              gemini_model: gemini-2.5-flash
+
+        - task_key: build_review_queue
+          timeout_seconds: 600
+          depends_on:
+            - task_key: neo4j_delta_snapshot
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/02_review_queue.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              workspace_id: books-romeo-juliet
+              min_confidence: "0.60"
+
+    tacitus_kge_candidates_manual:
+      name: tacitus-dialectica-kge-candidates-manual
+      description: Manual-only KGE link prediction job. Run after graph has enough edges and review queue has been inspected.
+      max_concurrent_runs: 1
+      timeout_seconds: 1800
+      tags:
+        project: tacitus-dialectica
+        cost_guardrail: manual-expensive
+        workload: kge
+      queue:
+        enabled: true
+      tasks:
+        - task_key: kge_link_candidates
+          timeout_seconds: 1800
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/03_kge_from_delta_link_predictions.py
+            base_parameters:
+              catalog: dialectica
+              schema: conflict_graphs
+              workspace_id: ""
+              model: TransE
+              epochs: "25"
+              embedding_dim: "64"
+              top_k_per_query: "10"
+              max_training_edges: "5000"
+
+    tacitus_neurosymbolic_benchmark_manual:
+      name: tacitus-dialectica-neurosymbolic-benchmark-manual
+      description: Manual benchmark comparing baseline LLM answers against DIALECTICA graph-grounded answers.
+      max_concurrent_runs: 1
+      timeout_seconds: 1800
+      tags:
+        project: tacitus-dialectica
+        cost_guardrail: manual-benchmark
+        workload: neurosymbolic-eval
+      queue:
+        enabled: true
+      tasks:
+        - task_key: benchmark_baseline_vs_dialectica
+          timeout_seconds: 1800
+          notebook_task:
+            notebook_path: ../../notebooks/databricks/04_neurosymbolic_benchmark.py
+            base_parameters:
+              workspace_id: books-romeo-juliet
+              secret_scope: tacitus
+              catalog: dialectica
+              schema: conflict_graphs
+              model_endpoint: databricks-meta-llama-3-3-70b-instruct
+              max_graph_facts: "80"

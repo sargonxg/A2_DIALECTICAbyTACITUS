@@ -1,0 +1,11 @@
+.git
+.gitignore
+.next
+node_modules
+dev-server.log
+dev-server.err.log
+tsconfig.tsbuildinfo
+coverage
+e2e
+test-results
+playwright-report
