@@ -34,17 +34,20 @@ import {
   ahaWorkflows,
   agenticTools,
   ambitionRoadmap,
+  aiCommandExamples,
   databricksJobs,
   databricksNeo4jExplanation,
   dynamicOntologyEngine,
   dynamicOntologyTables,
   embeddableSurfaces,
   demoGraph,
+  graphLayerBlueprints,
   graphCategories,
   graphOpsPipeline,
   ingestionTreeTemplate,
   liveDeltaTables,
   neo4jStatus,
+  neurosymbolicRuleCatalog,
   ontologyContracts,
   ontologyEdges,
   ontologyNodes,
@@ -65,6 +68,7 @@ import {
   pipelineStageGuide,
   topTenBuildPriorities,
   workspaceProjectTemplates,
+  configurationQualityChecklist,
 } from "@/data/graphops";
 
 const layerCards = [
@@ -167,6 +171,12 @@ type PipelineState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type AiCommandState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -188,12 +198,14 @@ export default function GraphOpsConsole() {
   const [pipelineTemporal, setPipelineTemporal] = useState(true);
   const [pipelineKnowledge, setPipelineKnowledge] = useState(true);
   const [pipelineBenchmarks, setPipelineBenchmarks] = useState(true);
+  const [aiCommand, setAiCommand] = useState(aiCommandExamples[0].command);
   const [queryState, setQueryState] = useState<QueryState>({ status: "idle" });
   const [databricksState, setDatabricksState] = useState<DatabricksState>({ status: "loading" });
   const [tableState, setTableState] = useState<TableState>({ status: "loading" });
   const [ingestState, setIngestState] = useState<IngestState>({ status: "idle" });
   const [agentRunState, setAgentRunState] = useState<AgentRunState>({ status: "idle" });
   const [pipelineState, setPipelineState] = useState<PipelineState>({ status: "idle" });
+  const [aiCommandState, setAiCommandState] = useState<AiCommandState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -363,6 +375,38 @@ export default function GraphOpsConsole() {
       setPipelineState({
         status: "error",
         message: error instanceof Error ? error.message : "Could not create pipeline plan.",
+      });
+    }
+  }
+
+  async function runAiCommand() {
+    setAiCommandState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/ai-command", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: aiCommand, workspaceId, caseId, objective }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setAiCommandState({ status: "error", message: payload?.error ?? "AI command failed." });
+        return;
+      }
+      setAiCommandState({ status: "ok", result: payload });
+      const selected = payload?.selected_template as { id?: string; defaultObjective?: string; recommendedProfile?: string; workspacePrefix?: string } | undefined;
+      if (selected?.id) {
+        setActiveTemplateId(selected.id);
+        if (selected.defaultObjective) setObjective(selected.defaultObjective);
+        const profile = ontologyProfileOptions.find((item) => item.id === selected.recommendedProfile);
+        if (profile) setActiveProfileId(profile.id);
+        if (selected.workspacePrefix) {
+          setWorkspaceId(`${selected.workspacePrefix}-${caseId}`.replace(/[^A-Za-z0-9_.-]/g, "-").toLowerCase());
+        }
+      }
+    } catch (error) {
+      setAiCommandState({
+        status: "error",
+        message: error instanceof Error ? error.message : "AI command failed.",
       });
     }
   }
@@ -578,6 +622,96 @@ export default function GraphOpsConsole() {
               <p className="mt-2 text-xs leading-5 text-text-secondary">{priority.why}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <Sparkles size={18} className="text-accent" />
+              AI configuration command
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              Describe what the user needs to build. Aletheia selects a workspace
+              type, ontology focus, graph layers, neurosymbolic rules, and benchmark
+              blocks before the pipeline is created. If Gemini is configured server-side,
+              the same endpoint adds model-generated ontology and episode suggestions;
+              otherwise it uses deterministic TACITUS planning rules.
+            </p>
+          </div>
+          <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-4 py-3 text-xs leading-5 text-violet-200 xl:max-w-md">
+            Rule: AI can propose ontology and graph changes, but every custom concept
+            must map back to TACITUS primitives and every answer must preserve provenance.
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="space-y-3">
+            <textarea
+              value={aiCommand}
+              onChange={(event) => setAiCommand(event.target.value)}
+              className="input-base min-h-[120px] w-full"
+              placeholder="Example: Build a labor mediation graph for a union-employer conflict with meeting notes, contract clauses, and local media."
+            />
+            <div className="flex flex-wrap gap-2">
+              {aiCommandExamples.map((example) => (
+                <button
+                  key={example.command}
+                  onClick={() => setAiCommand(example.command)}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-left text-[11px] leading-4 text-text-secondary hover:text-accent"
+                >
+                  {example.command}
+                </button>
+              ))}
+            </div>
+            <button onClick={runAiCommand} className="btn-primary inline-flex items-center gap-2">
+              <Brain size={15} />
+              Generate configuration
+            </button>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            {aiCommandState.status === "idle" && (
+              <div>
+                <p className="text-sm font-semibold text-text-primary">What this produces</p>
+                <div className="mt-3 space-y-2">
+                  {configurationQualityChecklist.slice(0, 5).map((item) => (
+                    <p key={item} className="text-xs leading-5 text-text-secondary">- {item}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {aiCommandState.status === "loading" && (
+              <p className="text-sm text-accent">Generating pipeline configuration...</p>
+            )}
+            {aiCommandState.status === "error" && (
+              <p className="text-sm text-warning">{aiCommandState.message}</p>
+            )}
+            {aiCommandState.status === "ok" && (
+              <div>
+                <p className="text-sm font-semibold text-text-primary">
+                  {String(((aiCommandState.result.selected_template as { name?: string })?.name) ?? "Configuration")}
+                </p>
+                <p className="mt-1 text-xs text-accent">
+                  mode: {String(aiCommandState.result.mode)}
+                </p>
+                <div className="mt-3 space-y-2">
+                  {((aiCommandState.result.neurosymbolic_rules as Array<{ id: string; name: string; category: string }>) ?? [])
+                    .slice(0, 4)
+                    .map((rule) => (
+                      <div key={rule.id} className="rounded-md bg-surface px-3 py-2">
+                        <p className="text-xs font-semibold text-text-primary">{rule.name}</p>
+                        <p className="text-[11px] text-accent">{rule.category}</p>
+                      </div>
+                    ))}
+                </div>
+                <pre className="mt-3 max-h-[220px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                  <code>{JSON.stringify(aiCommandState.result, null, 2)}</code>
+                </pre>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -807,6 +941,61 @@ export default function GraphOpsConsole() {
                 <p className="text-sm font-semibold text-text-primary">{block.name}</p>
                 <p className="mt-2 text-xs leading-5 text-text-secondary">{block.metric}</p>
                 <p className="mt-3 rounded-md bg-surface px-2 py-1 text-[11px] text-accent">{block.appliesTo}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+            <GitBranch size={18} className="text-accent" />
+            Neurosymbolic rule blocks
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
+            Rules sit between graph memory and LLM generation. They prevent the model
+            from turning weak evidence, chronology, or inferred claims into confident
+            prose. A rule can create review work, constrain answer wording, or propose
+            a safer intervention path.
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {neurosymbolicRuleCatalog.map((rule) => (
+              <div key={rule.id} className="rounded-lg border border-border bg-background p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold text-text-primary">{rule.name}</p>
+                  <span className="rounded-md bg-accent/10 px-2 py-1 text-[10px] text-accent">
+                    {rule.category}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-text-secondary">{rule.trigger}</p>
+                <code className="mt-3 block rounded-md bg-surface px-2 py-2 text-[11px] leading-5 text-accent">
+                  {rule.graphPattern}
+                </code>
+                <p className="mt-2 text-[11px] leading-5 text-text-secondary">{rule.output}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+            <Network size={18} className="text-accent" />
+            Graph layer blueprint
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">
+            DIALECTICA should build several graph layers, not one mixed knowledge
+            graph. This keeps source evidence, situation facts, abstract methods,
+            reasoning, and user activity separate but connected.
+          </p>
+          <div className="mt-4 space-y-3">
+            {graphLayerBlueprints.map((layer) => (
+              <div key={layer.layer} className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">{layer.layer}</p>
+                <p className="mt-2 text-xs leading-5 text-text-secondary">{layer.stores}</p>
+                <p className="mt-2 rounded-md bg-surface px-2 py-1 text-[11px] leading-5 text-accent">
+                  {layer.value}
+                </p>
               </div>
             ))}
           </div>

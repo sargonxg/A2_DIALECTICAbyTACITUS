@@ -914,6 +914,148 @@ export const dynamicOntologyEngine = {
     "A custom type is allowed only if it maps to Actor, Claim, Interest, Constraint, Leverage, Commitment, Event, Narrative, Source, Episode, ActorState, ExtractionRun, or EvidenceSpan.",
 };
 
+export const neurosymbolicRuleCatalog = [
+  {
+    id: "commitment-constraint-propagation",
+    name: "Commitment Constraint Propagation",
+    category: "Commitment",
+    trigger: "Commitment has constrains_actor_id and later Event contradicts or narrows the promised action.",
+    graphPattern: "(actor)-[:MADE_COMMITMENT]->(commitment)-[:CONSTRAINS]->(actor)",
+    output: "Create ReviewSignal: contested_commitment_scope with source spans before any answer is generated.",
+    benchmark: "commitment recall, ambiguity handling, provenance fidelity",
+  },
+  {
+    id: "causal-vs-temporal-separation",
+    name: "Causal vs Temporal Separation",
+    category: "Temporal",
+    trigger: "Events are ordered but no explicit causal evidence exists.",
+    graphPattern: "(event_a)-[:PRECEDES]->(event_b) without (event_a)-[:CAUSED]->(event_b)",
+    output: "Answer may say 'after' but must not say 'because' unless CAUSED has evidence/confidence.",
+    benchmark: "causal precision, temporal accuracy",
+  },
+  {
+    id: "power-asymmetry-process-risk",
+    name: "Power Asymmetry Process Risk",
+    category: "Power",
+    trigger: "One actor has high leverage over another and direct negotiation is proposed.",
+    graphPattern: "(a)-[:HAS_POWER_OVER {magnitude: high}]->(b)",
+    output: "Recommend shuttle mediation, guarantees, or process safeguards before direct joint session.",
+    benchmark: "intervention usefulness, safety boundary compliance",
+  },
+  {
+    id: "source-trust-claim-downgrade",
+    name: "Source Trust Claim Downgrade",
+    category: "Provenance",
+    trigger: "A claim comes only from low-trust media, rumor, or unverified source.",
+    graphPattern: "(claim)-[:EVIDENCED_BY]->(span)-[:FROM_SOURCE]->(source {trust: low})",
+    output: "Mark claim_status=candidate_unverified and require corroboration before graph-grounded answer.",
+    benchmark: "unsupported-claim reduction, source reliability",
+  },
+  {
+    id: "ontology-coverage-gate",
+    name: "Ontology Coverage Gate",
+    category: "Ontology",
+    trigger: "Selected profile requires primitives that are missing after extraction.",
+    graphPattern: "(profile)-[:REQUIRES_PRIMITIVE]->(primitive_type) with zero extracted instances",
+    output: "Block final answer and ask for more sources or run targeted extraction.",
+    benchmark: "ontology coverage, answer completeness",
+  },
+  {
+    id: "ripeness-signal",
+    name: "Ripeness Signal",
+    category: "Mediation",
+    trigger: "Escalating cost, stalemate indicators, viable process node, and minimal trust floor all exist.",
+    graphPattern: "Conflict has cost trend + Process option + ActorState trust/leverage signals",
+    output: "Flag possible ripe moment and generate mediator verification questions.",
+    benchmark: "meeting-prep usefulness, expert review score",
+  },
+  {
+    id: "narrative-identity-escalation",
+    name: "Narrative Identity Escalation",
+    category: "Narrative",
+    trigger: "Narratives contain identity threat, humiliation, honor, betrayal, or legitimacy claims.",
+    graphPattern: "(actor)-[:PROMOTES]->(narrative {identity_intensity: high})",
+    output: "Prioritize narrative de-escalation and avoid purely material settlement framing.",
+    benchmark: "narrative drift, de-escalation relevance",
+  },
+  {
+    id: "legal-constraint-option-filter",
+    name: "Legal Constraint Option Filter",
+    category: "Policy",
+    trigger: "A proposed option violates a Norm or requires a Process step not yet satisfied.",
+    graphPattern: "(option)-[:GOVERNED_BY]->(norm), (option)-[:REQUIRES]->(process_step)",
+    output: "Filter option or mark it infeasible until the missing process step is complete.",
+    benchmark: "policy constraint accuracy",
+  },
+];
+
+export const aiCommandExamples = [
+  {
+    command: "Build a labor mediation graph for a union-employer conflict with meeting notes, contract clauses, and local media.",
+    expected:
+      "Select Labor Union Mediation, mediation-resolution ontology, temporal episodes, commitment rules, source-trust downgrade, benchmark commitment recall.",
+  },
+  {
+    command: "Prepare a regional border meeting brief with maps, local press, legal documents, and stakeholder letters.",
+    expected:
+      "Select Regional Border Process, policy-analysis ontology, jurisdiction and narrative mappings, causal-vs-temporal rule, benchmark temporal accuracy.",
+  },
+  {
+    command: "Use Romeo and Juliet to build a graph about love, power, secrecy, banishment, and failed mediation.",
+    expected:
+      "Select Book Conflict Lab, literary-conflict ontology, family feud episodes, narrative escalation rule, benchmark graph-grounded answer quality.",
+  },
+  {
+    command: "Build a knowledge graph of expert mediator reasoning from manuals and case notes.",
+    expected:
+      "Select Expert Method Graph, abstract knowledge graph layer, method/rule extraction, agent terminal for mediator brief and review questions.",
+  },
+];
+
+export const graphLayerBlueprints = [
+  {
+    layer: "Source Provenance Graph",
+    stores: "SourceDocument, SourceChunk, EvidenceSpan, SourceReliability",
+    value: "Every answer can show where each fact came from.",
+  },
+  {
+    layer: "Situation Graph",
+    stores: "Actor, Claim, Commitment, Constraint, Leverage, Event, Narrative",
+    value: "The case becomes a queryable model of what is happening.",
+  },
+  {
+    layer: "Episodic Temporal Graph",
+    stores: "Episode, ConflictPhase, ActorState, valid_from, valid_to, observed_at",
+    value: "Users can ask what changed and when a claim was true.",
+  },
+  {
+    layer: "Abstract Knowledge Graph",
+    stores: "Framework, Method, DiagnosticRule, InterventionPattern, LegalPrinciple",
+    value: "Expert reasoning becomes reusable across cases.",
+  },
+  {
+    layer: "Reasoning Trace Graph",
+    stores: "RuleFire, Inference, Contradiction, ReviewSignal, AnswerPlan",
+    value: "Neurosymbolic rules become inspectable and benchmarkable.",
+  },
+  {
+    layer: "Activity Graph",
+    stores: "Workspace, UserAction, PipelineRun, AgentRun, ReviewDecision",
+    value: "The system can audit who built, changed, approved, or rejected graph knowledge.",
+  },
+];
+
+export const configurationQualityChecklist = [
+  "Does the pipeline name the user objective before selecting tools?",
+  "Are source types separated by trust level and provenance?",
+  "Does every custom ontology type map to a TACITUS core primitive?",
+  "Are temporal episodes explicit enough to support before/after questions?",
+  "Are graph layers separated instead of mixing facts, reasoning, and user activity?",
+  "Are terminal agents attached to concrete output artifacts?",
+  "Does the benchmark measure the failure mode this use case actually cares about?",
+  "Can the same pipeline be rerun after new sources are added?",
+];
+
 export const ingestionTreeTemplate = [
   {
     level: "Document",
