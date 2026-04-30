@@ -2,6 +2,7 @@ import neo4j from "neo4j-driver";
 import { NextResponse } from "next/server";
 import { extractGraphOpsPrimitives, sampleText } from "@/lib/graphopsExtraction";
 import { stageGraphOpsUploadToDatabricks, triggerDatabricksRun } from "@/lib/graphopsDatabricks";
+import { evaluateNeurosymbolicRules } from "@/lib/graphopsRules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -157,6 +158,7 @@ export async function POST(request: Request) {
     sourceTitle,
     sourceType,
   });
+  result.ruleEvaluation = evaluateNeurosymbolicRules(result.primitives);
 
   if (writeGraph) {
     const write = await writeToNeo4j(result.primitives as Array<Record<string, unknown>>);

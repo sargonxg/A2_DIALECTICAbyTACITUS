@@ -44,6 +44,7 @@ import {
   graphLayerBlueprints,
   graphCategories,
   graphOpsPipeline,
+  highImpactBuildItems,
   ingestionTreeTemplate,
   liveDeltaTables,
   neo4jStatus,
@@ -177,6 +178,12 @@ type AiCommandState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type RuleEvalState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -206,6 +213,7 @@ export default function GraphOpsConsole() {
   const [agentRunState, setAgentRunState] = useState<AgentRunState>({ status: "idle" });
   const [pipelineState, setPipelineState] = useState<PipelineState>({ status: "idle" });
   const [aiCommandState, setAiCommandState] = useState<AiCommandState>({ status: "idle" });
+  const [ruleEvalState, setRuleEvalState] = useState<RuleEvalState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -407,6 +415,39 @@ export default function GraphOpsConsole() {
       setAiCommandState({
         status: "error",
         message: error instanceof Error ? error.message : "AI command failed.",
+      });
+    }
+  }
+
+  async function runRuleEvaluation(useCurrentExtraction = false) {
+    setRuleEvalState({ status: "loading" });
+    try {
+      const currentPrimitives =
+        useCurrentExtraction && ingestState.status === "ok"
+          ? (ingestState.result.primitives as unknown[] | undefined)
+          : undefined;
+      const response = await fetch("/api/graphops/rules/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          primitives: currentPrimitives,
+          sampleKey: activeNeed.sampleKey || "romeo-juliet-conflict",
+          workspaceId,
+          caseId,
+          objective,
+          ontologyProfile: activeProfile.id,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setRuleEvalState({ status: "error", message: payload?.error ?? "Rule evaluation failed." });
+        return;
+      }
+      setRuleEvalState({ status: "ok", result: payload });
+    } catch (error) {
+      setRuleEvalState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Rule evaluation failed.",
       });
     }
   }
@@ -976,6 +1017,51 @@ export default function GraphOpsConsole() {
               </div>
             ))}
           </div>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button onClick={() => runRuleEvaluation(false)} className="btn-primary inline-flex items-center gap-2">
+              <Play size={15} />
+              Evaluate selected sample
+            </button>
+            <button
+              onClick={() => runRuleEvaluation(true)}
+              disabled={ingestState.status !== "ok"}
+              className="btn-secondary inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              Evaluate current extraction
+              <Activity size={15} />
+            </button>
+          </div>
+          {ruleEvalState.status === "loading" && (
+            <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 p-3 text-sm text-accent">
+              Evaluating deterministic rule layer...
+            </div>
+          )}
+          {ruleEvalState.status === "error" && (
+            <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
+              {ruleEvalState.message}
+            </div>
+          )}
+          {ruleEvalState.status === "ok" && (
+            <div className="mt-4 grid gap-4 xl:grid-cols-[0.65fr_1.35fr]">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Rule evaluation</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {Object.entries((ruleEvalState.result.summary as Record<string, number>) ?? {}).map(([key, value]) => (
+                    <div key={key} className="rounded-md bg-surface px-2 py-2">
+                      <p className="text-[11px] text-text-secondary">{key}</p>
+                      <p className="text-lg font-semibold text-text-primary">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs leading-5 text-accent">
+                  {((ruleEvalState.result.benchmarkTargets as string[]) ?? []).slice(0, 3).join(" / ")}
+                </p>
+              </div>
+              <pre className="max-h-[420px] overflow-auto rounded-lg border border-border bg-background p-4 text-xs leading-5 text-text-secondary">
+                <code>{JSON.stringify(ruleEvalState.result, null, 2)}</code>
+              </pre>
+            </div>
+          )}
         </div>
 
         <div className="rounded-lg border border-border bg-surface p-5">
@@ -1094,6 +1180,29 @@ export default function GraphOpsConsole() {
             <p className="mt-2 text-sm text-text-primary">{activeSourcePack.sources}</p>
             <p className="mt-2 text-xs text-text-secondary">Recommended run: {activeSourcePack.nextRun}</p>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+          <CheckCircle2 size={18} className="text-accent" />
+          10 high-impact execution items
+        </h2>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+          These are the critical implementation moves that make DIALECTICA valuable
+          for graph-grounded AI reasoning, not just document upload. Each item ties
+          to a working or staged part of the configuration builder.
+        </p>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {highImpactBuildItems.map((item, index) => (
+            <div key={item.item} className="rounded-lg border border-border bg-background p-4">
+              <p className="text-sm font-semibold text-text-primary">{index + 1}. {item.item}</p>
+              <p className="mt-2 text-xs leading-5 text-text-secondary">{item.impact}</p>
+              <p className="mt-3 rounded-md bg-surface px-2 py-1 text-[11px] leading-5 text-accent">
+                {item.proof}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -1252,6 +1361,14 @@ export default function GraphOpsConsole() {
                     <pre className="mt-3 max-h-[180px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
                       <code>{JSON.stringify(ingestState.result.databricks, null, 2) ?? ""}</code>
                     </pre>
+                  )}
+                  {Boolean(ingestState.result.ruleEvaluation) && (
+                    <div className="mt-3 rounded-md bg-surface px-3 py-2">
+                      <p className="text-[11px] text-text-secondary">rule signals</p>
+                      <p className="text-lg font-semibold text-text-primary">
+                        {String(((ingestState.result.ruleEvaluation as { summary?: { fired?: number } })?.summary?.fired) ?? 0)}
+                      </p>
+                    </div>
                   )}
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {Object.entries((ingestState.result.counts as Record<string, number>) ?? {}).map(([key, value]) => (

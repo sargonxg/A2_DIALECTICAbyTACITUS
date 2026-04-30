@@ -29,6 +29,7 @@ export type GraphOpsExtractionResult = {
     message: string;
   };
   databricks?: Record<string, unknown>;
+  ruleEvaluation?: Record<string, unknown>;
   counts: Record<string, number>;
   primitives: GraphOpsPrimitive[];
   graphPreview: {

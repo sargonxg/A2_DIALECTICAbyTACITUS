@@ -448,6 +448,17 @@ export const sourcePacks = [
 
 export const precompiledNeeds = [
   {
+    id: "book-conflict-resolution-lens",
+    label: "Book conflict-resolution lens",
+    objective:
+      "Extract a book into episodes, actors, commitments, constraints, power, narrative identity, failed mediation, and de-escalation options.",
+    profile: "literary-conflict",
+    sampleKey: "romeo-juliet-conflict",
+    caseId: "romeo-juliet-conflict-resolution",
+    workspaceId: "books-conflict-resolution-lab",
+    defaultQuestion: "How do love, family power, secrecy, banishment, and failed mediation interact as a conflict system?",
+  },
+  {
     id: "understand-literary-conflict",
     label: "Understand a book conflict",
     objective: "Extract actors, episodes, commitments, constraints, events, narratives, and actor states from a book.",
@@ -486,6 +497,59 @@ export const precompiledNeeds = [
     caseId: "field-intelligence-brief",
     workspaceId: "conflict-desk-field",
     defaultQuestion: "What changed, what is verified, and what remains uncertain?",
+  },
+];
+
+export const highImpactBuildItems = [
+  {
+    item: "Executable neurosymbolic rule layer",
+    impact: "Stops graph-grounded generation from overstating causality, source certainty, or intervention readiness.",
+    proof: "Rule evaluation endpoint and rule signals attached to ingestion results.",
+  },
+  {
+    item: "Conflict-resolution book lens",
+    impact: "Turns books into testable conflict systems instead of literary summaries.",
+    proof: "Romeo and Juliet preset with episodes, narrative, power, commitment, and mediation failure rules.",
+  },
+  {
+    item: "Pipeline blocks as artifacts",
+    impact: "Makes each workspace reproducible and comparable across users and cases.",
+    proof: "Pipeline plans staged to Databricks and normalized into Delta tables.",
+  },
+  {
+    item: "Rule-constrained answer plans",
+    impact: "Allows LLMs to generate useful prose while deterministic rules constrain unsupported claims.",
+    proof: "Answer constraints returned by the rule evaluator.",
+  },
+  {
+    item: "Benchmark targets generated from rules",
+    impact: "Benchmarks measure the actual failure modes in the selected use case.",
+    proof: "Rule signals emit benchmark targets like causal precision, temporal accuracy, and provenance fidelity.",
+  },
+  {
+    item: "Ontology coverage gates",
+    impact: "Prevents weak graphs from producing confident analysis.",
+    proof: "Coverage rule marks missing primitive types as warnings or blockers.",
+  },
+  {
+    item: "Abstract knowledge graph layer",
+    impact: "Allows expert methods, legal doctrines, HR processes, and mediation strategies to guide case graphs.",
+    proof: "Pipeline block and graph-layer blueprint are now first-class configuration artifacts.",
+  },
+  {
+    item: "Source trust downgrade",
+    impact: "Keeps media, rumor, and low-confidence claims from becoming unqualified graph truth.",
+    proof: "Source/provenance rule generates review signals before answer generation.",
+  },
+  {
+    item: "Agent terminal integration",
+    impact: "Turns pipeline output into concrete work: verifier queues, mediator briefs, GraphRAG plans, benchmark judgments.",
+    proof: "Agent launch endpoint and terminal agents attached to pipeline plans.",
+  },
+  {
+    item: "Backend portability",
+    impact: "Lets users choose Databricks, local Python, Neo4j-only, or future FalkorDB without changing the product concept.",
+    proof: "Backend mode is part of every pipeline artifact.",
   },
 ];
 
