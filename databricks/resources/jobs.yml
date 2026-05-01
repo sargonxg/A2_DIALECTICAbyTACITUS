@@ -39,3 +39,14 @@ resources:
               - dialectica
               - --schema
               - conflict_graphs
+
+        - task_key: sync_to_neo4j
+          depends_on:
+            - task_key: evaluate_extractions
+          spark_python_task:
+            python_file: ../src/sync_to_neo4j.py
+            parameters:
+              - --catalog
+              - dialectica
+              - --schema
+              - conflict_graphs

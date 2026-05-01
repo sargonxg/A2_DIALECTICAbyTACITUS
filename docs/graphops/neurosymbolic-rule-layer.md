@@ -93,9 +93,15 @@ Rule signals automatically name benchmark targets:
 - ontology coverage;
 - policy constraint accuracy.
 
-## Next Implementation Step
+## Persistence Slice
 
-Persist rule signals into Neo4j and Delta:
+Implemented:
+
+- GraphOps ingestion can persist rule results to Neo4j when graph writing is enabled.
+- GraphOps ingestion stages rule-evaluation artifacts to Databricks alongside staged uploads.
+- The optional Databricks bundle ingests staged uploads/artifacts, creates Delta graph-ready tables, evaluates extraction coverage, and can sync graph-ready nodes to Neo4j when secrets are configured.
+
+Persisted graph types:
 
 - `RuleSignal`
 - `RuleFire`
@@ -103,7 +109,7 @@ Persist rule signals into Neo4j and Delta:
 - `BenchmarkTarget`
 - `ReviewDecision`
 
-These should be linked to:
+These are linked to:
 
 - workspace;
 - case;
@@ -111,3 +117,7 @@ These should be linked to:
 - extraction run;
 - evidence spans;
 - affected graph primitives.
+
+## Next Implementation Step
+
+Extend the Databricks extraction job beyond source/run/chunk primitives so it reconstructs full actor, claim, event, constraint, commitment, narrative, actor-state, rule-signal, answer-constraint, benchmark-target, and review-decision rows from staged GraphOps artifacts.

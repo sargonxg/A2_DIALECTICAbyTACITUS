@@ -197,6 +197,13 @@ export async function stageGraphOpsArtifactToDatabricks(input: {
     };
   }
 
+  const dbfsPath = [
+    "dbfs:/FileStore/tacitus/dialectica/artifacts",
+    safePathSegment(input.workspaceId),
+    safePathSegment(input.caseId),
+    safePathSegment(input.artifactType),
+    `${safePathSegment(input.artifactId)}.json`,
+  ].join("/");
   const workspacePath = [
     "/Shared/tacitus/dialectica/artifacts",
     safePathSegment(input.workspaceId),
@@ -205,6 +212,27 @@ export async function stageGraphOpsArtifactToDatabricks(input: {
     `${safePathSegment(input.artifactId)}.json`,
   ].join("/");
   const contents = Buffer.from(JSON.stringify(input.payload, null, 2), "utf8").toString("base64");
+
+  const dbfsResponse = await fetch(`${host}/api/2.0/dbfs/put`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ path: dbfsPath, contents, overwrite: true }),
+  });
+  const dbfsDetails = await dbfsResponse.json().catch(() => ({}));
+  if (dbfsResponse.ok) {
+    return {
+      requested: true,
+      enabled: true,
+      uploaded: true,
+      storage: "dbfs",
+      path: dbfsPath,
+      message: "Staged GraphOps artifact to Databricks DBFS.",
+    };
+  }
+
   const parentPath = workspacePath.split("/").slice(0, -1).join("/");
 
   await fetch(`${host}/api/2.0/workspace/mkdirs`, {
@@ -235,8 +263,9 @@ export async function stageGraphOpsArtifactToDatabricks(input: {
       enabled: true,
       uploaded: false,
       path: workspacePath,
+      dbfsFallback: dbfsPath,
       message: `Databricks artifact staging returned HTTP ${response.status}.`,
-      details,
+      details: { workspace: details, dbfs: dbfsDetails },
     };
   }
   return {
@@ -245,6 +274,7 @@ export async function stageGraphOpsArtifactToDatabricks(input: {
     uploaded: true,
     storage: "workspace",
     path: workspacePath,
-    message: "Staged GraphOps artifact to Databricks Workspace files.",
+    dbfsFallback: dbfsPath,
+    message: "Staged GraphOps artifact to Databricks Workspace files after DBFS fallback failed.",
   };
 }

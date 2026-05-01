@@ -6,6 +6,7 @@ import {
   pipelineBlockCatalog,
   workspaceProjectTemplates,
 } from "@/data/graphops";
+import { buildDynamicOntologyPlan, coreMappingsForProfile } from "@/lib/dynamicOntology";
 import { stageGraphOpsArtifactToDatabricks } from "@/lib/graphopsDatabricks";
 
 export const runtime = "nodejs";
@@ -35,43 +36,6 @@ function selectBlockIds(
   return ids;
 }
 
-function coreMappings(profileId: string) {
-  if (profileId === "literary-conflict") {
-    return [
-      { custom_type: "Character", core_mapping: "Actor" },
-      { custom_type: "Scene", core_mapping: "Episode" },
-      { custom_type: "Feud", core_mapping: "Narrative" },
-      { custom_type: "Banishment", core_mapping: "Constraint" },
-      { custom_type: "Vow", core_mapping: "Commitment" },
-    ];
-  }
-  if (profileId === "policy-analysis") {
-    return [
-      { custom_type: "Institution", core_mapping: "Actor" },
-      { custom_type: "StatutoryRule", core_mapping: "Constraint" },
-      { custom_type: "VetoPoint", core_mapping: "Leverage" },
-      { custom_type: "ImplementationRisk", core_mapping: "Claim" },
-      { custom_type: "PolicyOption", core_mapping: "Narrative" },
-    ];
-  }
-  if (profileId === "mediation-resolution") {
-    return [
-      { custom_type: "Party", core_mapping: "Actor" },
-      { custom_type: "RedLine", core_mapping: "Constraint" },
-      { custom_type: "RepairOffer", core_mapping: "Commitment" },
-      { custom_type: "UnderlyingNeed", core_mapping: "Interest" },
-      { custom_type: "TrustRepair", core_mapping: "ActorState" },
-    ];
-  }
-  return [
-    { custom_type: "Participant", core_mapping: "Actor" },
-    { custom_type: "Assertion", core_mapping: "Claim" },
-    { custom_type: "FrictionPoint", core_mapping: "Constraint" },
-    { custom_type: "PromisedAction", core_mapping: "Commitment" },
-    { custom_type: "StateChange", core_mapping: "ActorState" },
-  ];
-}
-
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const templateId = String(body.templateId ?? "book-conflict-lab");
@@ -95,6 +59,12 @@ export async function POST(request: Request) {
       return block ? { order: order + 1, ...block } : null;
     })
     .filter(Boolean);
+  const ontologyPlan = buildDynamicOntologyPlan({
+    profileId: profile.id,
+    objective,
+    sourceType: template.sourceExamples,
+    templateId,
+  });
 
   const artifact = {
     kind: "tacitus.dialectica.pipeline_plan.v1",
@@ -112,9 +82,10 @@ export async function POST(request: Request) {
       objective: profile.objective,
       required_nodes: profile.requiredNodes,
       required_edges: profile.requiredEdges,
-      custom_mappings: coreMappings(profile.id),
+      custom_mappings: coreMappingsForProfile(profile.id),
       schema_validation_status: "draft_valid",
     },
+    dynamic_ontology_plan: ontologyPlan,
     graph_layers: [
       "source_provenance_graph",
       "situation_graph",

@@ -5,6 +5,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://dialectica.tacitus.me"),
   title: {
     default: "DIALECTICA by TACITUS",
     template: "%s | DIALECTICA",

@@ -71,6 +71,7 @@ import {
   workspaceProjectTemplates,
   configurationQualityChecklist,
 } from "@/data/graphops";
+import { buildDynamicOntologyPlan } from "@/lib/dynamicOntology";
 
 const layerCards = [
   {
@@ -184,6 +185,24 @@ type RuleEvalState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type LocalRunSummary = {
+  extractionRunId: string;
+  workspaceId: string;
+  caseId: string;
+  objective: string;
+  ontologyProfile: string;
+  savedAt: string;
+  sourceTitle?: string;
+  counts: Record<string, number>;
+  quality?: { status?: string; score?: number };
+  ruleSignals?: number;
+};
+
+type RunsState =
+  | { status: "loading" }
+  | { status: "ready"; runs: LocalRunSummary[] }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -214,6 +233,7 @@ export default function GraphOpsConsole() {
   const [pipelineState, setPipelineState] = useState<PipelineState>({ status: "idle" });
   const [aiCommandState, setAiCommandState] = useState<AiCommandState>({ status: "idle" });
   const [ruleEvalState, setRuleEvalState] = useState<RuleEvalState>({ status: "idle" });
+  const [runsState, setRunsState] = useState<RunsState>({ status: "loading" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -249,6 +269,16 @@ export default function GraphOpsConsole() {
   const workflowOptions = useMemo(
     () => databricksJobs.filter((job) => "actionKey" in job && job.actionKey),
     [],
+  );
+  const activeOntologyPlan = useMemo(
+    () =>
+      buildDynamicOntologyPlan({
+        profileId: activeProfile.id,
+        objective,
+        sourceType: activeTemplate.sourceExamples,
+        templateId: activeTemplate.id,
+      }),
+    [activeProfile.id, activeTemplate.id, activeTemplate.sourceExamples, objective],
   );
 
   async function refreshDatabricksJobs() {
@@ -290,9 +320,23 @@ export default function GraphOpsConsole() {
     }
   }
 
+  async function refreshLocalRuns() {
+    try {
+      const response = await fetch("/api/graphops/runs?limit=8", { cache: "no-store" });
+      const payload = await response.json();
+      setRunsState({ status: "ready", runs: payload.runs ?? [] });
+    } catch (error) {
+      setRunsState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not load local runs.",
+      });
+    }
+  }
+
   useEffect(() => {
     refreshDatabricksJobs();
     refreshDeltaTables();
+    refreshLocalRuns();
   }, []);
 
   async function runDatabricksJob(key: string) {
@@ -477,6 +521,7 @@ export default function GraphOpsConsole() {
         return;
       }
       setIngestState({ status: "ok", result: payload });
+      await refreshLocalRuns();
     } catch (error) {
       setIngestState({
         status: "error",
@@ -508,10 +553,36 @@ export default function GraphOpsConsole() {
         return;
       }
       setIngestState({ status: "ok", result: payload });
+      await refreshLocalRuns();
     } catch (error) {
       setIngestState({
         status: "error",
         message: error instanceof Error ? error.message : "File ingestion failed.",
+      });
+    }
+  }
+
+  async function loadLocalRun(extractionRunId: string) {
+    setIngestState({ status: "loading" });
+    try {
+      const response = await fetch(`/api/graphops/runs/${encodeURIComponent(extractionRunId)}`, {
+        cache: "no-store",
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setIngestState({ status: "error", message: payload?.error ?? "Could not load run." });
+        return;
+      }
+      setIngestState({ status: "ok", result: payload });
+      setWorkspaceId(String(payload.workspaceId ?? workspaceId));
+      setCaseId(String(payload.caseId ?? caseId));
+      setObjective(String(payload.objective ?? objective));
+      const profile = ontologyProfileOptions.find((item) => item.id === payload.ontologyProfile);
+      if (profile) setActiveProfileId(profile.id);
+    } catch (error) {
+      setIngestState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not load run.",
       });
     }
   }
@@ -1243,6 +1314,52 @@ export default function GraphOpsConsole() {
                 <p className="mt-2 text-[11px] text-accent">{need.defaultQuestion}</p>
               </button>
             ))}
+
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Local run history</p>
+                  <p className="mt-1 text-xs text-text-secondary">Saved automatically after every ingest.</p>
+                </div>
+                <button onClick={refreshLocalRuns} className="btn-secondary px-2 py-1 text-xs">
+                  Refresh
+                </button>
+              </div>
+              <div className="mt-3 space-y-2">
+                {runsState.status === "loading" && (
+                  <p className="text-xs text-text-secondary">Loading saved runs...</p>
+                )}
+                {runsState.status === "error" && (
+                  <p className="text-xs text-warning">{runsState.message}</p>
+                )}
+                {runsState.status === "ready" && runsState.runs.length === 0 && (
+                  <p className="text-xs text-text-secondary">No local runs saved yet.</p>
+                )}
+                {runsState.status === "ready" &&
+                  runsState.runs.map((run) => (
+                    <button
+                      key={run.extractionRunId}
+                      onClick={() => loadLocalRun(run.extractionRunId)}
+                      className="w-full rounded-md border border-border bg-surface px-3 py-2 text-left transition-colors hover:border-border-hover"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-xs font-semibold text-text-primary">
+                          {run.sourceTitle || run.caseId || run.extractionRunId}
+                        </p>
+                        <span className="shrink-0 text-[11px] text-accent">
+                          {run.quality?.score ?? 0}/100
+                        </span>
+                      </div>
+                      <p className="mt-1 truncate text-[11px] text-text-secondary">
+                        {run.workspaceId} / {run.caseId}
+                      </p>
+                      <p className="mt-1 text-[11px] text-text-secondary">
+                        {new Date(run.savedAt).toLocaleString()} · {run.ruleSignals ?? 0} signals
+                      </p>
+                    </button>
+                  ))}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -1269,6 +1386,36 @@ export default function GraphOpsConsole() {
               <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Objective</span>
               <textarea value={objective} onChange={(event) => setObjective(event.target.value)} className="input-base mt-2 min-h-[80px] w-full" />
             </label>
+
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Dynamic ontology plan</p>
+                  <p className="mt-1 max-w-3xl text-xs leading-5 text-text-secondary">
+                    {activeOntologyPlan.objective}
+                  </p>
+                </div>
+                <span className="rounded-md border border-accent/30 bg-accent/10 px-2 py-1 text-[11px] text-accent">
+                  {activeOntologyPlan.episodeStrategy.mode}
+                </span>
+              </div>
+              <div className="mt-3 grid gap-3 lg:grid-cols-4">
+                {activeOntologyPlan.extractionPasses.map((pass) => (
+                  <div key={pass.id} className="rounded-md bg-surface px-3 py-3">
+                    <p className="text-xs font-semibold text-text-primary">{pass.name}</p>
+                    <p className="mt-2 text-[11px] leading-5 text-text-secondary">{pass.instruction}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 grid gap-2 md:grid-cols-5">
+                {activeOntologyPlan.customMappings.map((mapping) => (
+                  <div key={mapping.custom_type} className="rounded-md border border-border bg-surface px-3 py-2">
+                    <p className="text-xs font-semibold text-text-primary">{mapping.custom_type}</p>
+                    <p className="mt-1 text-[11px] text-accent">{mapping.core_mapping}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <label className="block">
               <span className="text-xs font-medium uppercase tracking-wide text-text-secondary">Paste text</span>
@@ -1357,6 +1504,51 @@ export default function GraphOpsConsole() {
                   <p className="mt-2 text-xs text-accent">
                     {String((ingestState.result.graphWrite as { message?: string })?.message ?? "")}
                   </p>
+                  {Boolean(ingestState.result.localPersistence) && (
+                    <p className="mt-2 text-xs text-emerald-300">
+                      {String(
+                        (ingestState.result.localPersistence as { message?: string })?.message ?? "",
+                      )}
+                    </p>
+                  )}
+                  {Boolean(ingestState.result.quality) && (
+                    <div className="mt-3 rounded-md bg-surface px-3 py-2">
+                      <p className="text-[11px] text-text-secondary">readiness</p>
+                      <div className="mt-1 flex items-center justify-between gap-3">
+                        <p className="text-lg font-semibold text-text-primary">
+                          {String((ingestState.result.quality as { score?: number })?.score ?? 0)}/100
+                        </p>
+                        <span className="rounded-md border border-border px-2 py-1 text-[11px] text-accent">
+                          {String((ingestState.result.quality as { status?: string })?.status ?? "review")}
+                        </span>
+                      </div>
+                      <ul className="mt-2 space-y-1 text-[11px] leading-5 text-text-secondary">
+                        {((ingestState.result.quality as { recommendations?: string[] })?.recommendations ?? [])
+                          .slice(0, 3)
+                          .map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                  {Boolean(ingestState.result.preExtraction) && (
+                    <div className="mt-3 rounded-md bg-surface px-3 py-2">
+                      <p className="text-[11px] text-text-secondary">pre-extraction</p>
+                      <p className="mt-1 text-xs text-text-primary">
+                        {String((ingestState.result.preExtraction as { segmentCount?: number })?.segmentCount ?? 0)} segments ·{" "}
+                        {String((ingestState.result.preExtraction as { cleanedChars?: number })?.cleanedChars ?? 0)} cleaned chars
+                      </p>
+                      <div className="mt-2 space-y-1">
+                        {((ingestState.result.preExtraction as { segments?: Array<{ label: string; reason: string; charCount: number }> })?.segments ?? [])
+                          .slice(0, 4)
+                          .map((segment) => (
+                            <div key={`${segment.label}-${segment.charCount}`} className="rounded bg-background px-2 py-1 text-[11px] text-text-secondary">
+                              {segment.label} · {segment.reason} · {segment.charCount} chars
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                   {Boolean(ingestState.result.databricks) && (
                     <pre className="mt-3 max-h-[180px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
                       <code>{JSON.stringify(ingestState.result.databricks, null, 2) ?? ""}</code>
