@@ -219,6 +219,28 @@ How to test:
   `{ "sampleKey": "policy-constraint-map", "question": "Which constraints block
   feasible policy options?" }`.
 
+### Wave 4: graph contract tests and runtime schema
+
+Implemented hardening for the M1/M2 foundation:
+
+- Added Next/Jest configuration for focused web contract tests.
+- Added graph writeback idempotency tests for stable node and relationship
+  identities.
+- Added local retrieval execution tests for context, citation, and answer-policy
+  behavior.
+- Exported GraphOps runtime schema statements from `graphopsGraph.ts`.
+- Added `infrastructure/neo4j/graphops_runtime_schema.cypher` and documented it
+  in `infrastructure/neo4j/README.md`.
+
+Why it matters:
+
+- Graph writeback can now be changed with a regression test protecting idempotent
+  identities.
+- Retrieval execution has a contract test before the Neo4j-backed executor is
+  added.
+- Operators have a concrete schema file to apply to AuraDB instead of relying
+  only on runtime schema creation.
+
 Wave 2 why it mattered:
 
 - Graph writeback is now a reusable engine surface, not a hidden side effect of

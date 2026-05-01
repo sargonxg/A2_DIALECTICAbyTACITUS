@@ -30,6 +30,8 @@ Implemented:
 - `POST /api/graphops/graph/upsert`.
 - Refactored ingestion graph writes through the shared graph module.
 - `GET /api/graphops/graph/status`.
+- Graph writeback contract test for stable node/edge identities.
+- Neo4j runtime schema file: `infrastructure/neo4j/graphops_runtime_schema.cypher`.
 
 Next:
 
@@ -210,13 +212,13 @@ Acceptance:
 
 ## Immediate Next Engineering Targets
 
-1. Add graph writeback idempotency tests.
-2. Add Neo4j-backed retrieval execution behind the current local-first executor.
-3. Add GraphOps trace panel UI.
-4. Add review decision API.
-5. Add local persistence for graph write plans, retrieval executions, and trace bundles.
-6. Add explicit edge extraction model for MADE_BY, CONTRADICTS, CAUSES, HAS_INTEREST, BINDS, FRAMES.
-7. Add first gold pack fixture for Melian Dialogue or Romeo and Juliet.
-8. Add rule fixtures for R-001, R-007, and R-008.
-9. Add Neo4j migration file for the GraphOps runtime schema.
-10. Add Praxis SDK helpers for context, retrieval, and trace.
+1. Add Neo4j-backed retrieval execution behind the current local-first executor.
+2. Add GraphOps trace panel UI.
+3. Add review decision API.
+4. Add local persistence for graph write plans, retrieval executions, and trace bundles.
+5. Add explicit edge extraction model for MADE_BY, CONTRADICTS, CAUSES, HAS_INTEREST, BINDS, FRAMES.
+6. Add first gold pack fixture for Melian Dialogue or Romeo and Juliet.
+7. Add rule fixtures for R-001, R-007, and R-008.
+8. Add Praxis SDK helpers for context, retrieval, and trace.
+9. Add CI wiring for the new Jest graph contract tests.
+10. Add dependency audit remediation plan for current npm audit findings.

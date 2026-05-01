@@ -80,7 +80,7 @@ const RELATIONSHIP_KEYS: Array<{ key: string; type: string }> = [
   { key: "extraction_run_id", type: "PRODUCED_BY" },
 ];
 
-const SCHEMA_STATEMENTS = [
+export const GRAPHOPS_SCHEMA_STATEMENTS = [
   "CREATE CONSTRAINT tacitus_core_v1_id IF NOT EXISTS FOR (n:TacitusCoreV1) REQUIRE n.id IS UNIQUE",
   "CREATE INDEX tacitus_core_workspace IF NOT EXISTS FOR (n:TacitusCoreV1) ON (n.workspace_id)",
   "CREATE INDEX tacitus_core_case IF NOT EXISTS FOR (n:TacitusCoreV1) ON (n.case_id)",
@@ -383,7 +383,7 @@ export function buildGraphOpsGraphWritePlan(input: {
     workspaceId,
     caseId,
     extractionRunId,
-    schemaStatements: SCHEMA_STATEMENTS,
+    schemaStatements: GRAPHOPS_SCHEMA_STATEMENTS,
     nodes: uniqueNodes,
     edges: uniqueEdges,
     warnings: [...new Set(warnings)].slice(0, 25),

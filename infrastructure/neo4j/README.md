@@ -6,6 +6,13 @@ link prediction, but Neo4j remains the live query surface.
 
 ## Apply Schema
 
+The current runtime schema files are:
+
+- `dialectica_constraints.cypher`: canonical conflict graph constraints.
+- `dynamic_graph_layers.cypher`: dynamic ontology and layered graph constraints.
+- `graphops_runtime_schema.cypher`: GraphOps `TacitusCoreV1` runtime schema used
+  by the web workbench graph-writeback engine.
+
 Use environment variables or allow the script to prompt securely:
 
 ```powershell
@@ -14,6 +21,11 @@ $env:NEO4J_USERNAME = "neo4j"
 $env:NEO4J_DATABASE = "neo4j"
 uv run python tools/apply_neo4j_schema.py
 ```
+
+If applying manually in Neo4j Browser or Cypher Shell, run
+`graphops_runtime_schema.cypher` after the base constraints so GraphOps writeback
+has its workspace, case, extraction-run, primitive-type, review-status, and
+full-text indexes.
 
 Do not paste secrets into terminal commands. Let the password prompt collect the
 password, or use a local secret manager.
