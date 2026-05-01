@@ -48,6 +48,27 @@ export type GraphOpsGraphWriteResult = {
   warnings?: string[];
 };
 
+export type GraphOpsGraphStatus = {
+  kind: "tacitus.dialectica.graph_status.v1";
+  checkedAt: string;
+  configured: boolean;
+  connected: boolean;
+  database: string;
+  workspaceId?: string;
+  caseId?: string;
+  message: string;
+  counts: {
+    nodes: number;
+    relationships: number;
+    byPrimitiveType: Record<string, number>;
+    ruleSignals: number;
+    reviewDecisions: number;
+    benchmarkRuns: number;
+  };
+  latestRuns: Array<{ extractionRunId: string; observedAt: string | null; nodes: number }>;
+  error?: string;
+};
+
 const RELATIONSHIP_KEYS: Array<{ key: string; type: string }> = [
   { key: "evidence_span_id", type: "GROUNDED_IN" },
   { key: "chunk_id", type: "QUOTES" },
@@ -440,6 +461,114 @@ export async function writeGraphOpsPlanToNeo4j(plan: GraphOpsGraphWritePlan): Pr
       database,
       warnings: plan.warnings,
       message: "Wrote graph primitives, provenance edges, rule artifacts, review items, and benchmark artifacts to Neo4j.",
+    };
+  } finally {
+    await driver.close();
+  }
+}
+
+export async function getGraphOpsGraphStatus(input: {
+  workspaceId?: string;
+  caseId?: string;
+}): Promise<GraphOpsGraphStatus> {
+  const database = process.env.NEO4J_DATABASE || "neo4j";
+  const base = {
+    kind: "tacitus.dialectica.graph_status.v1" as const,
+    checkedAt: new Date().toISOString(),
+    configured: neo4jConfigured(),
+    connected: false,
+    database,
+    workspaceId: input.workspaceId,
+    caseId: input.caseId,
+    counts: {
+      nodes: 0,
+      relationships: 0,
+      byPrimitiveType: {},
+      ruleSignals: 0,
+      reviewDecisions: 0,
+      benchmarkRuns: 0,
+    },
+    latestRuns: [],
+  };
+
+  const uri = process.env.NEO4J_URI;
+  const username = process.env.NEO4J_USERNAME ?? process.env.NEO4J_USER;
+  const password = process.env.NEO4J_PASSWORD;
+  if (!uri || !username || !password) {
+    return {
+      ...base,
+      message: "Neo4j secrets are not configured in this deployment.",
+    };
+  }
+
+  const where = [
+    input.workspaceId ? "n.workspace_id = $workspaceId" : "",
+    input.caseId ? "n.case_id = $caseId" : "",
+  ].filter(Boolean);
+  const whereClause = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+  const params = {
+    workspaceId: input.workspaceId,
+    caseId: input.caseId,
+  };
+  const driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
+  try {
+    const nodeRecords = await driver.executeQuery(
+      `MATCH (n:TacitusCoreV1)
+       ${whereClause}
+       RETURN coalesce(n.primitive_type, 'Unknown') AS primitiveType, count(n) AS count`,
+      params,
+      { database },
+    );
+    const byPrimitiveType: Record<string, number> = {};
+    for (const record of nodeRecords.records) {
+      const count = record.get("count");
+      byPrimitiveType[String(record.get("primitiveType"))] = neo4j.isInt(count) ? count.toNumber() : Number(count);
+    }
+    const relRecords = await driver.executeQuery(
+      `MATCH (n:TacitusCoreV1)-[r]->(m:TacitusCoreV1)
+       ${whereClause}
+       RETURN count(r) AS count`,
+      params,
+      { database },
+    );
+    const relCount = relRecords.records[0]?.get("count");
+    const latest = await driver.executeQuery(
+      `MATCH (n:TacitusCoreV1)
+       ${whereClause}
+       WHERE n.extraction_run_id IS NOT NULL
+       RETURN n.extraction_run_id AS extractionRunId, max(n.observed_at) AS observedAt, count(n) AS nodes
+       ORDER BY observedAt DESC
+       LIMIT 8`,
+      params,
+      { database },
+    );
+
+    return {
+      ...base,
+      connected: true,
+      message: "Connected to Neo4j and counted DIALECTICA graph memory.",
+      counts: {
+        nodes: Object.values(byPrimitiveType).reduce((sum, count) => sum + count, 0),
+        relationships: neo4j.isInt(relCount) ? relCount.toNumber() : Number(relCount ?? 0),
+        byPrimitiveType,
+        ruleSignals: byPrimitiveType.RuleSignal ?? 0,
+        reviewDecisions: byPrimitiveType.ReviewDecision ?? 0,
+        benchmarkRuns: byPrimitiveType.BenchmarkRun ?? 0,
+      },
+      latestRuns: latest.records.map((record) => {
+        const nodes = record.get("nodes");
+        return {
+          extractionRunId: String(record.get("extractionRunId")),
+          observedAt: record.get("observedAt") ? String(record.get("observedAt")) : null,
+          nodes: neo4j.isInt(nodes) ? nodes.toNumber() : Number(nodes ?? 0),
+        };
+      }),
+    };
+  } catch (error) {
+    return {
+      ...base,
+      message: "Neo4j status check failed.",
+      error: error instanceof Error ? error.message : "Unknown Neo4j status error.",
     };
   } finally {
     await driver.close();

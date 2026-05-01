@@ -29,10 +29,10 @@ Implemented:
 - `writeGraphOpsPlanToNeo4j`.
 - `POST /api/graphops/graph/upsert`.
 - Refactored ingestion graph writes through the shared graph module.
+- `GET /api/graphops/graph/status`.
 
 Next:
 
-- Add graph status endpoint with counts by primitive type and rule artifact.
 - Add idempotency test that writes the same run twice.
 - Add migration file under `infrastructure/neo4j` matching the runtime schema.
 - Add support for explicit graph edge rows, not only inferred edges from primitive foreign keys.
@@ -51,10 +51,11 @@ Implemented:
 
 - `buildGraphOpsRetrievalPlan`.
 - `POST /api/graphops/retrieval/plan`.
+- `executeGraphOpsRetrievalLocally`.
+- `POST /api/graphops/retrieval/execute`.
 
 Next:
 
-- Add `POST /api/graphops/retrieval/execute`.
 - Connect to Neo4j allowlisted Cypher execution.
 - Add vector/hybrid placeholders only where indexes exist; otherwise fallback to graph neighborhood retrieval.
 - Store retrieval plans and executed Cypher in local run artifacts and benchmark outputs.
@@ -209,14 +210,13 @@ Acceptance:
 
 ## Immediate Next Engineering Targets
 
-1. Add `GET /api/graphops/graph/status`.
-2. Add graph writeback idempotency tests.
-3. Add `POST /api/graphops/retrieval/execute`.
-4. Add GraphOps trace panel UI.
-5. Add review decision API.
-6. Add local persistence for graph write plans and trace bundles.
-7. Add explicit edge extraction model for MADE_BY, CONTRADICTS, CAUSES, HAS_INTEREST, BINDS, FRAMES.
-8. Add first gold pack fixture for Melian Dialogue or Romeo and Juliet.
-9. Add rule fixtures for R-001, R-007, and R-008.
-10. Add Neo4j migration file for the GraphOps runtime schema.
-
+1. Add graph writeback idempotency tests.
+2. Add Neo4j-backed retrieval execution behind the current local-first executor.
+3. Add GraphOps trace panel UI.
+4. Add review decision API.
+5. Add local persistence for graph write plans, retrieval executions, and trace bundles.
+6. Add explicit edge extraction model for MADE_BY, CONTRADICTS, CAUSES, HAS_INTEREST, BINDS, FRAMES.
+7. Add first gold pack fixture for Melian Dialogue or Romeo and Juliet.
+8. Add rule fixtures for R-001, R-007, and R-008.
+9. Add Neo4j migration file for the GraphOps runtime schema.
+10. Add Praxis SDK helpers for context, retrieval, and trace.

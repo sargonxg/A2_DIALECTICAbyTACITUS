@@ -190,7 +190,36 @@ Implemented:
 - Trace bundle endpoint at `POST /api/graphops/trace/build`.
 - Manifest exposes graph upsert, retrieval plan, and trace build endpoints.
 
+### Wave 3: graph status and retrieval execution
+
+Implemented the next user-facing backbone step:
+
+- Graph status endpoint at `GET /api/graphops/graph/status`, returning Neo4j
+  configuration/connection state, primitive counts, relationship counts, review
+  counts, benchmark counts, and latest run summaries.
+- Retrieval execution endpoint at `POST /api/graphops/retrieval/execute`.
+- Local-first retrieval executor in `apps/web/src/lib/graphopsRetrieval.ts` so
+  the workbench can retrieve graph-grounded context from primitives even before
+  Neo4j/vector secrets are configured.
+- GraphOps UI now exposes graph status, retrieval plan, retrieval execution,
+  graph write dry run, and trace build as one coherent engine panel.
+
 Why it matters:
+
+- Users can now move from "plan" to "execute" without leaving the workbench.
+- The app degrades gracefully when Neo4j is unavailable while still preserving
+  the same typed contract that a Neo4j-backed executor can satisfy later.
+- Operators can tell whether graph memory is configured and populated instead
+  of guessing from failed query attempts.
+
+How to test:
+
+- `GET /api/graphops/graph/status?workspaceId=policy-friction-lab&caseId=policy-constraint-map`.
+- `POST /api/graphops/retrieval/execute` with
+  `{ "sampleKey": "policy-constraint-map", "question": "Which constraints block
+  feasible policy options?" }`.
+
+Wave 2 why it mattered:
 
 - Graph writeback is now a reusable engine surface, not a hidden side effect of
   ingestion.
@@ -199,7 +228,7 @@ Why it matters:
 - The system can dry-run a graph write plan even when Neo4j secrets are
   unavailable.
 
-How to test:
+Wave 2 how to test:
 
 - `POST /api/graphops/graph/upsert` with
   `{ "sampleKey": "policy-constraint-map", "dryRun": true }`.

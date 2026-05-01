@@ -301,7 +301,9 @@ export default function GraphOpsConsole() {
   const [workbenchState, setWorkbenchState] = useState<WorkbenchState>({ status: "loading" });
   const [praxisContextState, setPraxisContextState] = useState<PraxisContextState>({ status: "idle" });
   const [graphWritePlanState, setGraphWritePlanState] = useState<EngineContractState>({ status: "idle" });
+  const [graphStatusState, setGraphStatusState] = useState<EngineContractState>({ status: "idle" });
   const [retrievalPlanState, setRetrievalPlanState] = useState<EngineContractState>({ status: "idle" });
+  const [retrievalExecutionState, setRetrievalExecutionState] = useState<EngineContractState>({ status: "idle" });
   const [traceState, setTraceState] = useState<EngineContractState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
@@ -723,6 +725,55 @@ export default function GraphOpsConsole() {
     }
   }
 
+  async function executeRetrieval() {
+    setRetrievalExecutionState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/retrieval/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...currentEnginePayload(),
+          retrievalPlan: retrievalPlanState.status === "ok" ? retrievalPlanState.result : undefined,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setRetrievalExecutionState({ status: "error", message: payload?.error ?? "Could not execute retrieval." });
+        return;
+      }
+      setRetrievalExecutionState({ status: "ok", result: payload });
+      if (payload?.plan && retrievalPlanState.status !== "ok") {
+        setRetrievalPlanState({ status: "ok", result: payload.plan as Record<string, unknown> });
+      }
+    } catch (error) {
+      setRetrievalExecutionState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not execute retrieval.",
+      });
+    }
+  }
+
+  async function refreshGraphStatus() {
+    setGraphStatusState({ status: "loading" });
+    try {
+      const params = new URLSearchParams({ workspaceId, caseId });
+      const response = await fetch(`/api/graphops/graph/status?${params.toString()}`, {
+        cache: "no-store",
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setGraphStatusState({ status: "error", message: payload?.error ?? "Could not read graph status." });
+        return;
+      }
+      setGraphStatusState({ status: "ok", result: payload });
+    } catch (error) {
+      setGraphStatusState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not read graph status.",
+      });
+    }
+  }
+
   async function buildTraceBundle() {
     setTraceState({ status: "loading" });
     try {
@@ -1136,10 +1187,10 @@ export default function GraphOpsConsole() {
               GraphRAG engine contracts
             </h2>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
-              Build the three contracts that make DIALECTICA usable as a
-              production backbone: graph writeback plan, retrieval plan, and
-              answer trace. These can run from the active extraction or the
-              selected sample.
+              Build and run the contracts that make DIALECTICA usable as a
+              production backbone: graph writeback, graph status, retrieval
+              execution, and analyst trace. These can run from the active
+              extraction or the selected sample.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1152,6 +1203,14 @@ export default function GraphOpsConsole() {
               <Database size={15} />
             </button>
             <button
+              onClick={refreshGraphStatus}
+              disabled={graphStatusState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {graphStatusState.status === "loading" ? "Checking..." : "Graph Status"}
+              <Gauge size={15} />
+            </button>
+            <button
               onClick={planRetrieval}
               disabled={retrievalPlanState.status === "loading"}
               className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
@@ -1160,9 +1219,17 @@ export default function GraphOpsConsole() {
               <Route size={15} />
             </button>
             <button
+              onClick={executeRetrieval}
+              disabled={retrievalExecutionState.status === "loading"}
+              className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {retrievalExecutionState.status === "loading" ? "Retrieving..." : "Execute Retrieval"}
+              <Play size={15} />
+            </button>
+            <button
               onClick={buildTraceBundle}
               disabled={traceState.status === "loading"}
-              className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {traceState.status === "loading" ? "Tracing..." : "Build Trace"}
               <GitBranch size={15} />
@@ -1170,7 +1237,7 @@ export default function GraphOpsConsole() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 xl:grid-cols-3">
+        <div className="mt-5 grid gap-4 xl:grid-cols-4">
           <div className="rounded-lg border border-border bg-background p-4">
             <p className="text-sm font-semibold text-text-primary">Graph writeback</p>
             <p className="mt-1 text-xs text-text-secondary">/api/graphops/graph/upsert</p>
@@ -1207,11 +1274,56 @@ export default function GraphOpsConsole() {
           </div>
 
           <div className="rounded-lg border border-border bg-background p-4">
-            <p className="text-sm font-semibold text-text-primary">Retrieval plan</p>
-            <p className="mt-1 text-xs text-text-secondary">/api/graphops/retrieval/plan</p>
-            {retrievalPlanState.status === "idle" ? (
+            <p className="text-sm font-semibold text-text-primary">Graph status</p>
+            <p className="mt-1 text-xs text-text-secondary">/api/graphops/graph/status</p>
+            {graphStatusState.status === "idle" ? (
               <p className="mt-3 text-xs leading-5 text-text-secondary">
-                Route a question to vector, hybrid, VectorCypher, Text2Cypher, or global community context.
+                Check whether Neo4j is configured and count graph memory for this workspace.
+              </p>
+            ) : null}
+            {graphStatusState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphStatusState.message}
+              </p>
+            ) : null}
+            {graphStatusState.status === "ok" ? (
+              <div className="mt-3 space-y-3">
+                <div className={`rounded-md border px-3 py-2 ${
+                  graphStatusState.result.connected
+                    ? "border-success/30 bg-success/10"
+                    : "border-warning/30 bg-warning/10"
+                }`}>
+                  <p className="text-[10px] uppercase tracking-wide text-text-secondary">connection</p>
+                  <p className="mt-1 text-sm font-semibold text-text-primary">
+                    {graphStatusState.result.connected ? "connected" : "not connected"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ["nodes", (graphStatusState.result.counts as { nodes?: number })?.nodes ?? 0],
+                    ["edges", (graphStatusState.result.counts as { relationships?: number })?.relationships ?? 0],
+                    ["reviews", (graphStatusState.result.counts as { reviewDecisions?: number })?.reviewDecisions ?? 0],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="rounded-md bg-surface px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+                      <p className="mt-1 text-lg font-semibold text-text-primary">{String(value)}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs leading-5 text-text-secondary">{String(graphStatusState.result.message ?? "")}</p>
+                <pre className="max-h-[180px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                  <code>{JSON.stringify(graphStatusState.result, null, 2)}</code>
+                </pre>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">Retrieval</p>
+            <p className="mt-1 text-xs text-text-secondary">/api/graphops/retrieval/execute</p>
+            {retrievalPlanState.status === "idle" && retrievalExecutionState.status === "idle" ? (
+              <p className="mt-3 text-xs leading-5 text-text-secondary">
+                Route and execute graph-grounded context retrieval from the current extraction or selected sample.
               </p>
             ) : null}
             {retrievalPlanState.status === "error" ? (
@@ -1229,6 +1341,39 @@ export default function GraphOpsConsole() {
                 </div>
                 <pre className="max-h-[260px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
                   <code>{JSON.stringify(retrievalPlanState.result, null, 2)}</code>
+                </pre>
+              </div>
+            ) : null}
+            {retrievalExecutionState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {retrievalExecutionState.message}
+              </p>
+            ) : null}
+            {retrievalExecutionState.status === "ok" ? (
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ["context", (retrievalExecutionState.result.diagnostics as { contextItems?: number })?.contextItems ?? 0],
+                    ["quotes", (retrievalExecutionState.result.diagnostics as { citations?: number })?.citations ?? 0],
+                    ["rules", (retrievalExecutionState.result.diagnostics as { blockerSignals?: number })?.blockerSignals ?? 0],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="rounded-md bg-surface px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+                      <p className="mt-1 text-lg font-semibold text-text-primary">{String(value)}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className={`rounded-md px-3 py-2 text-xs ${
+                  (retrievalExecutionState.result.answerPolicy as { mayAnswer?: boolean })?.mayAnswer
+                    ? "bg-success/10 text-success"
+                    : "bg-warning/10 text-warning"
+                }`}>
+                  {(retrievalExecutionState.result.answerPolicy as { mayAnswer?: boolean })?.mayAnswer
+                    ? "Answer policy: enough cited context for a draft answer."
+                    : "Answer policy: review or additional evidence required before final answer."}
+                </p>
+                <pre className="max-h-[260px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                  <code>{JSON.stringify(retrievalExecutionState.result, null, 2)}</code>
                 </pre>
               </div>
             ) : null}
