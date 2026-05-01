@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { buildGraphOpsDemoReadyRun } from "@/lib/graphopsDemo";
 import { buildGraphOpsGraphWritePlan, GRAPHOPS_SCHEMA_STATEMENTS } from "@/lib/graphopsGraph";
+import { buildGraphOpsPromoStudioRun } from "@/lib/graphopsPromo";
 import {
   buildGraphOpsRetrievalPlan,
   executeGraphOpsRetrievalLocally,
@@ -154,5 +155,25 @@ describe("GraphOps demo-ready contract", () => {
     expect(demo.trace.kind).toBe("tacitus.dialectica.answer_trace.v1");
     expect(demo.praxisContext.kind).toBe("tacitus.dialectica.praxis_context.v1");
     expect(demo.demoReadiness.script).toHaveLength(5);
+  });
+});
+
+describe("GraphOps promo studio contract", () => {
+  it("assembles a recordable promo script with live API and Praxis proof", async () => {
+    const promo = await buildGraphOpsPromoStudioRun({
+      sampleKey: "policy-constraint-map",
+      workspaceId: "demo-ws",
+      caseId: "promo-case",
+      question: "Which constraints block feasible policy options?",
+      command: "Create a policy conflict promo with ontology, GraphRAG, benchmark, and Praxis handoff.",
+    });
+
+    expect(promo.kind).toBe("tacitus.dialectica.promo_studio.v1");
+    expect(promo.demoRun.kind).toBe("tacitus.dialectica.demo_ready_run.v1");
+    expect(promo.aiPlan.mode).toMatch(/planner|assisted/);
+    expect(promo.liveChecks.length).toBeGreaterThanOrEqual(5);
+    expect(promo.apiProof.some((item) => item.endpoint === "/api/graphops/praxis/context")).toBe(true);
+    expect(promo.recordingScript).toHaveLength(6);
+    expect(promo.wowMoments.length).toBeGreaterThanOrEqual(4);
   });
 });

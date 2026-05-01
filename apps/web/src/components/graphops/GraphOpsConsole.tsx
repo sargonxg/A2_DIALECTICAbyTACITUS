@@ -300,6 +300,7 @@ export default function GraphOpsConsole() {
   const [benchmarkState, setBenchmarkState] = useState<BenchmarkState>({ status: "idle" });
   const [workbenchState, setWorkbenchState] = useState<WorkbenchState>({ status: "loading" });
   const [praxisContextState, setPraxisContextState] = useState<PraxisContextState>({ status: "idle" });
+  const [promoStudioState, setPromoStudioState] = useState<EngineContractState>({ status: "idle" });
   const [demoReadyState, setDemoReadyState] = useState<EngineContractState>({ status: "idle" });
   const [graphWritePlanState, setGraphWritePlanState] = useState<EngineContractState>({ status: "idle" });
   const [graphStatusState, setGraphStatusState] = useState<EngineContractState>({ status: "idle" });
@@ -722,6 +723,38 @@ export default function GraphOpsConsole() {
     }
   }
 
+  async function runPromoStudio() {
+    setPromoStudioState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/promo/studio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...currentEnginePayload(),
+          command: `Create a promo-ready ${activeNeed.label} for workspace ${workspaceId} and case ${caseId}. Objective: ${objective}. Include ontology, GraphRAG retrieval, rules, benchmark guardrails, and Praxis handoff.`,
+          sourceTitle: ingestState.status === "ok" ? "Current GraphOps extraction" : activeNeed.label,
+          sourceType: ingestState.status === "ok" ? "current-extraction" : "sample",
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setPromoStudioState({ status: "error", message: payload?.error ?? "Could not build promo studio run." });
+        return;
+      }
+      setPromoStudioState({ status: "ok", result: payload });
+      setDemoReadyState({ status: "ok", result: payload.demoRun as Record<string, unknown> });
+      setAiCommandState({ status: "ok", result: payload.aiPlan as Record<string, unknown> });
+      setRetrievalExecutionState({ status: "ok", result: (payload.demoRun as Record<string, unknown>).retrievalExecution as Record<string, unknown> });
+      setTraceState({ status: "ok", result: (payload.demoRun as Record<string, unknown>).trace as Record<string, unknown> });
+      setPraxisContextState({ status: "ok", result: (payload.demoRun as Record<string, unknown>).praxisContext as Record<string, unknown> });
+    } catch (error) {
+      setPromoStudioState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not build promo studio run.",
+      });
+    }
+  }
+
   async function dryRunGraphWritePlan() {
     setGraphWritePlanState({ status: "loading" });
     try {
@@ -1019,6 +1052,143 @@ export default function GraphOpsConsole() {
             <ForceGraph data={demoGraph} width={520} height={360} />
           </div>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-success/30 bg-success/10 p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <Sparkles size={18} className="text-success" />
+              Promo recording studio
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              Generate a two-minute recording path that proves the live GraphOps
+              API, AI planner, GraphRAG trace, benchmark guardrails, and Praxis
+              handoff from the selected sample or current extraction.
+            </p>
+          </div>
+          <button
+            onClick={runPromoStudio}
+            disabled={promoStudioState.status === "loading"}
+            className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {promoStudioState.status === "loading" ? "Generating Promo..." : "Generate Promo Run"}
+            <Play size={15} />
+          </button>
+        </div>
+
+        {promoStudioState.status === "idle" ? (
+          <div className="mt-5 grid gap-3 md:grid-cols-4">
+            {[
+              ["Scene", "source to graph"],
+              ["AI", "ontology planner"],
+              ["Proof", "trace + citations"],
+              ["Handoff", "Praxis context"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+                <p className="mt-2 text-sm text-text-primary">{value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {promoStudioState.status === "error" ? (
+          <p className="mt-5 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {promoStudioState.message}
+          </p>
+        ) : null}
+
+        {promoStudioState.status === "ok" ? (
+          <div className="mt-5 space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
+              <div className="rounded-lg border border-success/30 bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-success">Promo readiness</p>
+                <p className="mt-2 text-3xl font-bold text-text-primary">
+                  {Math.round(Number(promoStudioState.result.score ?? 0) * 100)}%
+                </p>
+                <p className="mt-2 text-sm font-semibold text-success">
+                  {String(promoStudioState.result.status ?? "unknown")}
+                </p>
+                <p className="mt-2 text-xs leading-5 text-text-secondary">
+                  AI mode: {String(((promoStudioState.result.aiPlan as Record<string, unknown>)?.mode) ?? "unknown")}
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-5">
+                {((promoStudioState.result.liveChecks as Array<{ name: string; status: string; proof: string }>) ?? [])
+                  .map((check) => (
+                    <div key={check.name} className="rounded-lg border border-border bg-background p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{check.name}</p>
+                      <p className="mt-2 text-xs font-semibold text-success">{check.status}</p>
+                      <p className="mt-1 text-[11px] leading-4 text-text-secondary">{check.proof}</p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Recording script</p>
+                <div className="mt-3 space-y-2">
+                  {((promoStudioState.result.recordingScript as Array<{ timestamp: string; shot: string; narration: string; proof: string }>) ?? [])
+                    .map((scene) => (
+                      <div key={`${scene.timestamp}-${scene.shot}`} className="rounded-md bg-surface px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-xs font-semibold text-text-primary">{scene.shot}</p>
+                          <span className="text-[11px] text-success">{scene.timestamp}</span>
+                        </div>
+                        <p className="mt-1 text-xs leading-5 text-text-secondary">{scene.narration}</p>
+                        <p className="mt-1 text-[11px] leading-4 text-accent">{scene.proof}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Wow moments</p>
+                <div className="mt-3 space-y-2">
+                  {((promoStudioState.result.wowMoments as Array<{ title: string; line: string; proof: string }>) ?? [])
+                    .map((moment) => (
+                      <div key={moment.title} className="rounded-md bg-surface px-3 py-2">
+                        <p className="text-xs font-semibold text-text-primary">{moment.title}</p>
+                        <p className="mt-1 text-[11px] leading-5 text-text-secondary">{moment.line}</p>
+                        <p className="mt-1 text-[11px] text-success">{moment.proof}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Live API proof</p>
+                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  {((promoStudioState.result.apiProof as Array<{ endpoint: string; status: string; proof: string }>) ?? [])
+                    .map((api) => (
+                      <div key={api.endpoint} className="rounded-md bg-surface px-3 py-2">
+                        <p className="text-[11px] font-mono text-accent">{api.endpoint}</p>
+                        <p className="mt-1 text-[11px] text-text-secondary">{api.status}: {api.proof}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Praxis handoff</p>
+                <p className="mt-2 text-xs leading-5 text-text-secondary">
+                  {String(((promoStudioState.result.praxisHandoff as Record<string, unknown>)?.summary) ?? "")}
+                </p>
+                <div className="mt-3 space-y-2">
+                  {(((promoStudioState.result.praxisHandoff as Record<string, unknown>)?.nextQuestions as string[]) ?? [])
+                    .slice(0, 4)
+                    .map((question) => (
+                      <p key={question} className="rounded-md bg-surface px-3 py-2 text-[11px] leading-4 text-text-secondary">
+                        {question}
+                      </p>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-accent/30 bg-accent/10 p-5">

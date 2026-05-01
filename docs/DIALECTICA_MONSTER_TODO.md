@@ -242,3 +242,24 @@ Acceptance:
   needing Neo4j or Databricks secrets.
 - Live Neo4j writes stay off by default; the demo uses graph write dry-run
   output and graph status separately.
+
+## Promo Recording Slice
+
+Status: implemented in the GraphOps web surface.
+
+Implemented:
+
+- `POST /api/graphops/promo/studio`.
+- `buildGraphOpsPromoStudioRun`.
+- Shared Aletheia AI planner contract for `/api/graphops/ai-command` and the
+  promo studio.
+- GraphOps UI panel with promo readiness, live checks, API proof, wow moments,
+  recording script, and Praxis handoff.
+
+Acceptance:
+
+- A new user can click one button and get a two-minute promo script that proves
+  the live API, AI planner, GraphRAG trace, benchmark guardrails, and Praxis
+  context handoff.
+- The promo output names review gaps explicitly so the demo can explain
+  uncertainty as a first-class feature.

@@ -260,6 +260,28 @@ Why it matters:
 - The returned envelope is the first coherent "source to Praxis" product story
   for DIALECTICA.
 
+### Wave 6: promo recording studio
+
+Implemented a one-click promo preparation surface:
+
+- `POST /api/graphops/promo/studio`.
+- `buildGraphOpsPromoStudioRun` in `apps/web/src/lib/graphopsPromo.ts`.
+- Shared `buildGraphOpsAiCommandPlan` so `/api/graphops/ai-command` and the
+  promo studio use the same Aletheia planning contract.
+- GraphOps UI "Promo recording studio" panel near the top of the console.
+- Contract test proving the promo run returns live checks, API proof, AI plan,
+  wow moments, recording script, and Praxis handoff.
+
+Why it matters:
+
+- A new user can generate a two-minute recording script without knowing the
+  internal order of extraction, AI planning, GraphRAG, rules, benchmarks, and
+  Praxis handoff.
+- The promo flow makes uncertainty and review status visible as product value
+  instead of hiding them in a generic answer.
+- The endpoint creates a reusable artifact for demo preparation while keeping
+  Neo4j writeback gated and safe.
+
 Wave 2 why it mattered:
 
 - Graph writeback is now a reusable engine surface, not a hidden side effect of
