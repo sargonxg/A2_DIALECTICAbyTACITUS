@@ -8,8 +8,8 @@ const customJestConfig = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
+  modulePathIgnorePatterns: ["<rootDir>/.next/"],
   testEnvironment: "node",
 };
 
 module.exports = createJestConfig(customJestConfig);
-

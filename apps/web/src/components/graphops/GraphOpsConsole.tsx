@@ -300,6 +300,7 @@ export default function GraphOpsConsole() {
   const [benchmarkState, setBenchmarkState] = useState<BenchmarkState>({ status: "idle" });
   const [workbenchState, setWorkbenchState] = useState<WorkbenchState>({ status: "loading" });
   const [praxisContextState, setPraxisContextState] = useState<PraxisContextState>({ status: "idle" });
+  const [demoReadyState, setDemoReadyState] = useState<EngineContractState>({ status: "idle" });
   const [graphWritePlanState, setGraphWritePlanState] = useState<EngineContractState>({ status: "idle" });
   const [graphStatusState, setGraphStatusState] = useState<EngineContractState>({ status: "idle" });
   const [retrievalPlanState, setRetrievalPlanState] = useState<EngineContractState>({ status: "idle" });
@@ -670,6 +671,7 @@ export default function GraphOpsConsole() {
       extractionRunId: currentResult?.extractionRunId,
       primitives: currentResult?.primitives,
       ruleEvaluation: currentResult?.ruleEvaluation,
+      extraction: currentResult ?? undefined,
       sampleKey: currentResult ? "" : activeNeed.sampleKey || "policy-constraint-map",
       workspaceId,
       caseId,
@@ -679,6 +681,45 @@ export default function GraphOpsConsole() {
       answer: benchmarkAnswer,
       answerDraft: benchmarkAnswer,
     };
+  }
+
+  async function runDemoReady() {
+    setDemoReadyState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/demo/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...currentEnginePayload(),
+          persist: true,
+          sourceTitle: ingestState.status === "ok" ? "Current GraphOps extraction" : activeNeed.label,
+          sourceType: ingestState.status === "ok" ? "current-extraction" : "sample",
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setDemoReadyState({ status: "error", message: payload?.error ?? "Could not run demo-ready flow." });
+        return;
+      }
+      setDemoReadyState({ status: "ok", result: payload });
+      setGraphWritePlanState({
+        status: "ok",
+        result: {
+          mode: "dry_run",
+          plan: payload.graphWritePlan,
+          write: { message: "Demo-ready run includes a graph write dry-run plan." },
+        },
+      });
+      setRetrievalPlanState({ status: "ok", result: payload.retrievalPlan as Record<string, unknown> });
+      setRetrievalExecutionState({ status: "ok", result: payload.retrievalExecution as Record<string, unknown> });
+      setTraceState({ status: "ok", result: payload.trace as Record<string, unknown> });
+      setPraxisContextState({ status: "ok", result: payload.praxisContext as Record<string, unknown> });
+    } catch (error) {
+      setDemoReadyState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not run demo-ready flow.",
+      });
+    }
   }
 
   async function dryRunGraphWritePlan() {
@@ -978,6 +1019,124 @@ export default function GraphOpsConsole() {
             <ForceGraph data={demoGraph} width={520} height={360} />
           </div>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-accent/30 bg-accent/10 p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <PanelTop size={18} className="text-accent" />
+              Demo-ready workflow
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              Run the full safe demo path in one step: sample extraction, rule
+              evaluation, benchmark, graph-write dry run, retrieval execution,
+              trace, and Praxis context handoff. Live graph writes remain off.
+            </p>
+          </div>
+          <button
+            onClick={runDemoReady}
+            disabled={demoReadyState.status === "loading"}
+            className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {demoReadyState.status === "loading" ? "Running Demo..." : "Run Demo Workflow"}
+            <Play size={15} />
+          </button>
+        </div>
+
+        {demoReadyState.status === "idle" ? (
+          <div className="mt-5 grid gap-3 md:grid-cols-4">
+            {[
+              ["Input", activeNeed.label],
+              ["Graph", "dry-run write plan"],
+              ["Retrieval", "local GraphRAG context"],
+              ["Handoff", "Praxis bundle + trace"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+                <p className="mt-2 text-sm text-text-primary">{value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {demoReadyState.status === "error" ? (
+          <p className="mt-5 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {demoReadyState.message}
+          </p>
+        ) : null}
+
+        {demoReadyState.status === "ok" ? (
+          <div className="mt-5 space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
+              <div className="rounded-lg border border-accent/30 bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-accent">Demo readiness</p>
+                <p className="mt-2 text-3xl font-bold text-text-primary">
+                  {Math.round(Number((demoReadyState.result.demoReadiness as { score?: number })?.score ?? 0) * 100)}%
+                </p>
+                <p className="mt-2 text-sm font-semibold text-accent">
+                  {String((demoReadyState.result.demoReadiness as { status?: string })?.status ?? "unknown")}
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-4">
+                {[
+                  ["primitives", ((demoReadyState.result.extraction as Record<string, unknown>)?.primitives as unknown[])?.length ?? 0],
+                  ["nodes", (((demoReadyState.result.graphWritePlan as Record<string, unknown>)?.summary as { nodes?: number })?.nodes) ?? 0],
+                  ["quotes", (((demoReadyState.result.retrievalExecution as Record<string, unknown>)?.diagnostics as { citations?: number })?.citations) ?? 0],
+                  ["reviews", (((demoReadyState.result.praxisContext as Record<string, unknown>)?.reviewQueue as unknown[])?.length) ?? 0],
+                ].map(([label, value]) => (
+                  <div key={String(label)} className="rounded-lg border border-border bg-background p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+                    <p className="mt-2 text-2xl font-bold text-text-primary">{String(value)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Demo script</p>
+                <div className="mt-3 space-y-2">
+                  {(((demoReadyState.result.demoReadiness as Record<string, unknown>)?.script as Array<{ timestamp: string; scene: string; proof: string }>) ?? [])
+                    .map((step) => (
+                      <div key={`${step.timestamp}-${step.scene}`} className="rounded-md bg-surface px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-xs font-semibold text-text-primary">{step.scene}</p>
+                          <span className="text-[11px] text-accent">{step.timestamp}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-5 text-text-secondary">{step.proof}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Gaps to review</p>
+                <div className="mt-3 space-y-2">
+                  {(((demoReadyState.result.demoReadiness as Record<string, unknown>)?.gaps as string[]) ?? []).length > 0 ? (
+                    (((demoReadyState.result.demoReadiness as Record<string, unknown>)?.gaps as string[]) ?? []).map((gap) => (
+                      <p key={gap} className="rounded-md bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
+                        {gap}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="rounded-md bg-success/10 px-3 py-2 text-xs leading-5 text-success">
+                      No blocking demo gaps detected in this local run.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <details className="rounded-lg border border-border bg-background p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-text-primary">
+                Raw demo contract
+              </summary>
+              <pre className="mt-3 max-h-[240px] overflow-auto text-[11px] leading-5 text-text-secondary">
+                <code>{JSON.stringify(demoReadyState.result, null, 2)}</code>
+              </pre>
+            </details>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-border bg-surface p-5">

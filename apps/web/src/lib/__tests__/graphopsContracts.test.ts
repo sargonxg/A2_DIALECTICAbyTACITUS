@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
+import { buildGraphOpsDemoReadyRun } from "@/lib/graphopsDemo";
 import { buildGraphOpsGraphWritePlan, GRAPHOPS_SCHEMA_STATEMENTS } from "@/lib/graphopsGraph";
 import {
   buildGraphOpsRetrievalPlan,
@@ -134,5 +135,24 @@ describe("GraphOps retrieval contracts", () => {
     expect(execution.context.some((item) => item.primitiveType === "Constraint")).toBe(true);
     expect(execution.citations).toHaveLength(1);
     expect(execution.answerPolicy.mayAnswer).toBe(true);
+  });
+});
+
+describe("GraphOps demo-ready contract", () => {
+  it("assembles extraction, graph plan, retrieval, trace, benchmark, and Praxis context", () => {
+    const demo = buildGraphOpsDemoReadyRun({
+      sampleKey: "policy-constraint-map",
+      workspaceId: "demo-ws",
+      caseId: "demo-case",
+      question: "Which constraints block feasible policy options?",
+    });
+
+    expect(demo.kind).toBe("tacitus.dialectica.demo_ready_run.v1");
+    expect(demo.extraction.primitives.length).toBeGreaterThan(10);
+    expect(demo.graphWritePlan.summary.nodes).toBeGreaterThan(10);
+    expect(demo.retrievalExecution.diagnostics.contextItems).toBeGreaterThan(0);
+    expect(demo.trace.kind).toBe("tacitus.dialectica.answer_trace.v1");
+    expect(demo.praxisContext.kind).toBe("tacitus.dialectica.praxis_context.v1");
+    expect(demo.demoReadiness.script).toHaveLength(5);
   });
 });

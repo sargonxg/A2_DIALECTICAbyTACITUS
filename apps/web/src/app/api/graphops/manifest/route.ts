@@ -37,6 +37,7 @@ export async function GET() {
     },
     endpoints: {
       console: "/graphops",
+      demoRun: "/api/graphops/demo/run",
       databricksJobs: "/api/graphops/databricks/jobs",
       databricksTables: "/api/graphops/databricks/tables",
       ingest: "/api/graphops/ingest",

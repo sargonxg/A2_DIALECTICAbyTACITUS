@@ -215,10 +215,30 @@ Acceptance:
 1. Add Neo4j-backed retrieval execution behind the current local-first executor.
 2. Add GraphOps trace panel UI.
 3. Add review decision API.
-4. Add local persistence for graph write plans, retrieval executions, and trace bundles.
-5. Add explicit edge extraction model for MADE_BY, CONTRADICTS, CAUSES, HAS_INTEREST, BINDS, FRAMES.
-6. Add first gold pack fixture for Melian Dialogue or Romeo and Juliet.
-7. Add rule fixtures for R-001, R-007, and R-008.
-8. Add Praxis SDK helpers for context, retrieval, and trace.
-9. Add CI wiring for the new Jest graph contract tests.
-10. Add dependency audit remediation plan for current npm audit findings.
+4. Add explicit edge extraction model for MADE_BY, CONTRADICTS, CAUSES, HAS_INTEREST, BINDS, FRAMES.
+5. Add first gold pack fixture for Melian Dialogue or Romeo and Juliet.
+6. Add rule fixtures for R-001, R-007, and R-008.
+7. Add Praxis SDK helpers for context, retrieval, and trace.
+8. Add CI wiring for the new Jest graph contract tests.
+9. Add dependency audit remediation plan for current npm audit findings.
+10. Add optional Databricks demo workflow trigger after local demo-run success.
+
+## Demo-Ready Slice
+
+Status: implemented in the GraphOps web surface.
+
+Implemented:
+
+- `POST /api/graphops/demo/run`.
+- `buildGraphOpsDemoReadyRun`.
+- Local artifact persistence for demo-ready runs.
+- GraphOps UI panel near the top of the console.
+- Contract test proving the demo envelope includes extraction, graph plan,
+  retrieval, trace, benchmark, and Praxis context.
+
+Acceptance:
+
+- A user can click one button and see a coherent source-to-Praxis demo without
+  needing Neo4j or Databricks secrets.
+- Live Neo4j writes stay off by default; the demo uses graph write dry-run
+  output and graph status separately.

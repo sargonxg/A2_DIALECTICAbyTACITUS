@@ -241,6 +241,25 @@ Why it matters:
 - Operators have a concrete schema file to apply to AuraDB instead of relying
   only on runtime schema creation.
 
+### Wave 5: demo-ready workflow
+
+Implemented a one-click demo orchestration surface:
+
+- `POST /api/graphops/demo/run`.
+- `buildGraphOpsDemoReadyRun` in `apps/web/src/lib/graphopsDemo.ts`.
+- Local artifact persistence in `apps/web/src/lib/graphopsArtifacts.ts`.
+- GraphOps UI "Demo-ready workflow" panel near the top of the console.
+- Contract test proving the demo run returns extraction, rules, benchmark,
+  graph-write dry run, retrieval plan/execution, trace, and Praxis context.
+
+Why it matters:
+
+- The workbench is now demoable without requiring the operator to manually run
+  seven separate panels in the right order.
+- The demo remains safe because it does not perform live graph writes.
+- The returned envelope is the first coherent "source to Praxis" product story
+  for DIALECTICA.
+
 Wave 2 why it mattered:
 
 - Graph writeback is now a reusable engine surface, not a hidden side effect of
