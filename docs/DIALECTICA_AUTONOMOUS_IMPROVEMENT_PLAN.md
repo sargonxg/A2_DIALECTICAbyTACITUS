@@ -169,7 +169,50 @@ Useful external patterns:
 
 ## Current Implementation Wave
 
-This wave implements the highest-value low-risk surface:
+### Wave 2: graph writeback, retrieval plan, trace contract
+
+This wave saves the neurosymbolic GraphRAG research direction and begins the
+corrected M1-M3 build order: graph writeback first, retrieval planning second,
+trace/explanation third.
+
+Implemented:
+
+- Research memo: `docs/DIALECTICA_NEUROSYMBOLIC_GRAPHRAG_RESEARCH.md`.
+- Execution backlog: `docs/DIALECTICA_MONSTER_TODO.md`.
+- Reusable graph writeback planner and Neo4j writer in
+  `apps/web/src/lib/graphopsGraph.ts`.
+- Standalone graph writeback endpoint at `POST /api/graphops/graph/upsert`.
+- Ingestion graph writes now use the shared graph planner instead of
+  route-local Neo4j code.
+- Typed retrieval planner in `apps/web/src/lib/graphopsRetrieval.ts`.
+- Retrieval planning endpoint at `POST /api/graphops/retrieval/plan`.
+- Analyst trace bundle builder in `apps/web/src/lib/graphopsTrace.ts`.
+- Trace bundle endpoint at `POST /api/graphops/trace/build`.
+- Manifest exposes graph upsert, retrieval plan, and trace build endpoints.
+
+Why it matters:
+
+- Graph writeback is now a reusable engine surface, not a hidden side effect of
+  ingestion.
+- Retrieval and trace are typed product contracts that Praxis and future SDKs
+  can call.
+- The system can dry-run a graph write plan even when Neo4j secrets are
+  unavailable.
+
+How to test:
+
+- `POST /api/graphops/graph/upsert` with
+  `{ "sampleKey": "policy-constraint-map", "dryRun": true }`.
+- `POST /api/graphops/retrieval/plan` with
+  `{ "sampleKey": "policy-constraint-map", "question": "Which constraints block
+  feasible policy options?" }`.
+- `POST /api/graphops/trace/build` with
+  `{ "sampleKey": "policy-constraint-map", "question": "Which constraints block
+  feasible policy options?" }`.
+
+### Wave 1: Praxis context contract
+
+This wave implemented the highest-value low-risk surface:
 
 - Praxis-ready context bundle API.
 - Review queue derivation from primitives, rules, and benchmark diagnostics.

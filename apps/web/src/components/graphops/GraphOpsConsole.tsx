@@ -256,6 +256,12 @@ type PraxisContextState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type EngineContractState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -294,6 +300,9 @@ export default function GraphOpsConsole() {
   const [benchmarkState, setBenchmarkState] = useState<BenchmarkState>({ status: "idle" });
   const [workbenchState, setWorkbenchState] = useState<WorkbenchState>({ status: "loading" });
   const [praxisContextState, setPraxisContextState] = useState<PraxisContextState>({ status: "idle" });
+  const [graphWritePlanState, setGraphWritePlanState] = useState<EngineContractState>({ status: "idle" });
+  const [retrievalPlanState, setRetrievalPlanState] = useState<EngineContractState>({ status: "idle" });
+  const [traceState, setTraceState] = useState<EngineContractState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -649,6 +658,89 @@ export default function GraphOpsConsole() {
       setPraxisContextState({
         status: "error",
         message: error instanceof Error ? error.message : "Could not build Praxis context.",
+      });
+    }
+  }
+
+  function currentEnginePayload() {
+    const currentResult = ingestState.status === "ok" ? ingestState.result : null;
+    return {
+      extractionRunId: currentResult?.extractionRunId,
+      primitives: currentResult?.primitives,
+      ruleEvaluation: currentResult?.ruleEvaluation,
+      sampleKey: currentResult ? "" : activeNeed.sampleKey || "policy-constraint-map",
+      workspaceId,
+      caseId,
+      objective,
+      ontologyProfile: activeProfile.id,
+      question: benchmarkQuestion,
+      answer: benchmarkAnswer,
+      answerDraft: benchmarkAnswer,
+    };
+  }
+
+  async function dryRunGraphWritePlan() {
+    setGraphWritePlanState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/graph/upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...currentEnginePayload(), dryRun: true, includeBenchmark: true }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setGraphWritePlanState({ status: "error", message: payload?.error ?? "Could not build graph write plan." });
+        return;
+      }
+      setGraphWritePlanState({ status: "ok", result: payload });
+    } catch (error) {
+      setGraphWritePlanState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not build graph write plan.",
+      });
+    }
+  }
+
+  async function planRetrieval() {
+    setRetrievalPlanState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/retrieval/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(currentEnginePayload()),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setRetrievalPlanState({ status: "error", message: payload?.error ?? "Could not build retrieval plan." });
+        return;
+      }
+      setRetrievalPlanState({ status: "ok", result: payload });
+    } catch (error) {
+      setRetrievalPlanState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not build retrieval plan.",
+      });
+    }
+  }
+
+  async function buildTraceBundle() {
+    setTraceState({ status: "loading" });
+    try {
+      const response = await fetch("/api/graphops/trace/build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(currentEnginePayload()),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setTraceState({ status: "error", message: payload?.error ?? "Could not build trace bundle." });
+        return;
+      }
+      setTraceState({ status: "ok", result: payload });
+    } catch (error) {
+      setTraceState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not build trace bundle.",
       });
     }
   }
@@ -1034,6 +1126,148 @@ export default function GraphOpsConsole() {
             </div>
           </div>
         ) : null}
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <Route size={18} className="text-accent" />
+              GraphRAG engine contracts
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              Build the three contracts that make DIALECTICA usable as a
+              production backbone: graph writeback plan, retrieval plan, and
+              answer trace. These can run from the active extraction or the
+              selected sample.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={dryRunGraphWritePlan}
+              disabled={graphWritePlanState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {graphWritePlanState.status === "loading" ? "Planning..." : "Graph Write Plan"}
+              <Database size={15} />
+            </button>
+            <button
+              onClick={planRetrieval}
+              disabled={retrievalPlanState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {retrievalPlanState.status === "loading" ? "Routing..." : "Retrieval Plan"}
+              <Route size={15} />
+            </button>
+            <button
+              onClick={buildTraceBundle}
+              disabled={traceState.status === "loading"}
+              className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {traceState.status === "loading" ? "Tracing..." : "Build Trace"}
+              <GitBranch size={15} />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-3">
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">Graph writeback</p>
+            <p className="mt-1 text-xs text-text-secondary">/api/graphops/graph/upsert</p>
+            {graphWritePlanState.status === "idle" ? (
+              <p className="mt-3 text-xs leading-5 text-text-secondary">
+                Dry-run the idempotent Neo4j write plan before enabling live writes.
+              </p>
+            ) : null}
+            {graphWritePlanState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphWritePlanState.message}
+              </p>
+            ) : null}
+            {graphWritePlanState.status === "ok" ? (
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(
+                    (((graphWritePlanState.result.plan as Record<string, unknown>)?.summary as Record<string, number>) ??
+                      {}),
+                  )
+                    .filter(([key]) => ["nodes", "edges", "reviewNodes"].includes(key))
+                    .map(([key, value]) => (
+                      <div key={key} className="rounded-md bg-surface px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-text-secondary">{key}</p>
+                        <p className="mt-1 text-lg font-semibold text-text-primary">{value}</p>
+                      </div>
+                    ))}
+                </div>
+                <pre className="max-h-[220px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                  <code>{JSON.stringify(graphWritePlanState.result, null, 2)}</code>
+                </pre>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">Retrieval plan</p>
+            <p className="mt-1 text-xs text-text-secondary">/api/graphops/retrieval/plan</p>
+            {retrievalPlanState.status === "idle" ? (
+              <p className="mt-3 text-xs leading-5 text-text-secondary">
+                Route a question to vector, hybrid, VectorCypher, Text2Cypher, or global community context.
+              </p>
+            ) : null}
+            {retrievalPlanState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {retrievalPlanState.message}
+              </p>
+            ) : null}
+            {retrievalPlanState.status === "ok" ? (
+              <div className="mt-3 space-y-3">
+                <div className="rounded-md border border-accent/30 bg-accent/10 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-wide text-accent">strategy</p>
+                  <p className="mt-1 text-sm font-semibold text-text-primary">
+                    {String(retrievalPlanState.result.strategy)}
+                  </p>
+                </div>
+                <pre className="max-h-[260px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                  <code>{JSON.stringify(retrievalPlanState.result, null, 2)}</code>
+                </pre>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">Answer trace</p>
+            <p className="mt-1 text-xs text-text-secondary">/api/graphops/trace/build</p>
+            {traceState.status === "idle" ? (
+              <p className="mt-3 text-xs leading-5 text-text-secondary">
+                Produce the analyst-readable trace: plan, graph context, citations, rules, and benchmark summary.
+              </p>
+            ) : null}
+            {traceState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {traceState.message}
+              </p>
+            ) : null}
+            {traceState.status === "ok" ? (
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ["nodes", ((traceState.result.graphContext as Record<string, unknown>)?.nodes as unknown[])?.length ?? 0],
+                    ["quotes", (traceState.result.citations as unknown[])?.length ?? 0],
+                    ["rules", (traceState.result.ruleFindings as unknown[])?.length ?? 0],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="rounded-md bg-surface px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wide text-text-secondary">{label}</p>
+                      <p className="mt-1 text-lg font-semibold text-text-primary">{String(value)}</p>
+                    </div>
+                  ))}
+                </div>
+                <pre className="max-h-[260px] overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                  <code>{JSON.stringify(traceState.result, null, 2)}</code>
+                </pre>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </section>
 
       <section className="rounded-lg border border-border bg-surface p-5">

@@ -30,6 +30,8 @@ export type GraphOpsExtractionResult = {
     written: number;
     relationships?: number;
     ruleSignalsWritten?: number;
+    plan?: Record<string, unknown>;
+    warnings?: string[];
     message: string;
   };
   databricks?: Record<string, unknown>;
