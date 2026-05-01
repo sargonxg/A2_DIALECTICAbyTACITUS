@@ -47,6 +47,7 @@ export async function GET() {
       triggerWorkflow: "/api/graphops/databricks/run",
       neo4jQuery: "/api/graphops/query",
       workbenchStatus: "/api/graphops/workbench/status",
+      praxisContext: "/api/graphops/praxis/context",
       manifest: "/api/graphops/manifest",
       benchmark: "/api/graphops/benchmarks/run",
     },

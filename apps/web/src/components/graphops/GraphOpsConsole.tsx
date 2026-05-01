@@ -11,6 +11,7 @@ import {
   Code2,
   CheckCircle2,
   Database,
+  FileText,
   Gauge,
   GitBranch,
   Goal,
@@ -249,6 +250,12 @@ type WorkbenchState =
   | { status: "ready"; result: WorkbenchStatus }
   | { status: "error"; message: string };
 
+type PraxisContextState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -286,6 +293,7 @@ export default function GraphOpsConsole() {
   const [runsState, setRunsState] = useState<RunsState>({ status: "loading" });
   const [benchmarkState, setBenchmarkState] = useState<BenchmarkState>({ status: "idle" });
   const [workbenchState, setWorkbenchState] = useState<WorkbenchState>({ status: "loading" });
+  const [praxisContextState, setPraxisContextState] = useState<PraxisContextState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -605,6 +613,42 @@ export default function GraphOpsConsole() {
       setBenchmarkState({
         status: "error",
         message: error instanceof Error ? error.message : "Benchmark failed.",
+      });
+    }
+  }
+
+  async function buildPraxisContext(useCurrentExtraction = true) {
+    setPraxisContextState({ status: "loading" });
+    try {
+      const currentResult = useCurrentExtraction && ingestState.status === "ok" ? ingestState.result : null;
+      const currentBenchmark = benchmarkState.status === "ok" ? benchmarkState.result : undefined;
+      const response = await fetch("/api/graphops/praxis/context", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          extractionRunId: currentResult?.extractionRunId,
+          primitives: currentResult?.primitives,
+          ruleEvaluation: currentResult?.ruleEvaluation,
+          benchmark: currentBenchmark,
+          sampleKey: currentResult ? "" : activeNeed.sampleKey || "policy-constraint-map",
+          workspaceId,
+          caseId,
+          objective,
+          ontologyProfile: activeProfile.id,
+          question: benchmarkQuestion,
+          answer: benchmarkAnswer,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setPraxisContextState({ status: "error", message: payload?.error ?? "Could not build Praxis context." });
+        return;
+      }
+      setPraxisContextState({ status: "ok", result: payload });
+    } catch (error) {
+      setPraxisContextState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not build Praxis context.",
       });
     }
   }
@@ -1080,6 +1124,141 @@ export default function GraphOpsConsole() {
             )}
           </div>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <FileText size={18} className="text-accent" />
+              Praxis-ready context bundle
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              Build the compact context object that Praxis or another TACITUS
+              product can consume: actors, commitments, constraints, events,
+              narratives, evidence, answer constraints, readiness, and review
+              items.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => buildPraxisContext(true)}
+              disabled={praxisContextState.status === "loading"}
+              className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {praxisContextState.status === "loading" ? "Building..." : "Build Praxis Context"}
+              <FileText size={15} />
+            </button>
+            <button
+              onClick={() => buildPraxisContext(false)}
+              disabled={praxisContextState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              Use Active Sample
+              <CheckCircle2 size={15} />
+            </button>
+          </div>
+        </div>
+
+        {praxisContextState.status === "idle" ? (
+          <div className="mt-5 grid gap-3 md:grid-cols-4">
+            {[
+              ["Endpoint", "/api/graphops/praxis/context"],
+              ["Use", "Praxis graph-grounded answer context"],
+              ["Safety", "review queue + answer constraints"],
+              ["Format", "tacitus.dialectica.praxis_context.v1"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+                <p className="mt-2 text-sm text-text-primary">{value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {praxisContextState.status === "error" ? (
+          <p className="mt-5 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {praxisContextState.message}
+          </p>
+        ) : null}
+        {praxisContextState.status === "ok" ? (
+          <div className="mt-5 space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
+              <div className="rounded-lg border border-accent/30 bg-accent/10 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-accent">Readiness</p>
+                <p className="mt-2 text-3xl font-bold text-text-primary">
+                  {Math.round(Number((praxisContextState.result.readiness as { score?: number })?.score ?? 0) * 100)}%
+                </p>
+                <p className="mt-2 text-sm font-semibold text-accent">
+                  {String((praxisContextState.result.readiness as { status?: string })?.status ?? "unknown")}
+                </p>
+                <p className="mt-3 text-xs leading-5 text-text-secondary">
+                  {String((praxisContextState.result.readiness as { summary?: string })?.summary ?? "")}
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {Object.entries((praxisContextState.result.counts as Record<string, number>) ?? {})
+                  .filter(([type]) => ["Actor", "Claim", "Commitment", "Constraint", "Event", "Narrative", "EvidenceSpan", "ActorState"].includes(type))
+                  .map(([type, count]) => (
+                    <div key={type} className="rounded-lg border border-border bg-background p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{type}</p>
+                      <p className="mt-2 text-2xl font-bold text-text-primary">{count}</p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-3">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Actors</p>
+                <div className="mt-3 space-y-2">
+                  {(((praxisContextState.result.context as Record<string, unknown>)?.actors as Array<{ id: string; name: string; type: string }>) ?? [])
+                    .slice(0, 6)
+                    .map((actor) => (
+                      <div key={actor.id} className="rounded-md bg-surface px-3 py-2">
+                        <p className="text-xs font-semibold text-text-primary">{actor.name}</p>
+                        <p className="text-[11px] text-text-secondary">{actor.type}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Constraints and commitments</p>
+                <div className="mt-3 space-y-2">
+                  {[
+                    ...(((praxisContextState.result.context as Record<string, unknown>)?.constraints as Array<{ id: string; description: string }>) ?? []),
+                    ...(((praxisContextState.result.context as Record<string, unknown>)?.commitments as Array<{ id: string; description: string }>) ?? []),
+                  ]
+                    .slice(0, 5)
+                    .map((item) => (
+                      <p key={item.id} className="rounded-md bg-surface px-3 py-2 text-xs leading-5 text-text-secondary">
+                        {item.description}
+                      </p>
+                    ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="text-sm font-semibold text-text-primary">Review queue</p>
+                <div className="mt-3 space-y-2">
+                  {((praxisContextState.result.reviewQueue as Array<{ id: string; severity: string; title: string; recommendedAction: string }>) ?? [])
+                    .slice(0, 5)
+                    .map((item) => (
+                      <div key={item.id} className="rounded-md bg-surface px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-text-primary">{item.title}</p>
+                          <span className="text-[10px] text-warning">{item.severity}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-4 text-text-secondary">{item.recommendedAction}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <pre className="max-h-[260px] overflow-auto rounded-lg border border-border bg-background p-4 text-[11px] leading-5 text-text-secondary">
+              <code>{JSON.stringify(praxisContextState.result, null, 2)}</code>
+            </pre>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-border bg-surface p-5">
