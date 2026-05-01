@@ -46,7 +46,9 @@ export async function GET() {
       spawnAgent: "/api/graphops/agents/run",
       triggerWorkflow: "/api/graphops/databricks/run",
       neo4jQuery: "/api/graphops/query",
+      workbenchStatus: "/api/graphops/workbench/status",
       manifest: "/api/graphops/manifest",
+      benchmark: "/api/graphops/benchmarks/run",
     },
     integrationPattern: [
       "Product creates or selects a workspace and source pack.",

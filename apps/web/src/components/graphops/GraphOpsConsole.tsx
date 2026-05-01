@@ -8,8 +8,10 @@ import {
   BarChart3,
   BookOpen,
   Brain,
+  Code2,
   CheckCircle2,
   Database,
+  Gauge,
   GitBranch,
   Goal,
   KeyRound,
@@ -17,7 +19,9 @@ import {
   Lock,
   Network,
   Package,
+  PanelTop,
   Play,
+  Route,
   Shield,
   Sparkles,
   Upload,
@@ -210,6 +214,41 @@ type BenchmarkState =
   | { status: "ok"; result: Record<string, unknown> }
   | { status: "error"; message: string };
 
+type WorkbenchStatus = {
+  overallScore: number;
+  nextEngineeringTarget: {
+    title: string;
+    rationale: string;
+    successCriteria: string[];
+  };
+  blocks: Array<{
+    id: string;
+    stage: string;
+    title: string;
+    status: string;
+    score: number;
+    proof: string;
+    nextAction: string;
+    apiSurface?: string;
+  }>;
+  developerSurfaces: Array<{
+    name: string;
+    endpoint: string;
+    role: string;
+    status: string;
+  }>;
+  researchAlignment: Array<{
+    pattern: string;
+    implementationTarget: string;
+    status: string;
+  }>;
+};
+
+type WorkbenchState =
+  | { status: "loading" }
+  | { status: "ready"; result: WorkbenchStatus }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -246,6 +285,7 @@ export default function GraphOpsConsole() {
   const [ruleEvalState, setRuleEvalState] = useState<RuleEvalState>({ status: "idle" });
   const [runsState, setRunsState] = useState<RunsState>({ status: "loading" });
   const [benchmarkState, setBenchmarkState] = useState<BenchmarkState>({ status: "idle" });
+  const [workbenchState, setWorkbenchState] = useState<WorkbenchState>({ status: "loading" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -345,10 +385,33 @@ export default function GraphOpsConsole() {
     }
   }
 
+  async function refreshWorkbenchStatus(context?: { extraction?: Record<string, unknown>; benchmark?: Record<string, unknown> }) {
+    try {
+      const response = await fetch("/api/graphops/workbench/status", {
+        method: context ? "POST" : "GET",
+        headers: context ? { "Content-Type": "application/json" } : undefined,
+        body: context ? JSON.stringify(context) : undefined,
+        cache: "no-store",
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setWorkbenchState({ status: "error", message: payload?.error ?? "Could not load workbench status." });
+        return;
+      }
+      setWorkbenchState({ status: "ready", result: payload });
+    } catch (error) {
+      setWorkbenchState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Could not load workbench status.",
+      });
+    }
+  }
+
   useEffect(() => {
     refreshDatabricksJobs();
     refreshDeltaTables();
     refreshLocalRuns();
+    refreshWorkbenchStatus();
   }, []);
 
   async function runDatabricksJob(key: string) {
@@ -534,6 +597,10 @@ export default function GraphOpsConsole() {
         return;
       }
       setBenchmarkState({ status: "ok", result: payload });
+      await refreshWorkbenchStatus({
+        ...(currentResult ? { extraction: currentResult } : {}),
+        benchmark: payload,
+      });
     } catch (error) {
       setBenchmarkState({
         status: "error",
@@ -568,6 +635,7 @@ export default function GraphOpsConsole() {
       }
       setIngestState({ status: "ok", result: payload });
       await refreshLocalRuns();
+      await refreshWorkbenchStatus({ extraction: payload });
     } catch (error) {
       setIngestState({
         status: "error",
@@ -600,6 +668,7 @@ export default function GraphOpsConsole() {
       }
       setIngestState({ status: "ok", result: payload });
       await refreshLocalRuns();
+      await refreshWorkbenchStatus({ extraction: payload });
     } catch (error) {
       setIngestState({
         status: "error",
@@ -623,6 +692,7 @@ export default function GraphOpsConsole() {
       setWorkspaceId(String(payload.workspaceId ?? workspaceId));
       setCaseId(String(payload.caseId ?? caseId));
       setObjective(String(payload.objective ?? objective));
+      await refreshWorkbenchStatus({ extraction: payload });
       const profile = ontologyProfileOptions.find((item) => item.id === payload.ontologyProfile);
       if (profile) setActiveProfileId(profile.id);
     } catch (error) {
@@ -781,6 +851,145 @@ export default function GraphOpsConsole() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <PanelTop size={18} className="text-accent" />
+              GraphOps workbench backbone
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              This status board is the shared contract for Praxis and standalone
+              developer tools: each block has a score, proof, API surface, and next
+              engineering target.
+            </p>
+          </div>
+          <button
+            onClick={() => refreshWorkbenchStatus(ingestState.status === "ok" ? { extraction: ingestState.result } : undefined)}
+            className="btn-secondary inline-flex items-center justify-center gap-2"
+          >
+            Refresh Status
+            <Gauge size={15} />
+          </button>
+        </div>
+
+        {workbenchState.status === "loading" ? (
+          <p className="mt-5 text-sm text-accent">Loading workbench status...</p>
+        ) : null}
+        {workbenchState.status === "error" ? (
+          <p className="mt-5 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {workbenchState.message}
+          </p>
+        ) : null}
+        {workbenchState.status === "ready" ? (
+          <div className="mt-5 space-y-5">
+            <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
+              <div className="rounded-lg border border-accent/30 bg-accent/10 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-accent">
+                  <Gauge size={16} />
+                  Overall readiness
+                </p>
+                <p className="mt-4 text-4xl font-bold text-text-primary">
+                  {Math.round(workbenchState.result.overallScore * 100)}%
+                </p>
+                <div className="mt-3 h-2 rounded-full bg-background">
+                  <div
+                    className="h-2 rounded-full bg-accent"
+                    style={{ width: `${Math.round(workbenchState.result.overallScore * 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  <Route size={16} className="text-accent" />
+                  Next engineering target
+                </p>
+                <p className="mt-2 text-sm font-semibold text-accent">
+                  {workbenchState.result.nextEngineeringTarget.title}
+                </p>
+                <p className="mt-2 text-xs leading-5 text-text-secondary">
+                  {workbenchState.result.nextEngineeringTarget.rationale}
+                </p>
+                <div className="mt-3 grid gap-2 md:grid-cols-3">
+                  {workbenchState.result.nextEngineeringTarget.successCriteria.map((item) => (
+                    <p key={item} className="rounded-md bg-surface px-3 py-2 text-[11px] leading-5 text-text-secondary">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {workbenchState.result.blocks.map((block) => (
+                <div key={block.id} className="rounded-lg border border-border bg-background p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-accent">{block.stage}</p>
+                      <p className="mt-1 text-sm font-semibold text-text-primary">{block.title}</p>
+                    </div>
+                    <span className="rounded-md bg-surface px-2 py-1 text-[10px] text-text-secondary">
+                      {block.status}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="h-2 flex-1 rounded-full bg-surface">
+                      <div className="h-2 rounded-full bg-accent" style={{ width: `${Math.round(block.score * 100)}%` }} />
+                    </div>
+                    <span className="text-xs font-semibold text-text-primary">{Math.round(block.score * 100)}%</span>
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-text-secondary">{block.proof}</p>
+                  <p className="mt-2 text-[11px] leading-5 text-warning">{block.nextAction}</p>
+                  {block.apiSurface ? (
+                    <code className="mt-3 block rounded-md bg-surface px-2 py-1 text-[11px] text-accent">
+                      {block.apiSurface}
+                    </code>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  <Code2 size={16} className="text-accent" />
+                  Developer surfaces
+                </p>
+                <div className="mt-3 space-y-2">
+                  {workbenchState.result.developerSurfaces.map((surface) => (
+                    <div key={surface.endpoint} className="grid gap-2 rounded-md bg-surface p-3 md:grid-cols-[170px_minmax(0,1fr)_80px]">
+                      <p className="text-xs font-semibold text-text-primary">{surface.name}</p>
+                      <div>
+                        <code className="text-[11px] text-accent">{surface.endpoint}</code>
+                        <p className="mt-1 text-[11px] leading-4 text-text-secondary">{surface.role}</p>
+                      </div>
+                      <span className="text-[11px] text-text-secondary">{surface.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  <BookOpen size={16} className="text-accent" />
+                  Research-aligned build pattern
+                </p>
+                <div className="mt-3 space-y-2">
+                  {workbenchState.result.researchAlignment.map((item) => (
+                    <div key={item.pattern} className="rounded-md bg-surface p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-xs font-semibold text-text-primary">{item.pattern}</p>
+                        <span className="text-[11px] text-accent">{item.status}</span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-5 text-text-secondary">{item.implementationTarget}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-border bg-surface p-5">
