@@ -24,6 +24,7 @@ Objective: a user can open `/graphops`, choose a case objective, ingest text or 
 5. Add episode splitting controls so a user can segment a document by scene, meeting, incident, phase, or date.
 6. Expand Databricks extraction to reconstruct all staged GraphOps primitive and rule artifact rows into Delta.
 7. Add export buttons for JSONL, Cypher, and Delta-ready JSON from each local run.
-8. Add a workspace home page that groups runs by workspace/case and shows status across ingestion, rules, graph write, and benchmarks.
-9. Add benchmark run creation from a saved extraction run and objective.
-10. Add an offline Neo4j Docker quick-start check that can initialize schema and write the latest local run.
+8. Local benchmark creation: `/api/graphops/benchmarks/run` scores a saved extraction run, raw primitives, or fresh sample text.
+9. Console benchmark workbench: `/graphops` can score the current run or the active sample and show metric diagnostics.
+10. Add a workspace home page that groups runs by workspace/case and shows status across ingestion, rules, graph write, and benchmarks.
+11. Add an offline Neo4j Docker quick-start check that can initialize schema and write the latest local run.

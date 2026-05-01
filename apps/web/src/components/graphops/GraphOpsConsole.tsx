@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
+  BarChart3,
   BookOpen,
   Brain,
   CheckCircle2,
@@ -203,6 +204,12 @@ type RunsState =
   | { status: "ready"; runs: LocalRunSummary[] }
   | { status: "error"; message: string };
 
+type BenchmarkState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ok"; result: Record<string, unknown> }
+  | { status: "error"; message: string };
+
 export default function GraphOpsConsole() {
   const [activeQuery, setActiveQuery] = useState(sampleCypherQueries[0].title);
   const [activeScenarioId, setActiveScenarioId] = useState(benchmarkScenarios[0].id);
@@ -215,6 +222,10 @@ export default function GraphOpsConsole() {
   const [caseId, setCaseId] = useState("romeo-juliet-conflict");
   const [objective, setObjective] = useState(precompiledNeeds[0].objective);
   const [sourceText, setSourceText] = useState("");
+  const [benchmarkQuestion, setBenchmarkQuestion] = useState(
+    "What does the graph prove, what remains uncertain, and what should Praxis ask next?",
+  );
+  const [benchmarkAnswer, setBenchmarkAnswer] = useState("");
   const [writeGraph, setWriteGraph] = useState(false);
   const [sendToDatabricks, setSendToDatabricks] = useState(false);
   const [triggerWorkflowAfterIngest, setTriggerWorkflowAfterIngest] = useState(false);
@@ -234,6 +245,7 @@ export default function GraphOpsConsole() {
   const [aiCommandState, setAiCommandState] = useState<AiCommandState>({ status: "idle" });
   const [ruleEvalState, setRuleEvalState] = useState<RuleEvalState>({ status: "idle" });
   const [runsState, setRunsState] = useState<RunsState>({ status: "loading" });
+  const [benchmarkState, setBenchmarkState] = useState<BenchmarkState>({ status: "idle" });
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -492,6 +504,40 @@ export default function GraphOpsConsole() {
       setRuleEvalState({
         status: "error",
         message: error instanceof Error ? error.message : "Rule evaluation failed.",
+      });
+    }
+  }
+
+  async function runLocalBenchmark(useCurrentExtraction = true) {
+    setBenchmarkState({ status: "loading" });
+    try {
+      const currentResult = useCurrentExtraction && ingestState.status === "ok" ? ingestState.result : null;
+      const response = await fetch("/api/graphops/benchmarks/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          extractionRunId: currentResult?.extractionRunId,
+          primitives: currentResult?.primitives,
+          ruleEvaluation: currentResult?.ruleEvaluation,
+          sampleKey: currentResult ? "" : activeNeed.sampleKey || "romeo-juliet-conflict",
+          workspaceId,
+          caseId,
+          objective,
+          ontologyProfile: activeProfile.id,
+          question: benchmarkQuestion,
+          answer: benchmarkAnswer,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setBenchmarkState({ status: "error", message: payload?.error ?? "Benchmark failed." });
+        return;
+      }
+      setBenchmarkState({ status: "ok", result: payload });
+    } catch (error) {
+      setBenchmarkState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Benchmark failed.",
       });
     }
   }
@@ -1724,13 +1770,23 @@ export default function GraphOpsConsole() {
               causal precision, typed graph overlap, and ambiguity handling.
             </p>
           </div>
-          <button
-            onClick={() => runDatabricksJob("benchmark")}
-            className="btn-primary inline-flex items-center justify-center gap-2"
-          >
-            Run Databricks Benchmark
-            <Play size={15} />
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => runLocalBenchmark(true)}
+              disabled={benchmarkState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              Score Current Graph
+              <BarChart3 size={15} />
+            </button>
+            <button
+              onClick={() => runDatabricksJob("benchmark")}
+              className="btn-primary inline-flex items-center justify-center gap-2"
+            >
+              Run Databricks Benchmark
+              <Play size={15} />
+            </button>
+          </div>
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -1767,6 +1823,100 @@ export default function GraphOpsConsole() {
                 <p className="text-sm font-semibold text-accent">DIALECTICA Graph-Grounded</p>
                 <p className="mt-3 text-xs leading-5 text-text-secondary">{activeScenario.dialecticaAnswer}</p>
               </div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-background p-4">
+              <div className="grid gap-3 xl:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Benchmark question</span>
+                  <textarea
+                    value={benchmarkQuestion}
+                    onChange={(event) => setBenchmarkQuestion(event.target.value)}
+                    className="mt-2 min-h-24 w-full rounded-md border border-border bg-surface p-3 text-sm text-text-primary outline-none transition-colors focus:border-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Candidate answer</span>
+                  <textarea
+                    value={benchmarkAnswer}
+                    onChange={(event) => setBenchmarkAnswer(event.target.value)}
+                    placeholder={activeScenario.dialecticaAnswer}
+                    className="mt-2 min-h-24 w-full rounded-md border border-border bg-surface p-3 text-sm text-text-primary outline-none transition-colors placeholder:text-text-secondary/60 focus:border-accent"
+                  />
+                </label>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => runLocalBenchmark(true)}
+                  disabled={benchmarkState.status === "loading"}
+                  className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {benchmarkState.status === "loading" ? "Scoring..." : "Run Local Benchmark"}
+                  <BarChart3 size={15} />
+                </button>
+                <button
+                  onClick={() => runLocalBenchmark(false)}
+                  disabled={benchmarkState.status === "loading"}
+                  className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  Score Sample
+                  <CheckCircle2 size={15} />
+                </button>
+                {ingestState.status === "ok" ? (
+                  <span className="text-xs text-text-secondary">
+                    Current run: <code className="text-accent">{String(ingestState.result.extractionRunId ?? "")}</code>
+                  </span>
+                ) : null}
+              </div>
+              {benchmarkState.status === "error" ? (
+                <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                  {benchmarkState.message}
+                </p>
+              ) : null}
+              {benchmarkState.status === "ok" ? (
+                <div className="mt-4 space-y-4">
+                  <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                    {Object.entries((benchmarkState.result.scores as Record<string, number>) ?? {}).map(([metric, score]) => (
+                      <div key={metric} className="rounded-md border border-border bg-surface p-3">
+                        <p className="text-[11px] font-semibold capitalize text-text-secondary">
+                          {metric.replace(/([A-Z])/g, " $1")}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-text-primary">{Math.round(score * 100)}%</p>
+                        <div className="mt-2 h-1.5 rounded-full bg-background">
+                          <div className="h-1.5 rounded-full bg-accent" style={{ width: `${Math.round(score * 100)}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid gap-3 xl:grid-cols-2">
+                    <div className="rounded-md border border-border bg-surface p-3">
+                      <p className="text-xs font-semibold text-text-primary">Diagnostics</p>
+                      <div className="mt-2 grid gap-2 text-xs text-text-secondary md:grid-cols-2">
+                        {Object.entries(((benchmarkState.result.diagnostics as Record<string, unknown>)?.primitiveCounts as Record<string, number>) ?? {})
+                          .slice(0, 8)
+                          .map(([type, count]) => (
+                            <div key={type} className="flex justify-between rounded bg-background px-2 py-1">
+                              <span>{type}</span>
+                              <span className="text-accent">{count}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border bg-surface p-3">
+                      <p className="text-xs font-semibold text-text-primary">Next Fixes</p>
+                      <div className="mt-2 space-y-2">
+                        {(((benchmarkState.result.diagnostics as Record<string, unknown>)?.recommendations as string[]) ?? [])
+                          .slice(0, 4)
+                          .map((item) => (
+                            <p key={item} className="rounded bg-background px-2 py-1.5 text-xs leading-5 text-text-secondary">
+                              {item}
+                            </p>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="grid gap-3 md:grid-cols-4">
