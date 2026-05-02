@@ -18,6 +18,11 @@ Domain specs: `packages/ontology/src/dialectica_ontology/domains.py`
 3. **Reasoning & Inference**: 25+ deterministic symbolic rules fire FIRST -> GNN/KGE neural fills gaps -> human validates
 4. **Decision Support**: 6 AI agents (Analyst, Advisor, Comparator, Forecaster, Mediator, Theorist) + MCP server
 
+**Ingestion backbone** (canonical reference: `docs/ARCHITECTURE.md`).
+Project Gutenberg picker / document upload / paste → FastAPI router → inline
+pipeline runner (Pub/Sub worker in prod) → LangGraph 10-step DAG → Neo4j →
+SSE progress stream → auto-reasoning summary attached to job.
+
 ## Critical invariant
 Deterministic symbolic conclusions (treaty violations, legal constraints, Glasl stage derivations)
 are NEVER overridden by probabilistic neural predictions. Enforced via confidence_type tagging:
@@ -128,6 +133,40 @@ advanced ML on Databricks.
   provides its own Spark + PyTorch environment
 - Falls back gracefully when Databricks is not configured
 
+## Ingestion Backbone (data-ingestion-pipeline wave)
+Public-domain + upload + paste flow with live progress and auto-reasoning.
+Canonical reference: `docs/ARCHITECTURE.md`.
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v1/gutenberg/catalog` | GET | Curated 8-book catalog (public, no auth) |
+| `/v1/workspaces/{ws}/ingest/gutenberg` | POST | Fetch + ingest a Gutenberg book |
+| `/v1/workspaces/{ws}/extract` | POST | Inline text extraction |
+| `/v1/workspaces/{ws}/extract/document` | POST | File upload (PDF/DOCX/TXT, ≤10MB) |
+| `/v1/workspaces/{ws}/extractions` | GET | List jobs in workspace |
+| `/v1/workspaces/{ws}/extractions/{id}` | GET | Single job state |
+| `/v1/workspaces/{ws}/extractions/{id}/stream` | GET | **SSE** progress events |
+| `/v1/workspaces/{ws}/corpus/documents` | GET | Ingested SourceDocument library |
+
+- **Source loaders**: `packages/extraction/src/dialectica_extraction/sources/`
+  (`gutenberg.py` is the reference; add new sources here, e.g. `arxiv.py`).
+- **Pipeline runner**: `packages/api/src/dialectica_api/services/pipeline_runner.py`
+  emits one `JobProgressEvent` per LangGraph step plus a terminal `job` frame.
+- **Job + progress store**: `packages/api/src/dialectica_api/services/job_store.py`
+  (in-process, swap to Redis in prod — see `docs/ARCHITECTURE.md`).
+- **Frontend**: `apps/web/src/app/workspaces/[id]/ingest/page.tsx` (tabs),
+  `apps/web/src/components/extraction/GutenbergPicker.tsx`,
+  `apps/web/src/components/extraction/LiveExtractionProgress.tsx`,
+  `apps/web/src/app/workspaces/[id]/corpus/page.tsx`.
+- **Auto-reasoning** on completion attaches graph stats, escalation
+  trajectory, and top actors to the job and ships them as the SSE final frame.
+
+> **Sprawl note for Codex collaborators:** the codebase has two parallel
+> ingestion paths besides the canonical one above
+> (`dialectica/ingestion/` CLI and `apps/web/src/lib/graphopsExtraction.ts`).
+> Don't extend them; new ingestion features land in `packages/extraction/`
+> and `packages/api/`. Removal is scheduled but deferred.
+
 ## TACITUS Integration API
 3 endpoints that allow other TACITUS platform applications (e.g., trust graph,
 context layer, mediation tools) to interact with DIALECTICA:
@@ -176,6 +215,21 @@ context layer, mediation tools) to interact with DIALECTICA:
 - **Integration router**: packages/api/src/dialectica_api/routers/integration.py (TACITUS integration)
 - **Production runbook**: docs/runbook.md (step-by-step deployment guide)
 - **Benchmarking guide**: docs/benchmarking.md (corpora, metrics, custom gold standards)
+
+### Ingestion backbone (added 2026-05-02)
+- **Architecture reference**: docs/ARCHITECTURE.md (canonical pipeline, deprecation notes, Redis migration plan)
+- **Gutenberg source loader**: packages/extraction/src/dialectica_extraction/sources/gutenberg.py (catalog of 8 curated books + fetch helper)
+- **Gutenberg router**: packages/api/src/dialectica_api/routers/gutenberg.py (catalog + ingest)
+- **SSE stream router**: packages/api/src/dialectica_api/routers/extraction_stream.py
+- **Corpus library router**: packages/api/src/dialectica_api/routers/corpus_library.py
+- **Job store**: packages/api/src/dialectica_api/services/job_store.py (in-process, JobProgressEvent + asyncio listener)
+- **Inline pipeline runner**: packages/api/src/dialectica_api/services/pipeline_runner.py (emits per-step progress + auto-reasoning)
+- **Gutenberg picker UI**: apps/web/src/components/extraction/GutenbergPicker.tsx
+- **Live progress UI**: apps/web/src/components/extraction/LiveExtractionProgress.tsx (consumes SSE)
+- **Auto-reasoning panel**: apps/web/src/components/extraction/AutoReasoningPanel.tsx
+- **Ingest page (tabs)**: apps/web/src/app/workspaces/[id]/ingest/page.tsx
+- **Corpus library page**: apps/web/src/app/workspaces/[id]/corpus/page.tsx
+- **Gutenberg CLI** (thin wrapper around shared source loader): tools/download_gutenberg.py
 
 ## Running locally
 
@@ -246,6 +300,7 @@ docker build -f packages/api/Dockerfile.cloudrun -t dialectica-api .
 - Add seed data: data/seed/samples/new_scenario.json (use nodes/edges or actors/events format)
 - Add benchmark corpus: data/seed/samples/new_corpus.json (add `gold_standard` key, see docs/benchmarking.md)
 - Add subdomain: subdomains.py -> add to SubdomainType enum + SUBDOMAIN_KEYWORDS + SUBDOMAIN_THEORIES
+- Add ingestion source (e.g. arxiv, news API): create packages/extraction/src/dialectica_extraction/sources/<name>.py with a `fetch_<name>` function -> add a router under packages/api/src/dialectica_api/routers/<name>.py that calls `_new_job` + `run_pipeline_with_progress` -> register in main.py -> add a tab in apps/web/src/app/workspaces/[id]/ingest/page.tsx -> add tests with the `_restore_auth_env` autouse fixture pattern (see test_gutenberg.py). Full recipe in docs/ARCHITECTURE.md "Adding a new source".
 - Run production deploy: follow docs/runbook.md step by step
 - Publish ontology: `cd packages/ontology && uv build && twine upload dist/*`
 

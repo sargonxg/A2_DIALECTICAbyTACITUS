@@ -299,11 +299,11 @@ async def client(mock_graph: MockGraphClient) -> AsyncClient:
     test_app.dependency_overrides.clear()
 
     from dialectica_api.routers.developers import _api_keys
-    from dialectica_api.routers.extraction import _jobs
     from dialectica_api.routers.workspaces import _workspaces
+    from dialectica_api.services.job_store import reset_job_store_for_tests
 
     _workspaces.clear()
-    _jobs.clear()
+    reset_job_store_for_tests()
     _api_keys.clear()
 
     # Reset rate limit backend so tests don't accumulate hits
