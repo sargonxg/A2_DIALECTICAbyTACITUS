@@ -148,12 +148,108 @@ export const api = {
 
   // Extraction
   extract: (data: ExtractionRequest) =>
-    request<ExtractionResult>("/v1/extract", {
+    request<ExtractionResult>(`/v1/workspaces/${data.workspace_id}/extract`, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        text: data.text ?? "",
+        source_url: data.document_url ?? "",
+        tier: data.tier,
+      }),
     }),
-  getExtraction: (id: string) =>
-    request<ExtractionResult>(`/v1/extract/${id}`),
+  getExtraction: (workspaceId: string, jobId: string) =>
+    request<ExtractionResult>(
+      `/v1/workspaces/${workspaceId}/extractions/${jobId}`,
+    ),
+  uploadDocument: (workspaceId: string, file: File, tier: string = "standard") => {
+    const API_URL = getApiUrl();
+    const apiKey =
+      typeof window !== "undefined" ? localStorage.getItem("dialectica_api_key") : null;
+    const form = new FormData();
+    form.append("file", file);
+    return fetch(
+      `${API_URL}/v1/workspaces/${workspaceId}/extract/document?tier=${tier}`,
+      {
+        method: "POST",
+        headers: apiKey ? { "X-API-Key": apiKey } : {},
+        body: form,
+      },
+    ).then(async (res) => {
+      if (!res.ok) throw new ApiError(res.status, await res.text());
+      return res.json() as Promise<ExtractionResult>;
+    });
+  },
+
+  // Gutenberg
+  listGutenbergCatalog: () =>
+    request<{
+      books: Array<{
+        book_id: string;
+        title: string;
+        author: string;
+        domain: string;
+        subdomain: string;
+        summary: string;
+        estimated_words: number;
+        recommended_tier: string;
+      }>;
+    }>("/v1/gutenberg/catalog"),
+  ingestGutenberg: (
+    workspaceId: string,
+    body: { book_id: string; title?: string; tier?: string; max_chars?: number },
+  ) =>
+    request<{
+      job_id: string;
+      workspace_id: string;
+      book_id: string;
+      title: string;
+      status: string;
+      fetched_chars: number;
+      estimated_words: number;
+      created_at: string;
+    }>(`/v1/workspaces/${workspaceId}/ingest/gutenberg`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // Live extraction progress (SSE)
+  streamExtraction: (workspaceId: string, jobId: string): EventSource => {
+    const API_URL = getApiUrl();
+    const apiKey =
+      typeof window !== "undefined"
+        ? localStorage.getItem("dialectica_api_key")
+        : null;
+    const params = new URLSearchParams();
+    if (apiKey) params.set("api_key", apiKey);
+    return new EventSource(
+      `${API_URL}/v1/workspaces/${workspaceId}/extractions/${jobId}/stream?${params}`,
+    );
+  },
+
+  // Corpus library
+  listCorpusDocuments: (workspaceId: string) =>
+    request<{
+      workspace_id: string;
+      total_documents: number;
+      total_words: number;
+      total_nodes: number;
+      total_edges: number;
+      documents: Array<{
+        id: string;
+        title: string;
+        content_hash: string;
+        word_count: number;
+        language: string;
+        ingested_at: string;
+        extraction_tier: string;
+        extraction_model: string;
+        nodes_extracted: number;
+        edges_extracted: number;
+        errors: number;
+        job_id: string;
+        source_kind: string;
+        gutenberg_book_id: string | null;
+      }>;
+    }>(`/v1/workspaces/${workspaceId}/corpus/documents`),
 
   // Analysis (SSE streaming)
   analyzeStream: (data: AnalysisRequest): EventSource => {

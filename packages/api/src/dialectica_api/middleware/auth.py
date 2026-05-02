@@ -27,6 +27,7 @@ _PUBLIC_PATHS = {
     "/redoc",
     "/metrics",
     "/v1/waitlist",
+    "/v1/gutenberg/catalog",
 }
 
 # Permission levels (ordered from least to most privileged)
