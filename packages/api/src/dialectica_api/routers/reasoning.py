@@ -53,6 +53,23 @@ class SimilarityReasoningRequest(BaseModel):
     k: int = 3
 
 
+class CuratedQuestionResponse(BaseModel):
+    id: str
+    scenario_id: str
+    text: str
+    stake: str
+    academic_anchor: str
+    primary_framework: str
+    symbolic_rules: list[str]
+    counterfactual_supported: bool
+    similarity_supported: bool
+
+
+class CuratedLibraryResponse(BaseModel):
+    workspace_id: str
+    questions: list[CuratedQuestionResponse]
+
+
 class CounterfactualHandle(BaseModel):
     supported: bool
     transient: bool = True
@@ -153,6 +170,20 @@ def _curated_question_or_404(question_id: str) -> Any:
     return question
 
 
+def _curated_question_response(question: Any) -> CuratedQuestionResponse:
+    return CuratedQuestionResponse(
+        id=question.id,
+        scenario_id=question.scenario_id,
+        text=question.text,
+        stake=question.stake,
+        academic_anchor=question.academic_anchor,
+        primary_framework=question.primary_framework,
+        symbolic_rules=list(question.symbolic_rules),
+        counterfactual_supported=question.counterfactual_supported,
+        similarity_supported=question.similarity_supported,
+    )
+
+
 async def _run_curated_question(
     *,
     workspace_id: str,
@@ -236,6 +267,24 @@ async def analyze_streaming(
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.get("/reason/library")
+async def list_curated_questions(
+    workspace_id: str,
+    scenario_id: str | None = None,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+) -> CuratedLibraryResponse:
+    """List curated Prompt 2 questions for clients and demos."""
+    from dialectica_reasoning.library import get_curated_library
+
+    questions = list(get_curated_library().values())
+    if scenario_id:
+        questions = [question for question in questions if question.scenario_id == scenario_id]
+    return CuratedLibraryResponse(
+        workspace_id=workspace_id,
+        questions=[_curated_question_response(question) for question in questions],
+    )
 
 
 @router.post("/reason/curated")

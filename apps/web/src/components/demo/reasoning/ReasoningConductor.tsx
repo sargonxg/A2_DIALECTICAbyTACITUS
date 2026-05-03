@@ -9,6 +9,7 @@ import type { GraphData } from "@/types/graph";
 import { AnswerComparison } from "./AnswerComparison";
 import { CounterfactualToggler } from "./CounterfactualToggler";
 import { getReasoningScenario, cloneGraph } from "./reasoningData";
+import { LiveModeBadge } from "./LiveModeBadge";
 import { PathHighlightOverlay } from "./PathHighlightOverlay";
 import { QuestionLibrary } from "./QuestionLibrary";
 import { SimilarityPanel } from "./SimilarityPanel";
@@ -189,15 +190,18 @@ export function ReasoningConductor({ scenarioId }: Props) {
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-                <p className="text-xs leading-5 text-text-secondary">
-                  {liveStatus === "live"
-                    ? "Live backend result loaded for this question."
-                    : liveStatus === "loading"
-                      ? "Running the curated question through the backend reasoning adapter..."
-                      : liveStatus === "error"
-                        ? `Fixture retained. Live API error: ${liveError.slice(0, 180)}`
-                        : "Rendering deterministic fixture data. Use live mode when the API and key are configured."}
-                </p>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <LiveModeBadge status={liveStatus} />
+                  <p className="text-xs leading-5 text-text-secondary">
+                    {liveStatus === "live"
+                      ? "Live backend result loaded for this question."
+                      : liveStatus === "loading"
+                        ? "Running the curated question through the backend reasoning adapter..."
+                        : liveStatus === "error"
+                          ? `Fixture retained. Live API error: ${liveError.slice(0, 180)}`
+                          : "Rendering deterministic fixture data. Use live mode when the API and key are configured."}
+                  </p>
+                </div>
                 <button type="button" onClick={runLiveReasoning} className="btn-secondary" disabled={liveStatus === "loading"}>
                   {liveStatus === "loading" ? "Running..." : "Run live API"}
                 </button>
