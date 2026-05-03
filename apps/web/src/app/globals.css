@@ -55,4 +55,148 @@
     @apply hover:bg-surface-hover text-text-secondary hover:text-text-primary
            px-3 py-2 rounded-md transition-colors text-sm;
   }
+
+  .dialectica-graph-edge {
+    stroke: rgb(94 234 212 / 0.5);
+    stroke-width: 1.4;
+    stroke-dasharray: 7 8;
+    animation: dialectica-edge-flow 4.6s linear infinite;
+  }
+
+  .dialectica-graph-node {
+    animation: dialectica-node-pulse 4.8s ease-in-out infinite;
+  }
+
+  .dialectica-ontology-stage {
+    animation: dialectica-stage-rise 5.8s ease-in-out infinite;
+  }
+
+  .dialectica-token {
+    animation: dialectica-token-glow 4.8s ease-in-out infinite;
+  }
+
+  .dialectica-pipeline-card {
+    animation: dialectica-pipeline-rise 5.2s ease-in-out infinite;
+  }
+
+  .dialectica-pipeline-beam {
+    position: absolute;
+    top: 50%;
+    right: -0.9rem;
+    z-index: 2;
+    height: 2px;
+    width: 1.8rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(51 65 85);
+  }
+
+  .dialectica-pipeline-beam::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(90deg, transparent, rgb(34 211 238), transparent);
+    animation: dialectica-beam-sweep 1.7s linear infinite;
+  }
+
+  .dialectica-benchmark-bar {
+    height: 100%;
+    border-radius: 999px;
+    animation: dialectica-bar-fill 2.2s ease-out both;
+    transform-origin: left center;
+  }
+}
+
+@keyframes dialectica-edge-flow {
+  0% {
+    stroke-dashoffset: 64;
+    opacity: 0.2;
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.35;
+  }
+}
+
+@keyframes dialectica-node-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 14px 30px rgb(0 0 0 / 0.22);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.015);
+    box-shadow: 0 18px 44px rgb(20 184 166 / 0.18);
+  }
+}
+
+@keyframes dialectica-stage-rise {
+  0%,
+  100% {
+    transform: translateY(0);
+    border-color: rgb(51 65 85 / 1);
+  }
+  50% {
+    transform: translateY(-4px);
+    border-color: rgb(34 211 238 / 0.45);
+  }
+}
+
+@keyframes dialectica-token-glow {
+  0%,
+  100% {
+    color: rgb(148 163 184);
+    background: rgb(15 23 42 / 0.8);
+  }
+  50% {
+    color: rgb(204 251 241);
+    background: rgb(20 184 166 / 0.16);
+  }
+}
+
+@keyframes dialectica-pipeline-rise {
+  0%,
+  100% {
+    transform: translateY(0);
+    border-color: rgb(51 65 85);
+  }
+  50% {
+    transform: translateY(-6px);
+    border-color: rgb(125 211 252 / 0.52);
+  }
+}
+
+@keyframes dialectica-beam-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes dialectica-bar-fill {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialectica-graph-edge,
+  .dialectica-graph-node,
+  .dialectica-ontology-stage,
+  .dialectica-token,
+  .dialectica-pipeline-card,
+  .dialectica-pipeline-beam::after,
+  .dialectica-benchmark-bar {
+    animation: none;
+  }
 }

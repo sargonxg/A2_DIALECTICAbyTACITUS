@@ -78,6 +78,8 @@ import {
   configurationQualityChecklist,
 } from "@/data/graphops";
 import { buildDynamicOntologyPlan } from "@/lib/dynamicOntology";
+import { getApiUrl } from "@/lib/config";
+import { sampleText as getGraphOpsSampleText } from "@/lib/graphopsExtraction";
 
 const layerCards = [
   {
@@ -122,6 +124,30 @@ function stageClass(stage: string) {
   return stageStyles[stage] ?? "border-border bg-background text-text-secondary";
 }
 
+function graphReasoningHeaders() {
+  const apiKey = typeof window !== "undefined" ? localStorage.getItem("dialectica_api_key") : "";
+  return {
+    "Content-Type": "application/json",
+    ...(apiKey ? { "X-API-Key": apiKey } : {}),
+  };
+}
+
+async function readJsonResponse(response: Response) {
+  try {
+    return (await response.json()) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function responseErrorMessage(payload: Record<string, unknown>, fallback: string) {
+  const detail = payload.detail;
+  if (typeof payload.error === "string") return payload.error;
+  if (typeof detail === "string") return detail;
+  if (detail) return JSON.stringify(detail);
+  return fallback;
+}
+
 const bookStarts = [
   {
     title: "Romeo and Juliet",
@@ -144,6 +170,8 @@ const bookStarts = [
     why: "Institutional conflict, political norms, interests, public narratives.",
   },
 ];
+
+const initialGraphOpsText = getGraphOpsSampleText(precompiledNeeds[0].sampleKey) ?? "";
 
 type QueryState =
   | { status: "idle" }
@@ -273,7 +301,7 @@ export default function GraphOpsConsole() {
   const [workspaceId, setWorkspaceId] = useState("books-romeo-juliet");
   const [caseId, setCaseId] = useState("romeo-juliet-conflict");
   const [objective, setObjective] = useState(precompiledNeeds[0].objective);
-  const [sourceText, setSourceText] = useState("");
+  const [sourceText, setSourceText] = useState(initialGraphOpsText);
   const [benchmarkQuestion, setBenchmarkQuestion] = useState(
     "What does the graph prove, what remains uncertain, and what should Praxis ask next?",
   );
@@ -307,6 +335,14 @@ export default function GraphOpsConsole() {
   const [retrievalPlanState, setRetrievalPlanState] = useState<EngineContractState>({ status: "idle" });
   const [retrievalExecutionState, setRetrievalExecutionState] = useState<EngineContractState>({ status: "idle" });
   const [traceState, setTraceState] = useState<EngineContractState>({ status: "idle" });
+  const [graphReasoningHealthState, setGraphReasoningHealthState] = useState<EngineContractState>({ status: "idle" });
+  const [graphReasoningIngestState, setGraphReasoningIngestState] = useState<EngineContractState>({ status: "idle" });
+  const [graphReasoningSearchState, setGraphReasoningSearchState] = useState<EngineContractState>({ status: "idle" });
+  const [graphReasoningActorState, setGraphReasoningActorState] = useState<EngineContractState>({ status: "idle" });
+  const [graphReasoningRunsState, setGraphReasoningRunsState] = useState<EngineContractState>({ status: "idle" });
+  const [graphReasoningSearchQuery, setGraphReasoningSearchQuery] = useState("Alice");
+  const [graphReasoningActorId, setGraphReasoningActorId] = useState("");
+  const [graphReasoningText, setGraphReasoningText] = useState(initialGraphOpsText);
   const databricksJobsUrl =
     process.env.NEXT_PUBLIC_DATABRICKS_JOBS_URL ||
     "https://dbc-69e04818-40fb.cloud.databricks.com/jobs?o=7474658425841042";
@@ -428,11 +464,167 @@ export default function GraphOpsConsole() {
     }
   }
 
+  async function refreshGraphReasoningHealth() {
+    setGraphReasoningHealthState({ status: "loading" });
+    try {
+      const response = await fetch(`${getApiUrl()}/health`, { cache: "no-store" });
+      const payload = await readJsonResponse(response);
+      if (!response.ok && !payload.checks) {
+        setGraphReasoningHealthState({
+          status: "error",
+          message: responseErrorMessage(payload, "Graph reasoning health check failed."),
+        });
+        return;
+      }
+      setGraphReasoningHealthState({
+        status: "ok",
+        result: { ...payload, httpStatus: response.status },
+      });
+    } catch (error) {
+      setGraphReasoningHealthState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Graph reasoning health check failed.",
+      });
+    }
+  }
+
+  async function refreshGraphReasoningRuns() {
+    setGraphReasoningRunsState({ status: "loading" });
+    try {
+      const params = new URLSearchParams({ workspace_id: workspaceId, limit: "8" });
+      const response = await fetch(`${getApiUrl()}/pipeline/runs?${params.toString()}`, {
+        cache: "no-store",
+        headers: graphReasoningHeaders(),
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) {
+        setGraphReasoningRunsState({
+          status: "error",
+          message: responseErrorMessage(payload, "Pipeline run audit failed."),
+        });
+        return;
+      }
+      setGraphReasoningRunsState({ status: "ok", result: payload });
+    } catch (error) {
+      setGraphReasoningRunsState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Pipeline run audit failed.",
+      });
+    }
+  }
+
+  async function ingestGraphReasoningText() {
+    const text = graphReasoningText.trim();
+    if (!text) {
+      setGraphReasoningIngestState({ status: "error", message: "Add text before sending it to graph reasoning." });
+      return;
+    }
+    setGraphReasoningIngestState({ status: "loading" });
+    try {
+      const response = await fetch(`${getApiUrl()}/ingest/text`, {
+        method: "POST",
+        headers: graphReasoningHeaders(),
+        body: JSON.stringify({
+          workspace_id: workspaceId,
+          source_title: "GraphOps control panel",
+          source_type: "graphops-text",
+          objective,
+          ontology_profile: activeProfile.id,
+          text,
+        }),
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) {
+        setGraphReasoningIngestState({
+          status: "error",
+          message: responseErrorMessage(payload, "Graph reasoning ingestion failed."),
+        });
+        return;
+      }
+      setGraphReasoningIngestState({ status: "ok", result: payload });
+      await refreshGraphReasoningRuns();
+      await searchGraphReasoning(graphReasoningSearchQuery);
+    } catch (error) {
+      setGraphReasoningIngestState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Graph reasoning ingestion failed.",
+      });
+    }
+  }
+
+  async function searchGraphReasoning(queryText = graphReasoningSearchQuery) {
+    const q = queryText.trim();
+    if (!q) {
+      setGraphReasoningSearchState({ status: "error", message: "Enter a search term." });
+      return;
+    }
+    setGraphReasoningSearchState({ status: "loading" });
+    try {
+      const params = new URLSearchParams({ q, workspace_id: workspaceId, limit: "12" });
+      const response = await fetch(`${getApiUrl()}/graph/search?${params.toString()}`, {
+        cache: "no-store",
+        headers: graphReasoningHeaders(),
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) {
+        setGraphReasoningSearchState({
+          status: "error",
+          message: responseErrorMessage(payload, "Graph search failed."),
+        });
+        return;
+      }
+      setGraphReasoningSearchState({ status: "ok", result: payload });
+      const firstActor = ((payload.results as Array<Record<string, unknown>>) ?? []).find(
+        (item) => item.kind === "Actor",
+      );
+      if (firstActor?.id && !graphReasoningActorId) {
+        setGraphReasoningActorId(String(firstActor.id));
+      }
+    } catch (error) {
+      setGraphReasoningSearchState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Graph search failed.",
+      });
+    }
+  }
+
+  async function runActorReasoning(actorId = graphReasoningActorId) {
+    const id = actorId.trim();
+    if (!id) {
+      setGraphReasoningActorState({ status: "error", message: "Select or enter an actor id." });
+      return;
+    }
+    setGraphReasoningActorState({ status: "loading" });
+    try {
+      const params = new URLSearchParams({ workspace_id: workspaceId });
+      const response = await fetch(`${getApiUrl()}/reasoning/actor/${encodeURIComponent(id)}?${params.toString()}`, {
+        cache: "no-store",
+        headers: graphReasoningHeaders(),
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) {
+        setGraphReasoningActorState({
+          status: "error",
+          message: responseErrorMessage(payload, "Actor reasoning failed."),
+        });
+        return;
+      }
+      setGraphReasoningActorState({ status: "ok", result: payload });
+    } catch (error) {
+      setGraphReasoningActorState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Actor reasoning failed.",
+      });
+    }
+  }
+
   useEffect(() => {
     refreshDatabricksJobs();
     refreshDeltaTables();
     refreshLocalRuns();
     refreshWorkbenchStatus();
+    refreshGraphReasoningHealth();
+    refreshGraphReasoningRuns();
   }, []);
 
   async function runDatabricksJob(key: string) {
@@ -489,6 +681,12 @@ export default function GraphOpsConsole() {
     setWorkspaceId(need.workspaceId);
     setCaseId(need.caseId);
     setObjective(need.objective);
+    const text = getGraphOpsSampleText(need.sampleKey);
+    if (text) {
+      setSourceText(text);
+      setGraphReasoningText(text);
+      setGraphReasoningSearchQuery(need.caseId.includes("syria") ? "Syria" : "Alice");
+    }
     const profile = ontologyProfileOptions.find((item) => item.id === need.profile);
     if (profile) setActiveProfileId(profile.id);
   }
@@ -1050,6 +1248,322 @@ export default function GraphOpsConsole() {
           </div>
           <div className="overflow-hidden rounded-lg border border-border bg-background">
             <ForceGraph data={demoGraph} width={520} height={360} />
+          </div>
+        </div>
+      </section>
+
+      <section id="graph-reasoning" className="rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
+              <Brain size={18} className="text-accent" />
+              Graph reasoning control plane
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-text-secondary">
+              The live path writes to Graphiti and Neo4j, mirrors into Cozo, then
+              reads reasoning results from the active workspace. API-key protected
+              actions use the same browser key as the rest of DIALECTICA.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={refreshGraphReasoningHealth}
+              disabled={graphReasoningHealthState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {graphReasoningHealthState.status === "loading" ? "Checking..." : "Check Health"}
+              <Gauge size={15} />
+            </button>
+            <button
+              onClick={refreshGraphReasoningRuns}
+              disabled={graphReasoningRunsState.status === "loading"}
+              className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {graphReasoningRunsState.status === "loading" ? "Loading..." : "Run History"}
+              <Route size={15} />
+            </button>
+            <button
+              onClick={ingestGraphReasoningText}
+              disabled={graphReasoningIngestState.status === "loading"}
+              className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {graphReasoningIngestState.status === "loading" ? "Ingesting..." : "Ingest To Graph"}
+              <Database size={15} />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-[0.85fr_1.05fr_0.95fr_0.95fr]">
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">Backend status</p>
+            <p className="mt-1 break-all text-xs text-text-secondary">{getApiUrl()}</p>
+            {graphReasoningHealthState.status === "idle" ? (
+              <p className="mt-3 text-xs leading-5 text-text-secondary">
+                Health checks report Neo4j, Graphiti mode, and Cozo mirror mode.
+              </p>
+            ) : null}
+            {graphReasoningHealthState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphReasoningHealthState.message}
+              </p>
+            ) : null}
+            {graphReasoningHealthState.status === "ok" ? (
+              <div className="mt-3 space-y-2">
+                <div
+                  className={`rounded-md border px-3 py-2 ${
+                    graphReasoningHealthState.result.status === "healthy"
+                      ? "border-success/30 bg-success/10"
+                      : "border-warning/30 bg-warning/10"
+                  }`}
+                >
+                  <p className="text-[10px] uppercase tracking-wide text-text-secondary">overall</p>
+                  <p className="mt-1 text-sm font-semibold text-text-primary">
+                    {String(graphReasoningHealthState.result.status ?? "unknown")}
+                  </p>
+                </div>
+                {Object.entries(
+                  (graphReasoningHealthState.result.checks as Record<
+                    string,
+                    { status?: string; details?: string }
+                  >) ?? {},
+                )
+                  .filter(
+                    ([name]) =>
+                      name === "neo4j" ||
+                      name === "cloud_sql" ||
+                      name.startsWith("graph_reasoning"),
+                  )
+                  .map(([name, check]) => (
+                    <div key={name} className="rounded-md bg-surface px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold text-text-primary">{name}</p>
+                        <span
+                          className={`text-[11px] font-semibold ${
+                            check.status === "up" ? "text-success" : "text-warning"
+                          }`}
+                        >
+                          {check.status ?? "unknown"}
+                        </span>
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-text-secondary">
+                        {check.details ?? ""}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Graphiti ingestion</p>
+                <p className="mt-1 text-xs text-text-secondary">POST /ingest/text</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="rounded-md bg-surface px-2 py-1 text-[11px] text-text-secondary">
+                  {workspaceId}
+                </span>
+                <span className="rounded-md bg-surface px-2 py-1 text-[11px] text-text-secondary">
+                  {activeProfile.id}
+                </span>
+              </div>
+            </div>
+            <textarea
+              value={graphReasoningText}
+              onChange={(event) => setGraphReasoningText(event.target.value)}
+              className="input-base mt-3 h-32 w-full resize-y"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => setGraphReasoningText(sourceText || graphReasoningText)}
+                className="btn-secondary inline-flex items-center justify-center gap-2"
+              >
+                Use Pasted Text
+                <FileText size={15} />
+              </button>
+              <button
+                onClick={ingestGraphReasoningText}
+                disabled={graphReasoningIngestState.status === "loading"}
+                className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                Write Graphiti + Cozo
+                <Play size={15} />
+              </button>
+            </div>
+            {graphReasoningIngestState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphReasoningIngestState.message}
+              </p>
+            ) : null}
+            {graphReasoningIngestState.status === "ok" ? (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  ["objects", graphReasoningIngestState.result.object_count ?? 0],
+                  ["edges", graphReasoningIngestState.result.edge_count ?? 0],
+                  [
+                    "chunks",
+                    (graphReasoningIngestState.result.pipeline as Record<string, unknown> | undefined)
+                      ?.chunk_count ?? 0,
+                  ],
+                  ["duplicate", graphReasoningIngestState.result.duplicate ? "yes" : "no"],
+                ].map(([label, value]) => (
+                  <div key={String(label)} className="rounded-md bg-surface px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-text-secondary">{String(label)}</p>
+                    <p className="mt-1 text-sm font-semibold text-text-primary">{String(value)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            <p className="text-sm font-semibold text-text-primary">Search and reason</p>
+            <p className="mt-1 text-xs text-text-secondary">GET /graph/search and /reasoning/actor</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <input
+                value={graphReasoningSearchQuery}
+                onChange={(event) => setGraphReasoningSearchQuery(event.target.value)}
+                className="input-base w-full"
+                placeholder="Search actors, claims, evidence"
+              />
+              <button
+                onClick={() => searchGraphReasoning()}
+                disabled={graphReasoningSearchState.status === "loading"}
+                className="btn-secondary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                Search
+                <Network size={15} />
+              </button>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <input
+                value={graphReasoningActorId}
+                onChange={(event) => setGraphReasoningActorId(event.target.value)}
+                className="input-base w-full font-mono text-xs"
+                placeholder="actor id"
+              />
+              <button
+                onClick={() => runActorReasoning()}
+                disabled={graphReasoningActorState.status === "loading"}
+                className="btn-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                Reason
+                <Brain size={15} />
+              </button>
+            </div>
+
+            {graphReasoningSearchState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphReasoningSearchState.message}
+              </p>
+            ) : null}
+            {graphReasoningSearchState.status === "ok" ? (
+              <div className="mt-3 max-h-48 space-y-2 overflow-auto">
+                {((graphReasoningSearchState.result.results as Array<Record<string, unknown>>) ?? []).map((item) => (
+                  <button
+                    key={String(item.id)}
+                    onClick={() => {
+                      const id = String(item.id ?? "");
+                      setGraphReasoningActorId(id);
+                      if (item.kind === "Actor") void runActorReasoning(id);
+                    }}
+                    className="w-full rounded-md bg-surface px-3 py-2 text-left hover:border-accent hover:outline hover:outline-1 hover:outline-accent"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold text-text-primary">
+                        {String(item.name ?? item.text ?? item.description ?? item.id)}
+                      </p>
+                      <span className="text-[10px] uppercase tracking-wide text-accent">{String(item.kind)}</span>
+                    </div>
+                    <p className="mt-1 truncate font-mono text-[11px] text-text-secondary">{String(item.id)}</p>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {graphReasoningActorState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphReasoningActorState.message}
+              </p>
+            ) : null}
+            {graphReasoningActorState.status === "ok" ? (
+              <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-surface p-3 text-[11px] leading-5 text-text-secondary">
+                <code>{JSON.stringify(graphReasoningActorState.result, null, 2)}</code>
+              </pre>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Cloud SQL run audit</p>
+                <p className="mt-1 text-xs text-text-secondary">GET /pipeline/runs</p>
+              </div>
+              <button
+                onClick={refreshGraphReasoningRuns}
+                disabled={graphReasoningRunsState.status === "loading"}
+                className="btn-secondary inline-flex items-center justify-center gap-2 px-3 py-2 text-xs disabled:opacity-60"
+              >
+                Refresh
+                <Route size={14} />
+              </button>
+            </div>
+            {graphReasoningRunsState.status === "idle" ? (
+              <p className="mt-3 text-xs leading-5 text-text-secondary">
+                Pipeline runs preserve objective, ontology profile, chunks, graph counts, and failures.
+              </p>
+            ) : null}
+            {graphReasoningRunsState.status === "error" ? (
+              <p className="mt-3 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {graphReasoningRunsState.message}
+              </p>
+            ) : null}
+            {graphReasoningRunsState.status === "ok" ? (
+              <div className="mt-3 max-h-[26rem] space-y-2 overflow-auto">
+                {((graphReasoningRunsState.result.runs as Array<Record<string, unknown>>) ?? [])
+                  .length ? (
+                  ((graphReasoningRunsState.result.runs as Array<Record<string, unknown>>) ?? []).map(
+                    (run) => (
+                      <div key={String(run.id)} className="rounded-md bg-surface px-3 py-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-text-primary">
+                              {String(run.source_title || run.id)}
+                            </p>
+                            <p className="mt-1 truncate font-mono text-[11px] text-text-secondary">
+                              {String(run.id)}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                              run.status === "completed"
+                                ? "bg-success/10 text-success"
+                                : run.status === "failed"
+                                  ? "bg-danger/10 text-danger"
+                                  : "bg-warning/10 text-warning"
+                            }`}
+                          >
+                            {String(run.status ?? "unknown")}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] text-text-secondary">
+                          <span>{String(run.chunk_count ?? 0)} chunks</span>
+                          <span>{String(run.object_count ?? 0)} objects</span>
+                          <span>{String(run.edge_count ?? 0)} edges</span>
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-text-secondary">
+                          {String(run.objective ?? objective)}
+                        </p>
+                      </div>
+                    ),
+                  )
+                ) : (
+                  <p className="rounded-md bg-surface px-3 py-2 text-xs text-text-secondary">
+                    No durable graph reasoning runs found for this workspace.
+                  </p>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -3468,10 +3982,10 @@ export default function GraphOpsConsole() {
             benchmark labs can call.
           </p>
           <Link
-            href="/api/graphops/manifest"
+            href="/api/graphops/capabilities"
             className="mt-4 inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs text-text-secondary hover:text-accent"
           >
-            Open GraphOps manifest
+            Open GraphOps capabilities
             <ArrowRight size={13} />
           </Link>
           <div className="mt-4 space-y-3">

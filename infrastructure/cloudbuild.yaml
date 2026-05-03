@@ -44,7 +44,7 @@ steps:
       - '--no-allow-unauthenticated'
 
 substitutions:
-  _REGION: us-east1
+  _REGION: us-central1
   _REGISTRY: ${_REGION}-docker.pkg.dev/${PROJECT_ID}/dialectica
 
 images:

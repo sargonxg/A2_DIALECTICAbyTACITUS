@@ -25,11 +25,11 @@ resource "google_cloud_run_v2_service" "api" {
 
       resources {
         limits = {
-          cpu    = "2"
-          memory = "2Gi"
+          cpu    = "1"
+          memory = "1Gi"
         }
         cpu_idle          = true
-        startup_cpu_boost = true
+        startup_cpu_boost = false
       }
 
       env {

@@ -19,6 +19,7 @@ COPY packages/graph packages/graph
 COPY packages/extraction packages/extraction
 COPY packages/reasoning packages/reasoning
 COPY packages/api packages/api
+COPY app app
 
 # Install WITHOUT optional heavy deps (torch, pykeen, gliner excluded)
 RUN uv sync --all-packages --no-dev --no-editable
@@ -37,6 +38,7 @@ RUN useradd -m -u 1000 dialectica
 COPY --from=builder /build/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+COPY app /app/app
 
 # Copy seed data for demo
 COPY data /app/data
@@ -47,7 +49,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-CMD ["uvicorn", "dialectica_api.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8080", \
-     "--workers", "2"]
+CMD ["sh", "-c", "python -m uvicorn dialectica_api.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers ${WEB_CONCURRENCY:-2}"]

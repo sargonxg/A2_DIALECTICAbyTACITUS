@@ -80,9 +80,19 @@ async def health_check(
     graph_check = await _check_graph(graph_client, settings)
     checks["neo4j" if settings.graph_backend == "neo4j" else settings.graph_backend] = graph_check
 
-    # Check redis
-    redis_check = await _check_redis()
+    # Check Redis only when the service is configured to use it.
+    redis_check = (
+        await _check_redis()
+        if settings.rate_limit_backend == "redis"
+        else ServiceCheck(service="redis", status="up", details="not_required")
+    )
     checks["redis"] = redis_check
+
+    db_check = await _check_database()
+    checks["cloud_sql"] = db_check
+
+    graph_reasoning_checks = await _check_graph_reasoning()
+    checks.update(graph_reasoning_checks)
 
     # Determine overall status
     all_checks = list(checks.values())
@@ -122,7 +132,11 @@ async def readiness_check(
     graph_check = await _check_graph(graph_client, settings)
     checks.append(graph_check)
 
-    redis_check = await _check_redis()
+    redis_check = (
+        await _check_redis()
+        if settings.rate_limit_backend == "redis"
+        else ServiceCheck(service="redis", status="up", details="not_required")
+    )
     checks.append(redis_check)
 
     if graph_check.status == "up":
@@ -144,6 +158,7 @@ async def deep_health_check(
 
     checks.append(await _check_graph(graph_client, settings))
     checks.append(await _check_redis())
+    checks.extend((await _check_graph_reasoning()).values())
     checks.append(await _check_vertex_ai())
     checks.append(await _check_pubsub())
     checks.append(await _check_gcs())
@@ -207,6 +222,63 @@ async def _check_redis() -> ServiceCheck:
             latency_ms=round(latency, 1),
             details=str(e)[:100],
         )
+
+
+async def _check_database() -> ServiceCheck:
+    start = time.time()
+    try:
+        from sqlalchemy import text
+
+        from dialectica_api.database.engine import get_engine
+
+        async with get_engine().connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        latency = (time.time() - start) * 1000
+        url = os.getenv("DATABASE_URL", "")
+        mode = "cloud_sql" if "cloudsql" in url or "postgresql" in url else "sqlite"
+        return ServiceCheck(
+            service="cloud_sql",
+            status="up",
+            latency_ms=round(latency, 1),
+            details=mode,
+        )
+    except Exception as exc:
+        latency = (time.time() - start) * 1000
+        return ServiceCheck(
+            service="cloud_sql",
+            status="down",
+            latency_ms=round(latency, 1),
+            details=str(exc)[:100],
+        )
+
+
+async def _check_graph_reasoning() -> dict[str, ServiceCheck]:
+    """Check optional graph reasoning subsystem dependencies."""
+    start = time.time()
+    try:
+        from dialectica_api.routers.graph_reasoning import get_graph_reasoning_service
+
+        health = await get_graph_reasoning_service().health()
+        latency = (time.time() - start) * 1000
+        return {
+            f"graph_reasoning:{name}": ServiceCheck(
+                service=f"graph_reasoning:{name}",
+                status=check.status,
+                latency_ms=round(latency, 1),
+                details=(f"{check.mode} {check.details}").strip()[:100],
+            )
+            for name, check in health.checks.items()
+        }
+    except Exception as exc:
+        latency = (time.time() - start) * 1000
+        return {
+            "graph_reasoning": ServiceCheck(
+                service="graph_reasoning",
+                status="down",
+                latency_ms=round(latency, 1),
+                details=str(exc)[:100],
+            )
+        }
 
 
 async def _check_vertex_ai() -> ServiceCheck:

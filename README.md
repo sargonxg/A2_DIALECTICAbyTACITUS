@@ -82,7 +82,53 @@ uv run dialectica ingest data/sample_docs \
   --dry-run
 ```
 
-It writes JSONL primitives to `.dialectica/runs/latest.jsonl` and preserves:
+### Optional Graph Reasoning Subsystem
+
+The additive `app/graph_reasoning/` subsystem exposes unversioned API routes for
+Neo4j-backed graph ingestion, Graphiti-style temporal provenance, a Cozo-style
+reasoning mirror, and Cloud SQL pipeline audit history.
+
+```bash
+uv run uvicorn dialectica_api.main:app --host 0.0.0.0 --port 8080
+
+curl -X POST http://localhost:8080/ingest/text \
+  -H "X-API-Key: dev-admin-key-change-in-production" \
+  -H "Content-Type: application/json" \
+  -d '{"workspace_id":"demo","source_title":"note","objective":"Map commitments and leverage","ontology_profile":"human-friction","text":"Alice will meet Bob. Bob must accept the deadline."}'
+
+curl -H "X-API-Key: dev-admin-key-change-in-production" \
+  "http://localhost:8080/graph/search?q=Alice&workspace_id=demo"
+
+curl -H "X-API-Key: dev-admin-key-change-in-production" \
+  "http://localhost:8080/pipeline/runs?workspace_id=demo"
+```
+
+Routes:
+
+- `POST /ingest/text`
+- `GET /graph/actor/{id}`
+- `GET /graph/search?q=`
+- `GET /reasoning/actor/{id}`
+- `GET /reasoning/constraints/{id}`
+- `GET /reasoning/leverage/{id}`
+- `GET /reasoning/timeline`
+- `GET /reasoning/changed-since`
+- `GET /reasoning/provenance/{id}`
+- `GET /pipeline/runs`
+- `GET /pipeline/runs/{run_id}`
+
+Neo4j remains the source of truth. Cozo is a rebuildable reasoning mirror.
+Cloud SQL stores the durable ingestion ledger: run state, chunk plan, objective,
+dynamic ontology profile, graph object mirror, graph edge mirror, and failures.
+`graphiti-core` and `cozo-embedded` are installed for the API package; native
+Graphiti still requires `GRAPHITI_USE_NATIVE=true`, reachable Neo4j, and the
+LLM/embedder credentials used by Graphiti.
+
+Databricks is optional. The API chunks and ingests text directly without
+Databricks, while preserving enough Cloud SQL/Neo4j metadata for later
+lakehouse replay or batch enrichment.
+
+The CLI writes JSONL primitives to `.dialectica/runs/latest.jsonl` and preserves:
 `workspace_id`, `case_id`, `episode_id`, `ontology_version`, `source_id`,
 `extraction_run_id`, `confidence`, `provenance_span`, `valid_from`, and
 `valid_to` where applicable.
@@ -118,14 +164,30 @@ npm run dev
 **Key pages:**
 | Route | Description |
 |-------|-------------|
-| `/` | Marketing landing page |
-| `/demo` | Paste-and-see demo (works offline with fallback data) |
+| `/` | Product landing page for the live graph/backbone narrative |
+| `/situation-demo` | Main demo page with Syria, Gutenberg/book graph, dynamic ontology, D3 layer graph, source dossier, and PRAXIS handoff |
+| `/graphops` | Operator console for ingestion, ontology controls, Databricks hooks, graph writes, retrieval plans, and benchmarks |
+| `/admin/graph-health` | Graph/API health checks for demo readiness |
+| `/demo` | Legacy paste-and-see demo |
 | `/demo/investor` | 5-step guided investor walkthrough |
 | `/workspaces` | Workspace list |
 | `/workspaces/[id]` | Workspace detail with Graph, Entities, Timeline, Analysis, Query tabs |
 | `/theory` | 15 theory frameworks browser |
 | `/developers` | API documentation and playground |
 | `/login` / `/signup` | Authentication |
+
+### Graphify Audit
+
+The graph reasoning subsystem includes a committed graphify baseline:
+
+- `app/graph_reasoning/graphify-out/GRAPH_REPORT.md`
+- `app/graph_reasoning/graphify-out/graph.html`
+- `app/graph_reasoning/graphify-out/graph.json`
+
+Use it to inspect the subsystem structure before broad refactors. The artifact
+is intentionally scoped to `app/graph_reasoning`; the full repo currently has
+hundreds of supported files and should be graphified by subdomain for useful
+review.
 
 ---
 
@@ -151,7 +213,8 @@ This creates three secrets:
 
 ```bash
 # One-command deploy: build, push, deploy, verify
-bash infrastructure/scripts/deploy-cloudrun.sh YOUR_GCP_PROJECT_ID us-east1
+CLOUD_SQL_CONNECTION_NAME=YOUR_GCP_PROJECT_ID:us-central1:dialectica \
+  bash infrastructure/scripts/deploy-cloudrun.sh YOUR_GCP_PROJECT_ID us-central1
 ```
 
 **What this script does:**
@@ -160,8 +223,9 @@ bash infrastructure/scripts/deploy-cloudrun.sh YOUR_GCP_PROJECT_ID us-east1
 3. Builds a slim Docker image (~400MB, no torch/gliner) via Cloud Build
 4. Creates an admin API key secret (random 64-char hex)
 5. Deploys to Cloud Run with:
-   - 1-4 instances, 2 vCPU, 2GB RAM
+   - 0-1 instances, 1 vCPU, 1GB RAM, CPU throttled while idle
    - Neo4j credentials injected from Secret Manager
+   - Cloud SQL attached when `CLOUD_SQL_CONNECTION_NAME` is set
    - Public access (unauthenticated — API key auth handled by the app)
 6. Prints the API URL and verifies the health endpoint
 
@@ -169,6 +233,8 @@ bash infrastructure/scripts/deploy-cloudrun.sh YOUR_GCP_PROJECT_ID us-east1
 | Variable | Value | Source |
 |----------|-------|--------|
 | `GRAPH_BACKEND` | `neo4j` | Set in deploy script |
+| `DATABASE_URL` | `postgresql+asyncpg://...cloudsql...` | Secret Manager |
+| `CLOUD_SQL_CONNECTION_NAME` | `PROJECT:REGION:INSTANCE` | Deploy environment |
 | `NEO4J_URI` | `neo4j+s://...` | Secret Manager |
 | `NEO4J_USER` | `neo4j` | Secret Manager |
 | `NEO4J_PASSWORD` | `***` | Secret Manager |
@@ -584,6 +650,7 @@ See `.env.example` for the complete list. Key variables:
 | `NEO4J_USER` | `neo4j` | Neo4j username |
 | `NEO4J_PASSWORD` | `dialectica-dev` | Neo4j password |
 | `NEO4J_DATABASE` | `neo4j` | Neo4j database name |
+| `NEO4J_CONNECTION_TIMEOUT` | `5` | Neo4j connection timeout in seconds |
 | `ADMIN_API_KEY` | `dev-admin-key-...` | Admin API key (generate random for production) |
 | `ENVIRONMENT` | `development` | `development` or `production` |
 | `RATE_LIMIT_BACKEND` | `memory` | `memory` (dev) or `redis` (production) |
@@ -592,6 +659,14 @@ See `.env.example` for the complete list. Key variables:
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `GCP_PROJECT_ID` | `local-project` | GCP project for Vertex AI, Pub/Sub, etc. |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8080` | Backend API URL for the frontend |
+| `GRAPHITI_USE_NATIVE` | `false` | Use native `graphiti-core` when installed; otherwise use Neo4j compatibility mode |
+| `OPENAI_API_KEY` | empty | Required by Graphiti's default LLM/embedder clients when native mode is enabled |
+| `COZO_USE_EMBEDDED` | `false` | Use `cozo-embedded` when installed; otherwise use in-process mirror |
+| `COZO_ENGINE` | `mem` | Cozo embedded engine, usually `mem` for Cloud Run-safe cache mode |
+| `COZO_PATH` | empty | Cozo embedded path for local dev engines that need one |
+| `COZO_OPTIONS` | `{}` | Cozo embedded JSON options |
+| `COZO_SNAPSHOT_PATH` | empty | Optional local dev snapshot path for the reasoning mirror |
+| `COZO_GCS_BUCKET` | empty | Reserved for Cloud Run-safe mirror snapshot handoff |
 
 ---
 

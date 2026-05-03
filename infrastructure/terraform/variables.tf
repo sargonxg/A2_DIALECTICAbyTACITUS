@@ -8,7 +8,7 @@ variable "project_id" {
 variable "region" {
   description = "Primary GCP region for deployment"
   type        = string
-  default     = "us-east1"
+  default     = "us-central1"
 }
 
 variable "environment" {
@@ -31,25 +31,25 @@ variable "image_tag" {
 variable "api_min_instances" {
   description = "Minimum Cloud Run instances for API"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "api_max_instances" {
   description = "Maximum Cloud Run instances for API"
   type        = number
-  default     = 10
+  default     = 1
 }
 
 variable "web_min_instances" {
   description = "Minimum Cloud Run instances for Web"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "web_max_instances" {
   description = "Maximum Cloud Run instances for Web"
   type        = number
-  default     = 5
+  default     = 1
 }
 
 variable "spanner_processing_units" {

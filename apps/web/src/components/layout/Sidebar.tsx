@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useWorkspaceStore } from "@/hooks/useWorkspace";
 import {
+  Home,
   LayoutDashboard,
   MessageSquare,
   GitCompare,
@@ -47,7 +48,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "GRAPHOPS",
     items: [
+      { label: "Landing", href: "/", icon: Home },
       { label: "GraphOps", href: "/graphops", icon: Network },
+      { label: "Situation Demo", href: "/situation-demo", icon: Globe },
       { label: "Workspaces", href: "/workspaces", icon: LayoutDashboard },
       { label: "Ask", href: "/ask", icon: MessageSquare },
       { label: "Graph Explorer", href: "/admin/graph", icon: Database },

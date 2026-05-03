@@ -1,9 +1,19 @@
 """Tests for database models — table creation, CRUD, FK constraints."""
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from dialectica_api.database.models import User, WorkspaceMeta, ApiKeyRecord, ExtractionJob
+from dialectica_api.database.models import (
+    ApiKeyRecord,
+    ExtractionJob,
+    GraphEdgeRecord,
+    GraphObjectRecord,
+    OntologyProfileRecord,
+    PipelineRun,
+    SourceChunkRecord,
+    User,
+    WorkspaceMeta,
+)
 
 
 @pytest.fixture
@@ -81,3 +91,67 @@ async def test_extraction_job_insert(session: AsyncSession):
     assert job.id is not None
     assert job.status == "pending"
     assert job.completed_at is None
+
+
+@pytest.mark.asyncio
+async def test_pipeline_audit_models_insert(session: AsyncSession):
+    run = PipelineRun(
+        id="episode_1",
+        workspace_id="ws",
+        tenant_id="tenant",
+        source_id="source_1",
+        source_hash="hash",
+        source_title="fixture",
+        objective="Understand the conflict",
+        ontology_profile="human-friction",
+        pipeline={"stages": ["source_cleaning", "neo4j_upsert"]},
+    )
+    session.add(run)
+    session.add(
+        SourceChunkRecord(
+            id="chunk_1",
+            run_id=run.id,
+            workspace_id="ws",
+            source_id="source_1",
+            ordinal=0,
+            label="Chunk 1",
+            text="Alice must meet Bob.",
+        )
+    )
+    session.add(
+        OntologyProfileRecord(
+            id="episode_1:ontology",
+            run_id=run.id,
+            workspace_id="ws",
+            profile_id="human-friction",
+            plan={"required_nodes": ["Actor", "Claim"]},
+        )
+    )
+    session.add(
+        GraphObjectRecord(
+            id="actor_1",
+            run_id=run.id,
+            workspace_id="ws",
+            kind="Actor",
+            source_ids=["source_1"],
+            payload={"name": "Alice"},
+        )
+    )
+    session.add(
+        GraphEdgeRecord(
+            id="edge_1",
+            run_id=run.id,
+            workspace_id="ws",
+            kind="MENTIONS",
+            source_id="actor_1",
+            target_id="claim_1",
+            source_ids=["source_1"],
+            payload={"kind": "MENTIONS"},
+        )
+    )
+    await session.commit()
+    await session.refresh(run)
+
+    assert run.id == "episode_1"
+    assert run.status == "running"
+    assert run.pipeline["stages"]

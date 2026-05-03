@@ -28,6 +28,7 @@ from dialectica_api.routers import (
     entities,
     extraction,
     graph,
+    graph_reasoning,
     health,
     integration,
     reasoning,
@@ -98,6 +99,7 @@ def create_app() -> FastAPI:
     app.include_router(relationships.router)
     app.include_router(extraction.router)
     app.include_router(graph.router)
+    app.include_router(graph_reasoning.router)
     app.include_router(reasoning.router)
     app.include_router(theory.router)
     app.include_router(admin.router)
@@ -133,10 +135,15 @@ def create_app() -> FastAPI:
     @app.on_event("shutdown")
     async def shutdown() -> None:
         from dialectica_api.deps import _graph_client_instance
+        from dialectica_api.routers.graph_reasoning import _service as graph_reasoning_service
 
         if _graph_client_instance is not None:
             with contextlib.suppress(Exception):
                 await _graph_client_instance.close()
+
+        if graph_reasoning_service is not None:
+            with contextlib.suppress(Exception):
+                await graph_reasoning_service.close()
 
         # Clean up rate-limit backend
         from dialectica_api.middleware.rate_limit import get_rate_limit_backend

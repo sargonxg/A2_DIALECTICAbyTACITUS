@@ -409,6 +409,15 @@ export const liveDeltaTables = [
 
 export const sourcePacks = [
   {
+    id: "syria-transition-demo",
+    name: "Syria Transition Demo",
+    sources: "UN briefings, Security Council forecast, CFR conflict tracker, humanitarian reporting",
+    profile: "policy-analysis + field-intelligence",
+    nextRun: "Syria transition graph reasoning demo",
+    why:
+      "Real conflict-intelligence case for actors, transitional authority, SDF negotiations, external leverage, humanitarian constraints, sanctions, and ISIS resurgence risk.",
+  },
+  {
     id: "books-complex-conflict-lab",
     name: "Complex Book Conflict Lab",
     sources: "War and Peace, Crime and Punishment, The Federalist Papers",
@@ -447,6 +456,18 @@ export const sourcePacks = [
 ];
 
 export const precompiledNeeds = [
+  {
+    id: "syria-transition-live-brief",
+    label: "Syria transition live brief",
+    objective:
+      "Map Syria's transition as a source-grounded graph: actors, claims, constraints, leverage, events, humanitarian risks, external patrons, and unresolved verification questions.",
+    profile: "policy-analysis",
+    sampleKey: "syria-transition-2026",
+    caseId: "syria-transition-2026",
+    workspaceId: "syria-transition-demo",
+    defaultQuestion:
+      "Which actors have leverage over Syria's transition, what constraints block stabilization, and what must be verified next?",
+  },
   {
     id: "book-conflict-resolution-lens",
     label: "Book conflict-resolution lens",
@@ -661,6 +682,16 @@ export const nextSprintPriorities = [
 
 export const workspaceProjectTemplates = [
   {
+    id: "syria-transition-desk",
+    name: "Syria Transition Desk",
+    workspacePrefix: "syria",
+    description: "Transition, security, humanitarian, sanctions, and external-leverage reporting structured as an operational graph.",
+    defaultObjective:
+      "Track Syria's transition as a live graph of actors, claims, constraints, leverage, events, sources, evidence, and verification gaps.",
+    recommendedProfile: "policy-analysis",
+    sourceExamples: "UN briefings, Security Council reports, humanitarian updates, conflict trackers, diplomatic statements",
+  },
+  {
     id: "book-conflict-lab",
     name: "Book Conflict Lab",
     workspacePrefix: "books",
@@ -868,6 +899,18 @@ export const benchmarkBlockCatalog = [
 ];
 
 export const pipelineConfigurationExamples = [
+  {
+    id: "syria-transition-recording-demo",
+    title: "Syria Transition Recording Pipeline",
+    user: "Policy analyst preparing a conflict-intelligence demo",
+    objective:
+      "Show how live Syria transition reporting becomes a temporal, provenance-preserving graph with actor leverage, constraints, timelines, and verification queues.",
+    sources: ["UN briefings", "Security Council forecast", "humanitarian updates", "conflict tracker", "diplomatic statements"],
+    ontologyFocus: ["Actor", "Claim", "Constraint", "Leverage", "Event", "Narrative", "Source", "Evidence"],
+    episodes: ["post-Assad transition", "SDF integration talks", "intercommunal violence", "humanitarian access", "external leverage", "counter-ISIS risk"],
+    graphOutputs: ["actor leverage map", "constraint register", "timeline", "provenance trace", "verification queue"],
+    benchmark: "Provenance fidelity + leverage precision + next-question usefulness",
+  },
   {
     id: "labor-union-mediation-live",
     title: "Labor Union Mediation Pipeline",

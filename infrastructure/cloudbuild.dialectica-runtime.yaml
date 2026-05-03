@@ -1,0 +1,26 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - packages/api/Dockerfile.cloudrun
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/dialectica/api:latest
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - apps/web/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/dialectica/web:latest
+      - apps/web
+
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/dialectica/api:latest
+  - us-central1-docker.pkg.dev/$PROJECT_ID/dialectica/web:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8

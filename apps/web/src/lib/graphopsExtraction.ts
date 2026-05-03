@@ -71,7 +71,7 @@ export type GraphOpsExtractionResult = {
 };
 
 const ACTOR_PATTERN =
-  /\b(?:Alex|Sam|Romeo|Juliet|Capulet|Montague|Tybalt|Mercutio|Nurse|Friar Laurence|Prince|State A|State B|Mayor|Agency|Finance Office|Mediator|Union|Ministry)\b/g;
+  /\b(?:Alex|Sam|Romeo|Juliet|Capulet|Montague|Tybalt|Mercutio|Nurse|Friar Laurence|Prince|State A|State B|Mayor|Agency|Finance Office|Mediator|Union|Ministry|Syria|Syrian Government|Syrian Interim Government|Ahmed al-Sharaa|SDF|Kurdish-led SDF|Turkey|Israel|United Nations|OCHA|United States|European states|Russia|Iran|ISIS|Druze communities|humanitarian agencies)\b/g;
 const CAPITALIZED_ACTOR_PATTERN =
   /\b[A-Z][a-z]+(?:\s+(?:[A-Z][a-z]+|[A-Z]{2,}|&|and)){0,3}\b/g;
 const COMMITMENT_PATTERN =
@@ -86,6 +86,13 @@ const TRUST_PATTERN = /\b(trust|distrust|confidence|safety|betray|secret|guarant
 const LEVERAGE_PATTERN = /\b(power|leverage|capacity|funds|authority|control|banished|penalty)\b/i;
 
 const SAMPLE_TEXTS: Record<string, string> = {
+  "syria-transition-2026":
+    "Syria transition demo, May 2026. The Syrian Interim Government under Ahmed al-Sharaa is trying to consolidate national authority while preserving international support for a credible, inclusive political transition. " +
+    "Kurdish-led SDF forces and northeast authorities remain central to negotiations over security integration, detention facilities, oil fields, local autonomy, and the future administration of camps and prisons. " +
+    "Turkey has leverage through border security concerns, counter-PKK pressure, and influence over allied Syrian factions. Israel has leverage through military pressure, security demands in southern Syria, and control of escalation around the Golan area. " +
+    "The United Nations, OCHA, and humanitarian agencies emphasize displacement, humanitarian access, camp security, accountability, civil society participation, and protection for women and girls. " +
+    "Russia and Iran remain external actors with military, diplomatic, and legacy-network interests, while the United States and European states can shape sanctions relief, recognition, stabilization funding, and counterterrorism cooperation. " +
+    "Key constraints include intercommunal violence, detention camp instability, foreign military presence, sanctions, war-crimes accountability, armed faction fragmentation, and the need to prevent ISIS resurgence.",
   "romeo-juliet-conflict":
     "Romeo is a Montague and Juliet is a Capulet. Their families are opposed in a public feud. " +
     "After Tybalt kills Mercutio, Romeo kills Tybalt and the Prince banishes Romeo from Verona. " +

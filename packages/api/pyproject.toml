@@ -33,6 +33,8 @@ dependencies = [
     "alembic>=1.13",
     "python-ulid>=2.0",
     "bcrypt>=4.1",
+    "graphiti-core>=0.29.0",
+    "cozo-embedded>=0.7.6",
 ]
 
 [build-system]
