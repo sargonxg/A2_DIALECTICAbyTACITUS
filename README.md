@@ -120,6 +120,7 @@ npm run dev
 |-------|-------------|
 | `/` | Marketing landing page |
 | `/demo` | Paste-and-see demo (works offline with fallback data) |
+| `/demo/[scenarioId]/reasoning` | Deterministic reasoning theatre for Romeo, War and Peace, and Syria. Shows curated questions, LLM comparison fixtures, graph citation paths, trace JSON, counterfactual controls, and structural-similarity panels. |
 | `/demo/investor` | 5-step guided investor walkthrough |
 | `/workspaces` | Workspace list |
 | `/workspaces/[id]` | Workspace detail with Graph, Entities, Timeline, Analysis, Query tabs |
@@ -149,6 +150,19 @@ curl -N http://localhost:8080/v1/workspaces/$WS/extractions/$JOB/stream
 ```
 
 Or use the UI tabs at `/workspaces/[id]/ingest` (Project Gutenberg / Upload / Paste).
+
+### Demo experience
+
+The May demo track is split into two theatres:
+
+1. `/demo` builds the graph from a live SSE ingestion stream when the API is available, and from labelled captured replays when it is not.
+2. `/demo/romeo/reasoning`, `/demo/war_peace/reasoning`, and `/demo/syria/reasoning` show the deterministic reasoning layer over the built graph.
+
+The reasoning theatre currently ships with the curated 23-question library from
+`data/seed/reasoning_library.json` and deterministic frontend fixtures that match
+the planned `/v1/workspaces/{ws}/reason/curated` result shape. The next backend
+integration step is wiring those cards to `packages/reasoning/.../query_engine.py`
+and adding the curated, counterfactual, and similarity endpoints.
 
 ---
 

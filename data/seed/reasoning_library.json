@@ -1,0 +1,260 @@
+{
+  "version": "may-prompt-02-v1",
+  "generated_at": "2026-05-03",
+  "contract": "Curated questions for /demo/{scenarioId}/reasoning. The frontend fixture mirrors this metadata and adds traced answer fixtures until the backend /reason/curated endpoint is wired.",
+  "questions": [
+    {
+      "id": "R-1",
+      "scenario_id": "romeo",
+      "text": "At what Glasl stage does this conflict pivot from objectifiable to intractable, and on which event?",
+      "stake": "Mediators need to know whether they are still facing loss-of-face dynamics or public threat dynamics.",
+      "academic_anchor": "Glasl, F. (1999). Confronting Conflict.",
+      "primary_framework": "glasl",
+      "symbolic_rules": ["escalation.compute_glasl_stage", "causal_analysis.find_pivot_event"],
+      "counterfactual_supported": true,
+      "similarity_supported": false
+    },
+    {
+      "id": "R-2",
+      "scenario_id": "romeo",
+      "text": "Who is the structural spoiler? Quantify by betweenness centrality on de-escalation paths.",
+      "stake": "Spoilers are the first actor class a peace process has to identify.",
+      "academic_anchor": "Stedman (1997), Spoiler Problems in Peace Processes.",
+      "primary_framework": "network_metrics",
+      "symbolic_rules": ["network_metrics.compute_betweenness", "pattern_matching.identify_spoilers"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "R-3",
+      "scenario_id": "romeo",
+      "text": "Why does Friar Lawrence's Track-II mediation fail? Diagnose with French/Raven.",
+      "stake": "Track-II mediators often have expertise and trust but no enforceable authority.",
+      "academic_anchor": "French & Raven (1959), The Bases of Social Power.",
+      "primary_framework": "french_raven",
+      "symbolic_rules": ["power_analysis.compute_power_distribution", "pattern_matching.match_mediator_template"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "R-4",
+      "scenario_id": "romeo",
+      "text": "If Mercutio survives Act III Scene 1, project the conflict trajectory.",
+      "stake": "Counterfactual discipline is the daily work of intelligence and mediation analysis.",
+      "academic_anchor": "Pearl (2009), Causality.",
+      "primary_framework": "pearl_causal",
+      "symbolic_rules": ["causal_analysis.do_intervention", "escalation.project_trajectory"],
+      "counterfactual_supported": true,
+      "similarity_supported": false
+    },
+    {
+      "id": "R-5",
+      "scenario_id": "romeo",
+      "text": "Is the conflict ripe for resolution at the moment of the secret marriage? Compute MHS and MEO.",
+      "stake": "Mistimed mediation burns credibility before the conflict reaches a hurting stalemate.",
+      "academic_anchor": "Zartman (1989), Ripe for Resolution.",
+      "primary_framework": "zartman",
+      "symbolic_rules": ["ripeness.compute_mhs_meo"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "R-6",
+      "scenario_id": "romeo",
+      "text": "Which real-world conflicts share this actor-event-norm topology?",
+      "stake": "Structured comparison turns analyst memory into computable pattern recognition.",
+      "academic_anchor": "George & Bennett (2005), Case Studies and Theory Development.",
+      "primary_framework": "pattern_matching",
+      "symbolic_rules": ["pattern_matching.compute_topology_signature", "community.find_similar_workspaces"],
+      "counterfactual_supported": false,
+      "similarity_supported": true
+    },
+    {
+      "id": "R-7",
+      "scenario_id": "romeo",
+      "text": "What unstated interest does Lord Capulet hold that the play never makes explicit?",
+      "stake": "Fisher/Ury negotiation depends on detecting interests behind stated positions.",
+      "academic_anchor": "Fisher & Ury (1981), Getting to Yes.",
+      "primary_framework": "fisher_ury",
+      "symbolic_rules": ["pattern_matching.infer_unstated_interests"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "R-8",
+      "scenario_id": "romeo",
+      "text": "What intervention would Lederach's conflict transformation framework recommend, and at what timing?",
+      "stake": "Transformation requires sequencing personal, relational, structural, and cultural work.",
+      "academic_anchor": "Lederach (2003), The Little Book of Conflict Transformation.",
+      "primary_framework": "lederach",
+      "symbolic_rules": ["pattern_matching.match_lederach_levels"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "W-1",
+      "scenario_id": "war_peace",
+      "text": "How much variance in the 1812 outcome is explained by individual agency vs structural forces?",
+      "stake": "This operationalizes Tolstoy's great-man critique as a testable causal decomposition.",
+      "academic_anchor": "Tolstoy, Epilogue II; Carr (1961); Pearl (2009).",
+      "primary_framework": "pearl_causal",
+      "symbolic_rules": ["causal_analysis.decompose_variance", "pattern_matching.classify_decision_constraint_density"],
+      "counterfactual_supported": true,
+      "similarity_supported": false
+    },
+    {
+      "id": "W-2",
+      "scenario_id": "war_peace",
+      "text": "Was Kutuzov's decision to abandon Moscow rational? Compute his BATNA.",
+      "stake": "Military withdrawal can be a dominant strategy when attrition curves matter more than territory.",
+      "academic_anchor": "Fisher & Ury (1981); Brodie (1973), War and Politics.",
+      "primary_framework": "fisher_ury",
+      "symbolic_rules": ["power_analysis.compute_batna", "causal_analysis.simulate_attrition_curve"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "W-3",
+      "scenario_id": "war_peace",
+      "text": "Glasl trajectory of the Napoleon-Russia conflict: when does it cross stage 7 -> 8 -> 9?",
+      "stake": "A literary arc becomes dated stage boundaries in an escalation model.",
+      "academic_anchor": "Glasl (1999), stages 7-9.",
+      "primary_framework": "glasl",
+      "symbolic_rules": ["escalation.compute_glasl_stage", "escalation.compute_trajectory"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "W-4",
+      "scenario_id": "war_peace",
+      "text": "Does the partisan irregular fighter materially shift the outcome, or is Tolstoy's portrayal decorative?",
+      "stake": "Irregular warfare can be a causal layer, not just a colourful narrative detail.",
+      "academic_anchor": "Beckett (2001); Mao (1937).",
+      "primary_framework": "network_metrics",
+      "symbolic_rules": ["network_metrics.compute_edge_contribution", "causal_analysis.decompose_attrition_sources"],
+      "counterfactual_supported": true,
+      "similarity_supported": false
+    },
+    {
+      "id": "W-5",
+      "scenario_id": "war_peace",
+      "text": "Counterfactual: if Napoleon retreats from Smolensk in August 1812, does France retain Continental hegemony through 1815?",
+      "stake": "Long horizon counterfactuals must show uncertainty rather than a confident alternate history.",
+      "academic_anchor": "Pearl (2009); Schroeder (1994), The Transformation of European Politics.",
+      "primary_framework": "pearl_causal",
+      "symbolic_rules": ["causal_analysis.do_intervention", "pattern_matching.compare_hegemony_trajectory"],
+      "counterfactual_supported": true,
+      "similarity_supported": false
+    },
+    {
+      "id": "W-6",
+      "scenario_id": "war_peace",
+      "text": "Map structural similarity to other imperial overreach cases.",
+      "stake": "Buyers need cross-case retrieval by operational class, not keyword resemblance.",
+      "academic_anchor": "Kennedy (1987), The Rise and Fall of the Great Powers.",
+      "primary_framework": "pattern_matching",
+      "symbolic_rules": ["community.find_similar_workspaces"],
+      "counterfactual_supported": false,
+      "similarity_supported": true
+    },
+    {
+      "id": "W-7",
+      "scenario_id": "war_peace",
+      "text": "What does Mayer trust analysis say about the Napoleon-Alexander I dyad before, during, and after?",
+      "stake": "Trust collapse can be decomposed into ability, benevolence, and integrity signals.",
+      "academic_anchor": "Mayer, Davis & Schoorman (1995).",
+      "primary_framework": "mayer_trust",
+      "symbolic_rules": ["trust_analysis.compute_dyad_trust", "trust_analysis.detect_breach_events"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-1",
+      "scenario_id": "syria",
+      "text": "Did Russia's September 2015 intervention cause regime survival? Quantify the counterfactual.",
+      "stake": "This is a live policy debate about intervention efficacy and regime survival.",
+      "academic_anchor": "Charap & Geist (2018), Russia's Use of Military Power; Pearl (2009).",
+      "primary_framework": "pearl_causal",
+      "symbolic_rules": ["causal_analysis.do_intervention", "causal_analysis.compute_territorial_trajectory"],
+      "counterfactual_supported": true,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-2",
+      "scenario_id": "syria",
+      "text": "When did the conflict cross from Glasl 7 to Glasl 8? Anchor the date on a norm-violation event.",
+      "stake": "Escalation-stage labels should be tied to events, not adjectives.",
+      "academic_anchor": "Glasl (1999), stage 8 fragmentation.",
+      "primary_framework": "glasl",
+      "symbolic_rules": ["escalation.compute_glasl_stage", "causal_analysis.identify_stage_pivot"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-3",
+      "scenario_id": "syria",
+      "text": "Why did Russia, Iran, and Turkey bypass Geneva and create the Astana process in 2017? Diagnose the BATNA shift.",
+      "stake": "Forum choice is often BATNA arithmetic disguised as diplomatic creativity.",
+      "academic_anchor": "Hill (2018) on Astana; Fisher & Ury BATNA framework.",
+      "primary_framework": "fisher_ury",
+      "symbolic_rules": ["power_analysis.compute_batna_shift", "pattern_matching.identify_forum_shift"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-4",
+      "scenario_id": "syria",
+      "text": "Spoiler typology: which armed groups acted as systematic de-escalation spoilers from 2012-2024?",
+      "stake": "Different spoiler classes require coercion, isolation, or incentives.",
+      "academic_anchor": "Stedman (1997); Putzel (2010); Cunningham (2006).",
+      "primary_framework": "pattern_matching",
+      "symbolic_rules": ["pattern_matching.identify_spoilers", "network_metrics.compute_ceasefire_violation_attribution"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-5",
+      "scenario_id": "syria",
+      "text": "Galtung structural-violence index: change from pre-2011 to 2024. Decompose by direct, structural, cultural.",
+      "stake": "Negative peace is not positive peace; reconstruction planning depends on the difference.",
+      "academic_anchor": "Galtung (1969), Violence, Peace, and Peace Research.",
+      "primary_framework": "galtung",
+      "symbolic_rules": ["pattern_matching.compute_galtung_indices"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-6",
+      "scenario_id": "syria",
+      "text": "Power asymmetries between Iran-Russia-Turkey-US-Israel as of 2024: French/Raven decomposition.",
+      "stake": "Leverage is multidimensional; coercive power and legitimacy can diverge sharply.",
+      "academic_anchor": "French & Raven (1959); Nye (1990).",
+      "primary_framework": "french_raven",
+      "symbolic_rules": ["power_analysis.compute_power_distribution", "power_analysis.compute_dyadic_leverage"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    },
+    {
+      "id": "S-7",
+      "scenario_id": "syria",
+      "text": "The November-December 2024 HTS offensive: classify the regime collapse as Glasl 9 or Kriesberg settlement.",
+      "stake": "Collapse, settlement, and mutual destruction lead to very different policy postures.",
+      "academic_anchor": "Glasl (1999); Kriesberg (1991).",
+      "primary_framework": "glasl_kriesberg",
+      "symbolic_rules": ["escalation.compute_glasl_stage", "pattern_matching.match_kriesberg_phase"],
+      "counterfactual_supported": false,
+      "similarity_supported": true
+    },
+    {
+      "id": "S-8",
+      "scenario_id": "syria",
+      "text": "Recurrence probability within 5 years: compute Walter base rate plus structural similarity adjustment.",
+      "stake": "A recurrence estimate changes donor posture from rebuilding to prevention.",
+      "academic_anchor": "Walter (2004), Does Conflict Beget Conflict?",
+      "primary_framework": "pattern_matching",
+      "symbolic_rules": ["pattern_matching.compute_recurrence_risk"],
+      "counterfactual_supported": false,
+      "similarity_supported": false
+    }
+  ]
+}

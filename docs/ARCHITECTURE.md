@@ -107,6 +107,30 @@ Results are attached to the job under `job["auto_reasoning"]` and shown
 inline in the ingest UI. Failures here are logged and swallowed; they do
 not flip the job to `failed`.
 
+### Demo reasoning theatre hand-off
+
+The May Prompt 2 demo route, `/demo/{scenarioId}/reasoning`, consumes the graph
+created by `/demo` and renders a deterministic reasoning surface over three demo
+workspaces:
+
+- `demo-romeo`
+- `demo-war-peace`
+- `demo-syria`
+
+The curated question metadata lives in `data/seed/reasoning_library.json`. The
+frontend fixture currently mirrors the planned structured `ReasoningResult`
+contract so the UI can render citations, determinism, hallucination risk,
+counterfactual diffs, structural-similarity neighbours, Cypher snippets, and
+symbolic rules without hard-coding a prose blob.
+
+Planned API endpoints for the backend pass:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/v1/workspaces/{ws}/reason/curated` | Run a curated question through GraphRAG, symbolic rules, synthesis, and hallucination detection. |
+| `POST` | `/v1/workspaces/{ws}/reason/counterfactual` | Re-run a curated question against a transient mutilated graph; never writes back to Neo4j. |
+| `POST` | `/v1/workspaces/{ws}/reason/similarity` | Return nearest comparison workspaces by semantic and topology distance. |
+
 ## Deprecated / parallel paths (do not extend)
 
 The following predate this consolidation. Don't add features to them; route

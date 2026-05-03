@@ -7,15 +7,16 @@ Last updated: 2026-05-03
 - May Prompt 1: `docs/prompts/MAY_PROMPT_01_INGESTION_THEATRE.md`
 - May Prompt 2: `docs/prompts/MAY_PROMPT_02_REASONING_THEATRE.md`
 
-May Prompt 1 is the active implementation target. May Prompt 2 depends on the
-graph-building handoff route produced by Prompt 1.
+May Prompt 1 provides the graph-building ingestion theatre. May Prompt 2
+provides the deterministic reasoning theatre that consumes the graph-building
+handoff route.
 
 ## Branching
 
 - Prompt archive branch on GitHub: `may-demo-prompts`.
 - Prompt 1 implementation branch: `feat/demo-ingestion-theatre-prompt1`.
-- Prompt 2 implementation branch, after Prompt 1 lands:
-  `feat/demo-reasoning-theatre`.
+- Prompt 2 implementation branch:
+  `feat/demo-reasoning-theatre-prompt2`.
 
 ## Current Remote Baseline
 
@@ -87,7 +88,7 @@ act components.
 ## Current Status
 
 - Prompt files archived on GitHub branch `may-demo-prompts`.
-- Prompt 1 implementation branch: started.
+- Prompt 1 implementation branch: `feat/demo-ingestion-theatre-prompt1`.
 - Backend SSE/Gutenberg foundation: present from `origin/main`.
 - Frontend theatre: first scaffold complete. `/demo` now uses a client
   conductor, eleven act files, live SSE/replay mode switching, event-log drawer,
@@ -95,3 +96,33 @@ act components.
 - Replay capture: starter NDJSON fixtures added; live capture middleware still
   not implemented.
 - E2E: not started.
+
+## Prompt 2 Audit Against Current Repo
+
+| Contract Path | Current State | Action |
+| --- | --- | --- |
+| `docs/neurosymbolic-rationale.md` | Exists | Use symbolic-first bridge protocol for answer traces. |
+| `docs/theory-frameworks.md` | Exists | Use framework names and semantics in question metadata. |
+| `packages/ontology/src/dialectica_ontology/benchmark_questions.py` | Exists | Supersede demo copy with curated investor-grade questions. |
+| `packages/reasoning/src/dialectica_reasoning/query_engine.py` | Exists | Current API returns analysis responses, not the exact Prompt 2 `ReasoningResult`; add adapter endpoint next. |
+| `packages/reasoning/src/dialectica_reasoning/hallucination_detector.py` | Exists | Surface hallucination risk in the UI and wire detector in backend pass. |
+| `packages/reasoning/src/dialectica_reasoning/graphrag/retriever.py` | Exists | Use as source for cited subgraph once endpoint is wired. |
+| `apps/web/src/components/graph/ForceGraph.tsx` | Exists | Extended with optional highlighted node and edge IDs. |
+
+## Prompt 2 Current Slice
+
+- Added `data/seed/reasoning_library.json` with the 23 curated questions from
+  May Prompt 2 metadata.
+- Replaced `/demo/[scenarioId]/reasoning` stub with a full reasoning theatre
+  scaffold:
+  - left question library;
+  - LLM comparison panel;
+  - DIALECTICA structured answer panel;
+  - determinism badge and hallucination gauge;
+  - ForceGraph citation-path highlighting;
+  - trace drawer with subgraph, Cypher, symbolic rules, and JSON;
+  - counterfactual toggles and structural-similarity panels for supported
+    questions.
+- Current limitation: reasoning answers are deterministic fixtures in the
+  frontend result shape. Backend endpoints still need to be implemented:
+  `/reason/curated`, `/reason/counterfactual`, and `/reason/similarity`.
