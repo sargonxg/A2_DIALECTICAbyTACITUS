@@ -118,18 +118,19 @@ workspaces:
 - `demo-syria`
 
 The curated question metadata lives in `data/seed/reasoning_library.json`. The
-frontend fixture currently mirrors the planned structured `ReasoningResult`
-contract so the UI can render citations, determinism, hallucination risk,
-counterfactual diffs, structural-similarity neighbours, Cypher snippets, and
-symbolic rules without hard-coding a prose blob.
+frontend fixture mirrors the structured `ReasoningResult` contract so the UI can
+render citations, determinism, hallucination risk, counterfactual diffs,
+structural-similarity neighbours, Cypher snippets, and symbolic rules without
+hard-coding a prose blob. The page also has a live API control that calls the
+backend curated adapter when the API is configured.
 
-Planned API endpoints for the backend pass:
+Reasoning theatre API endpoints:
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/v1/workspaces/{ws}/reason/curated` | Run a curated question through GraphRAG, symbolic rules, synthesis, and hallucination detection. |
-| `POST` | `/v1/workspaces/{ws}/reason/counterfactual` | Re-run a curated question against a transient mutilated graph; never writes back to Neo4j. |
-| `POST` | `/v1/workspaces/{ws}/reason/similarity` | Return nearest comparison workspaces by semantic and topology distance. |
+| `POST` | `/v1/workspaces/{ws}/reason/curated` | Runs a curated question through the existing query engine and adapts it to `ReasoningResult`. |
+| `POST` | `/v1/workspaces/{ws}/reason/counterfactual` | Preserves the transient non-persistence contract; full MutilatedGraph recomputation is the next backend pass. |
+| `POST` | `/v1/workspaces/{ws}/reason/similarity` | Returns curated comparison-corpus neighbours; full semantic plus topology scoring is the next backend pass. |
 
 ## Deprecated / parallel paths (do not extend)
 

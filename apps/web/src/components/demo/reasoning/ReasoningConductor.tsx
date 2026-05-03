@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ExternalLink, FlaskConical, GitBranch, Network } from "lucide-react";
+import { ArrowLeft, ExternalLink, FlaskConical, Network } from "lucide-react";
 import ForceGraph from "@/components/graph/ForceGraph";
+import { getApiUrl } from "@/lib/config";
 import type { GraphData } from "@/types/graph";
 import { AnswerComparison } from "./AnswerComparison";
 import { CounterfactualToggler } from "./CounterfactualToggler";
@@ -12,6 +13,7 @@ import { PathHighlightOverlay } from "./PathHighlightOverlay";
 import { QuestionLibrary } from "./QuestionLibrary";
 import { SimilarityPanel } from "./SimilarityPanel";
 import { TraceDrawer } from "./TraceDrawer";
+import type { ReasoningResultFixture } from "./types";
 
 interface Props {
   scenarioId: string;
@@ -63,10 +65,18 @@ export function ReasoningConductor({ scenarioId }: Props) {
   const [activeId, setActiveId] = useState(scenario?.questions[0]?.id ?? "");
   const [traceOpen, setTraceOpen] = useState(false);
   const [counterfactualActive, setCounterfactualActive] = useState(false);
+  const [liveResults, setLiveResults] = useState<Record<string, ReasoningResultFixture>>({});
+  const [liveStatus, setLiveStatus] = useState<"fixture" | "loading" | "live" | "error">("fixture");
+  const [liveError, setLiveError] = useState<string>("");
 
   useEffect(() => {
     if (scenario?.questions[0]?.id) setActiveId(scenario.questions[0].id);
   }, [scenario?.id]);
+
+  useEffect(() => {
+    setLiveError("");
+    setLiveStatus(liveResults[activeId] ? "live" : "fixture");
+  }, [activeId, liveResults]);
 
   if (!scenario) {
     return (
@@ -84,16 +94,46 @@ export function ReasoningConductor({ scenarioId }: Props) {
 
   const activeQuestion =
     scenario.questions.find((question) => question.id === activeId) ?? scenario.questions[0];
+  const workspaceId = scenario.workspace_id;
+  const renderedQuestion = {
+    ...activeQuestion,
+    dialectica: liveResults[activeQuestion.id] ?? activeQuestion.dialectica,
+  };
   const highlightedNodeIds = counterfactualActive
-    ? activeQuestion.dialectica.cited_node_ids.filter(
+    ? renderedQuestion.dialectica.cited_node_ids.filter(
         (id) => !activeQuestion.counterfactual?.removed_node_ids.includes(id)
       )
-    : activeQuestion.dialectica.cited_node_ids;
+    : renderedQuestion.dialectica.cited_node_ids;
   const highlightedEdgeIds = counterfactualActive
-    ? activeQuestion.dialectica.cited_edge_ids.filter(
+    ? renderedQuestion.dialectica.cited_edge_ids.filter(
         (id) => !activeQuestion.counterfactual?.removed_edge_ids.includes(id)
       )
-    : activeQuestion.dialectica.cited_edge_ids;
+    : renderedQuestion.dialectica.cited_edge_ids;
+
+  async function runLiveReasoning() {
+    setLiveStatus("loading");
+    setLiveError("");
+    try {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+      const apiKey = typeof window !== "undefined" ? localStorage.getItem("dialectica_api_key") : null;
+      const response = await fetch(`${apiUrl}/v1/workspaces/${workspaceId}/reason/curated`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey ? { "X-API-Key": apiKey } : {}),
+        },
+        body: JSON.stringify({ question_id: activeQuestion.id }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      setLiveResults((current) => ({ ...current, [activeQuestion.id]: result }));
+      setLiveStatus("live");
+    } catch (error) {
+      setLiveStatus("error");
+      setLiveError(error instanceof Error ? error.message : "Live reasoning failed.");
+    }
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-background text-text-primary">
@@ -148,10 +188,24 @@ export function ReasoningConductor({ scenarioId }: Props) {
                   {activeQuestion.academic_anchor}
                 </div>
               </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+                <p className="text-xs leading-5 text-text-secondary">
+                  {liveStatus === "live"
+                    ? "Live backend result loaded for this question."
+                    : liveStatus === "loading"
+                      ? "Running the curated question through the backend reasoning adapter..."
+                      : liveStatus === "error"
+                        ? `Fixture retained. Live API error: ${liveError.slice(0, 180)}`
+                        : "Rendering deterministic fixture data. Use live mode when the API and key are configured."}
+                </p>
+                <button type="button" onClick={runLiveReasoning} className="btn-secondary" disabled={liveStatus === "loading"}>
+                  {liveStatus === "loading" ? "Running..." : "Run live API"}
+                </button>
+              </div>
             </section>
 
             <AnswerComparison
-              question={activeQuestion}
+              question={renderedQuestion}
               counterfactualActive={counterfactualActive}
               onTraceOpen={() => setTraceOpen(true)}
             />
@@ -167,7 +221,7 @@ export function ReasoningConductor({ scenarioId }: Props) {
                   highlightedNodeIds={highlightedNodeIds}
                   highlightedEdgeIds={highlightedEdgeIds}
                 />
-                <PathHighlightOverlay question={activeQuestion} graph={scenario.graph} />
+                <PathHighlightOverlay question={renderedQuestion} graph={scenario.graph} />
               </div>
               <div className="space-y-3">
                 <CounterfactualToggler
@@ -192,7 +246,7 @@ export function ReasoningConductor({ scenarioId }: Props) {
           </div>
         </section>
       </div>
-      <TraceDrawer question={activeQuestion} open={traceOpen} onToggle={() => setTraceOpen((value) => !value)} />
+      <TraceDrawer question={renderedQuestion} open={traceOpen} onToggle={() => setTraceOpen((value) => !value)} />
     </main>
   );
 }

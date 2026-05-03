@@ -104,7 +104,7 @@ act components.
 | `docs/neurosymbolic-rationale.md` | Exists | Use symbolic-first bridge protocol for answer traces. |
 | `docs/theory-frameworks.md` | Exists | Use framework names and semantics in question metadata. |
 | `packages/ontology/src/dialectica_ontology/benchmark_questions.py` | Exists | Supersede demo copy with curated investor-grade questions. |
-| `packages/reasoning/src/dialectica_reasoning/query_engine.py` | Exists | Current API returns analysis responses, not the exact Prompt 2 `ReasoningResult`; add adapter endpoint next. |
+| `packages/reasoning/src/dialectica_reasoning/query_engine.py` | Exists | Curated adapter now calls it and returns the Prompt 2 `ReasoningResult` shape. |
 | `packages/reasoning/src/dialectica_reasoning/hallucination_detector.py` | Exists | Surface hallucination risk in the UI and wire detector in backend pass. |
 | `packages/reasoning/src/dialectica_reasoning/graphrag/retriever.py` | Exists | Use as source for cited subgraph once endpoint is wired. |
 | `apps/web/src/components/graph/ForceGraph.tsx` | Exists | Extended with optional highlighted node and edge IDs. |
@@ -123,6 +123,13 @@ act components.
   - trace drawer with subgraph, Cypher, symbolic rules, and JSON;
   - counterfactual toggles and structural-similarity panels for supported
     questions.
-- Current limitation: reasoning answers are deterministic fixtures in the
-  frontend result shape. Backend endpoints still need to be implemented:
+- Added `packages/reasoning/src/dialectica_reasoning/library.py` to load and
+  validate the curated library.
+- Added backend adapter endpoints:
   `/reason/curated`, `/reason/counterfactual`, and `/reason/similarity`.
+- Added a "Run live API" control on the reasoning page. Without configured API
+  URL/key, the page keeps the deterministic fixture and says so.
+- Current limitation: counterfactuals preserve the transient API contract but
+  do not yet run symbolic rules against a full in-memory MutilatedGraph.
+  Similarity returns curated comparison-corpus neighbours rather than live
+  semantic/topology scoring.

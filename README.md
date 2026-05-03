@@ -158,11 +158,13 @@ The May demo track is split into two theatres:
 1. `/demo` builds the graph from a live SSE ingestion stream when the API is available, and from labelled captured replays when it is not.
 2. `/demo/romeo/reasoning`, `/demo/war_peace/reasoning`, and `/demo/syria/reasoning` show the deterministic reasoning layer over the built graph.
 
-The reasoning theatre currently ships with the curated 23-question library from
-`data/seed/reasoning_library.json` and deterministic frontend fixtures that match
-the planned `/v1/workspaces/{ws}/reason/curated` result shape. The next backend
-integration step is wiring those cards to `packages/reasoning/.../query_engine.py`
-and adding the curated, counterfactual, and similarity endpoints.
+The reasoning theatre ships with the curated 23-question library from
+`data/seed/reasoning_library.json` and deterministic frontend fixtures for demo
+reliability. It also exposes a "Run live API" control that calls the backend
+adapter at `/v1/workspaces/{ws}/reason/curated` when `NEXT_PUBLIC_API_URL` and an
+API key are configured. Counterfactual and similarity endpoint contracts are in
+place; the next backend pass upgrades them from adapter semantics to full
+MutilatedGraph recomputation and graph-kernel similarity.
 
 ---
 

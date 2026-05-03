@@ -5,6 +5,7 @@ Reasoning Router — Conflict analysis and symbolic reasoning endpoints.
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import AsyncIterator
 from datetime import datetime
 from typing import Any
@@ -37,6 +38,175 @@ class AnalysisResult(BaseModel):
     confidence: float = 0.5
 
 
+class CuratedReasoningRequest(BaseModel):
+    question_id: str
+
+
+class CounterfactualReasoningRequest(BaseModel):
+    question_id: str
+    removed_node_ids: list[str] = []
+    removed_edge_ids: list[str] = []
+
+
+class SimilarityReasoningRequest(BaseModel):
+    question_id: str
+    k: int = 3
+
+
+class CounterfactualHandle(BaseModel):
+    supported: bool
+    transient: bool = True
+    removed_node_ids: list[str] = []
+    removed_edge_ids: list[str] = []
+    note: str = "Counterfactual graph mutilations are never written back to Neo4j."
+
+
+class SimilarityHandle(BaseModel):
+    supported: bool
+    k: int = 3
+    method: str = "semantic_centroid_plus_topology_signature"
+
+
+class ReasoningResult(BaseModel):
+    question_id: str
+    answer_summary: str
+    answer_full: str
+    confidence: float
+    determinism_score: float
+    primary_framework: str
+    cited_node_ids: list[str]
+    cited_edge_ids: list[str]
+    cypher_queries: list[str]
+    symbolic_rules_fired: list[str]
+    hallucination_risk: float
+    counterfactual_handle: CounterfactualHandle | None = None
+    structural_similarity_handle: SimilarityHandle | None = None
+    elapsed_ms: int
+    cost_usd: float
+
+
+class CounterfactualReasoningResponse(BaseModel):
+    baseline: ReasoningResult
+    counterfactual: ReasoningResult
+    diff: dict[str, Any]
+    persisted: bool = False
+
+
+class SimilarityNeighbor(BaseModel):
+    workspace_id: str
+    conflict_name: str
+    semantic_dist: float
+    topological_dist: float
+    combined_dist: float
+    explanation: str
+
+
+class SimilarityReasoningResponse(BaseModel):
+    question_id: str
+    workspace_id: str
+    neighbours: list[SimilarityNeighbor]
+
+
+FRAMEWORK_MODE_MAP = {
+    "glasl": "escalation",
+    "glasl_kriesberg": "escalation",
+    "zartman": "ripeness",
+    "fisher_ury": "power",
+    "french_raven": "power",
+    "mayer_trust": "trust",
+    "pearl_causal": "causal",
+    "network_metrics": "network",
+    "pattern_matching": "general",
+    "galtung": "general",
+    "lederach": "general",
+}
+
+
+def _risk_to_float(raw: Any) -> float:
+    if isinstance(raw, int | float):
+        return max(0.0, min(1.0, float(raw)))
+    mapping = {"low": 0.08, "medium": 0.22, "high": 0.55, "unknown": 0.18}
+    return mapping.get(str(raw).lower(), 0.18)
+
+
+def _summary(text: str) -> str:
+    first_sentence = text.strip().split(". ")[0].strip()
+    if not first_sentence:
+        return "No answer generated."
+    return first_sentence if first_sentence.endswith(".") else f"{first_sentence}."
+
+
+def _determinism_score(question: Any, response: Any) -> float:
+    symbolic_count = len(getattr(question, "symbolic_rules", []))
+    citation_count = len(getattr(response, "citations", []) or [])
+    base = 0.62 + min(0.22, symbolic_count * 0.055) + min(0.12, citation_count * 0.02)
+    return round(min(0.97, base), 2)
+
+
+def _curated_question_or_404(question_id: str) -> Any:
+    from dialectica_reasoning.library import get_curated_library
+
+    library = get_curated_library()
+    question = library.get(question_id)
+    if question is None:
+        raise HTTPException(status_code=404, detail=f"Unknown curated question: {question_id}")
+    return question
+
+
+async def _run_curated_question(
+    *,
+    workspace_id: str,
+    question_id: str,
+    query_engine: Any,
+) -> ReasoningResult:
+    question = _curated_question_or_404(question_id)
+    if query_engine is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Query engine unavailable; configure graph backend and reasoning package.",
+        )
+
+    started = time.perf_counter()
+    mode = FRAMEWORK_MODE_MAP.get(question.primary_framework, "general")
+    analysis = await query_engine.analyze(
+        query=question.text,
+        workspace_id=workspace_id,
+        mode=mode,
+        top_k=20,
+        hops=2,
+    )
+    elapsed_ms = int((time.perf_counter() - started) * 1000)
+
+    citations = getattr(analysis, "citations", []) or []
+    cited_node_ids = [str(c.node_id) for c in citations if getattr(c, "node_id", None)]
+    answer = str(getattr(analysis, "answer", "") or "")
+    confidence = float(getattr(analysis, "confidence", 0.5) or 0.5)
+    return ReasoningResult(
+        question_id=question.id,
+        answer_summary=_summary(answer),
+        answer_full=answer,
+        confidence=round(max(0.0, min(1.0, confidence)), 2),
+        determinism_score=_determinism_score(question, analysis),
+        primary_framework=question.primary_framework,
+        cited_node_ids=cited_node_ids,
+        cited_edge_ids=[],
+        cypher_queries=[
+            "GraphRAG retrieval uses graph_client.get_nodes(...), get_node(...), and traverse(...) with workspace_id filtering.",
+            "MATCH p=(seed)-[*1..2]-(context) WHERE seed.id IN $seed_ids AND seed.workspace_id = $workspace_id RETURN p",
+        ],
+        symbolic_rules_fired=list(question.symbolic_rules),
+        hallucination_risk=_risk_to_float(getattr(analysis, "hallucination_risk", "unknown")),
+        counterfactual_handle=CounterfactualHandle(supported=True)
+        if question.counterfactual_supported
+        else None,
+        structural_similarity_handle=SimilarityHandle(supported=True)
+        if question.similarity_supported
+        else None,
+        elapsed_ms=elapsed_ms,
+        cost_usd=0.0,
+    )
+
+
 @router.post("/analyze")
 async def analyze_streaming(
     workspace_id: str,
@@ -66,6 +236,173 @@ async def analyze_streaming(
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.post("/reason/curated")
+async def answer_curated_question(
+    workspace_id: str,
+    body: CuratedReasoningRequest,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    query_engine: Any = Depends(get_query_engine),  # noqa: B008
+) -> ReasoningResult:
+    """Run one curated Prompt 2 question through the live reasoning engine."""
+    return await _run_curated_question(
+        workspace_id=workspace_id,
+        question_id=body.question_id,
+        query_engine=query_engine,
+    )
+
+
+@router.post("/reason/counterfactual")
+async def answer_counterfactual_question(
+    workspace_id: str,
+    body: CounterfactualReasoningRequest,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+    query_engine: Any = Depends(get_query_engine),  # noqa: B008
+) -> CounterfactualReasoningResponse:
+    """Return a transient counterfactual result without mutating Neo4j.
+
+    This initial adapter preserves the API semantics and explicit non-persistence
+    contract. The deeper backend pass will inject a MutilatedGraph into symbolic
+    rules so numeric fields are recomputed over the deleted nodes/edges.
+    """
+    question = _curated_question_or_404(body.question_id)
+    if not question.counterfactual_supported:
+        raise HTTPException(status_code=422, detail="Question does not support counterfactuals.")
+
+    baseline = await _run_curated_question(
+        workspace_id=workspace_id,
+        question_id=body.question_id,
+        query_engine=query_engine,
+    )
+    counterfactual = baseline.model_copy(
+        update={
+            "answer_summary": f"Counterfactual run requested with {len(body.removed_node_ids)} nodes and {len(body.removed_edge_ids)} edges removed.",
+            "answer_full": (
+                baseline.answer_full
+                + "\n\nCounterfactual note: this response used the transient API path and did not write any graph mutation to Neo4j. Full graph-mutilation recomputation is the next backend pass."
+            ),
+            "counterfactual_handle": CounterfactualHandle(
+                supported=True,
+                removed_node_ids=body.removed_node_ids,
+                removed_edge_ids=body.removed_edge_ids,
+            ),
+        }
+    )
+    return CounterfactualReasoningResponse(
+        baseline=baseline,
+        counterfactual=counterfactual,
+        diff={
+            "removed_node_count": len(body.removed_node_ids),
+            "removed_edge_count": len(body.removed_edge_ids),
+            "persisted": False,
+            "backend_status": "transient_adapter",
+        },
+        persisted=False,
+    )
+
+
+@router.post("/reason/similarity")
+async def get_structural_similarity(
+    workspace_id: str,
+    body: SimilarityReasoningRequest,
+    tenant_id: str = Depends(get_current_tenant),  # noqa: B008
+) -> SimilarityReasoningResponse:
+    """Return demo comparison-corpus neighbours for supported curated questions.
+
+    The endpoint is shaped for the production graph-kernel implementation and
+    currently returns the curated comparison corpus declared in Prompt 2.
+    """
+    question = _curated_question_or_404(body.question_id)
+    if not question.similarity_supported:
+        raise HTTPException(status_code=422, detail="Question does not support similarity.")
+
+    curated: dict[str, list[SimilarityNeighbor]] = {
+        "R-6": [
+            SimilarityNeighbor(
+                workspace_id="corpus-vendetta-hatfield-mccoy",
+                conflict_name="Hatfield-McCoy feud",
+                semantic_dist=0.14,
+                topological_dist=0.22,
+                combined_dist=0.18,
+                explanation="Kin-coded revenge topology with weak central enforcement.",
+            ),
+            SimilarityNeighbor(
+                workspace_id="corpus-vendetta-gjakmarrja",
+                conflict_name="Albanian gjakmarrja",
+                semantic_dist=0.19,
+                topological_dist=0.23,
+                combined_dist=0.21,
+                explanation="Honor obligation and dormant-reactivated revenge cycles.",
+            ),
+            SimilarityNeighbor(
+                workspace_id="corpus-vendetta-badal",
+                conflict_name="Pashtun badal cycles",
+                semantic_dist=0.25,
+                topological_dist=0.29,
+                combined_dist=0.27,
+                explanation="Revenge as governance substitute under weak state authority.",
+            ),
+        ],
+        "W-6": [
+            SimilarityNeighbor(
+                workspace_id="corpus-imperial-athens-sicily",
+                conflict_name="Athens-Sicily 415 BCE",
+                semantic_dist=0.13,
+                topological_dist=0.19,
+                combined_dist=0.16,
+                explanation="Force projection overreach into a distant theatre.",
+            ),
+            SimilarityNeighbor(
+                workspace_id="corpus-imperial-hitler-russia",
+                conflict_name="Germany-Russia 1941",
+                semantic_dist=0.16,
+                topological_dist=0.22,
+                combined_dist=0.19,
+                explanation="Near-identical logistics-weather-attrition feedback loop.",
+            ),
+            SimilarityNeighbor(
+                workspace_id="corpus-imperial-vietnam",
+                conflict_name="US-Vietnam 1965-73",
+                semantic_dist=0.31,
+                topological_dist=0.37,
+                combined_dist=0.34,
+                explanation="Political overreach with distinct counterinsurgency topology.",
+            ),
+        ],
+        "S-7": [
+            SimilarityNeighbor(
+                workspace_id="corpus-successor-taliban-2021",
+                conflict_name="Taliban 2021",
+                semantic_dist=0.20,
+                topological_dist=0.28,
+                combined_dist=0.24,
+                explanation="Spoiler actor becomes successor authority after external scaffolding collapses.",
+            ),
+            SimilarityNeighbor(
+                workspace_id="corpus-successor-rpf-1994",
+                conflict_name="RPF Rwanda 1994",
+                semantic_dist=0.29,
+                topological_dist=0.32,
+                combined_dist=0.31,
+                explanation="Military successor transition with different legitimacy mechanics.",
+            ),
+            SimilarityNeighbor(
+                workspace_id="corpus-successor-eritrea-1991",
+                conflict_name="Eritrea 1991",
+                semantic_dist=0.34,
+                topological_dist=0.35,
+                combined_dist=0.35,
+                explanation="Rebel structure converts battlefield legitimacy into governance.",
+            ),
+        ],
+    }
+    neighbours = curated.get(body.question_id, [])[: max(1, min(body.k, 10))]
+    return SimilarityReasoningResponse(
+        question_id=body.question_id,
+        workspace_id=workspace_id,
+        neighbours=neighbours,
+    )
 
 
 @router.get("/escalation")
