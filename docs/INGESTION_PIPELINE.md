@@ -1,15 +1,63 @@
 # DIALECTICA Ingestion Pipeline
 
-Last updated: 2026-05-01
+Last updated: 2026-05-02
 
-## What Changed
+> **Canonical reference:** `docs/ARCHITECTURE.md`. That file declares which
+> ingestion path is the source of truth (the LangGraph pipeline behind
+> `/v1/workspaces/{ws}/extract` and `/v1/workspaces/{ws}/ingest/gutenberg`)
+> and which paths below are deprecated. This file is the longer
+> walk-through of all paths that currently exist.
 
-This wave adds a Praxis-ready context surface on top of existing ingestion:
+## What Changed (2026-05-02 — backbone wave)
 
-- GraphOps can already ingest text, samples, TXT, and PDF.
-- Ingested runs persist locally and can be reloaded.
-- `/api/graphops/praxis/context` can consume a saved run, raw primitives, or
-  fresh text/sample input and return a downstream-ready bundle.
+A first-class **public-domain ingestion backbone** on top of the existing
+LangGraph pipeline:
+
+- **Project Gutenberg picker** — curated 8-book catalog at
+  `GET /v1/gutenberg/catalog` (public, no auth) and one-click ingest at
+  `POST /v1/workspaces/{ws}/ingest/gutenberg`. Books span both TACITUS
+  domains (Romeo & Juliet, War & Peace, Crime & Punishment, Thucydides,
+  The Prince, Meditations, Art of War, Wealth of Nations).
+- **Live SSE progress stream** at
+  `GET /v1/workspaces/{ws}/extractions/{job_id}/stream` — emits one
+  `JobProgressEvent` per LangGraph step (`chunked: 312`, `entities_raw: 47`,
+  `nodes_written: 23` …). Used by the new `LiveExtractionProgress`
+  component on the ingest page.
+- **Auto-reasoning hand-off** — on job completion the pipeline runner
+  attaches a small reasoning summary (graph stats, escalation trajectory,
+  top actors) onto the job and exposes it via the SSE final frame.
+- **Corpus library** at `GET /v1/workspaces/{ws}/corpus/documents` —
+  list of `SourceDocument` summaries (title, content hash, word count,
+  tier, model, ingested-at, node/edge counts).
+- **Shared sources module** — Gutenberg fetch + boilerplate-strip moved
+  into `packages/extraction/src/dialectica_extraction/sources/gutenberg.py`
+  and shared by the API router, the CLI tool (`tools/download_gutenberg.py`),
+  and the Databricks notebooks.
+- **Shared `JobStore`** — in-process job + progress event store with an
+  `asyncio.Event`-driven SSE listener
+  (`packages/api/src/dialectica_api/services/job_store.py`). Designed for
+  mechanical replacement by a Redis-backed implementation in production
+  (see `docs/ARCHITECTURE.md` §"Migration to Redis").
+
+### Frontend
+
+- `apps/web/src/app/workspaces/[id]/ingest/page.tsx` — tabs for
+  Project Gutenberg / Upload / Paste, with live progress and auto-reasoning
+  rendered inline.
+- `apps/web/src/components/extraction/GutenbergPicker.tsx` — book grid +
+  domain filter + tier + max-chars selector + free-form Gutenberg ID field.
+- `apps/web/src/components/extraction/LiveExtractionProgress.tsx` —
+  consumes the SSE stream and renders the canonical 11-step list with
+  per-step counters.
+- `apps/web/src/app/workspaces/[id]/corpus/page.tsx` — corpus library page
+  listing all ingested SourceDocuments with provenance.
+
+### Sprawl note
+
+We had three parallel ingestion paths before this wave (LangGraph,
+`dialectica/ingestion/` CLI, `apps/web/src/lib/graphopsExtraction.ts`).
+The LangGraph path is now declared canonical in `docs/ARCHITECTURE.md`;
+the others are read-compatible only. Don't extend them.
 
 ## Actual Current Pipeline
 

@@ -1,5 +1,8 @@
 """Download public-domain Project Gutenberg texts for DIALECTICA ingestion.
 
+Thin wrapper around ``dialectica_extraction.sources.gutenberg`` so the same
+fetch/strip logic is shared by the API, the Databricks notebooks, and this CLI.
+
 Examples:
     uv run python tools/download_gutenberg.py 1513 --output data/raw/romeo_juliet.txt
     uv run python tools/download_gutenberg.py 2600 --output data/raw/war_and_peace.txt
@@ -10,28 +13,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import httpx
-
-
-def gutenberg_text_urls(book_id: str) -> list[str]:
-    return [
-        f"https://www.gutenberg.org/files/{book_id}/{book_id}-0.txt",
-        f"https://www.gutenberg.org/files/{book_id}/{book_id}.txt",
-        f"https://www.gutenberg.org/cache/epub/{book_id}/pg{book_id}.txt",
-    ]
-
-
-def download_text(book_id: str) -> str:
-    last_error = ""
-    for url in gutenberg_text_urls(book_id):
-        try:
-            response = httpx.get(url, timeout=30.0, follow_redirects=True)
-            if response.status_code == 200 and response.text.strip():
-                return response.text
-            last_error = f"{url} returned HTTP {response.status_code}"
-        except httpx.HTTPError as exc:
-            last_error = f"{url}: {exc}"
-    raise RuntimeError(f"Could not download Project Gutenberg book {book_id}: {last_error}")
+from dialectica_extraction.sources.gutenberg import fetch_gutenberg_text
 
 
 def main() -> None:
@@ -44,11 +26,18 @@ def main() -> None:
         default=0,
         help="Optional character limit for quick experiments",
     )
+    parser.add_argument(
+        "--keep-boilerplate",
+        action="store_true",
+        help="Keep the *** START OF ... *** / *** END OF ... *** framing",
+    )
     args = parser.parse_args()
 
-    text = download_text(args.book_id)
-    if args.max_chars > 0:
-        text = text[: args.max_chars]
+    text = fetch_gutenberg_text(
+        args.book_id,
+        max_chars=args.max_chars,
+        strip_boilerplate=not args.keep_boilerplate,
+    )
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

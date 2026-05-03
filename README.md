@@ -172,6 +172,8 @@ npm run dev
 | `/demo/investor` | 5-step guided investor walkthrough |
 | `/workspaces` | Workspace list |
 | `/workspaces/[id]` | Workspace detail with Graph, Entities, Timeline, Analysis, Query tabs |
+| `/workspaces/[id]/ingest` | **Ingestion backbone**: pick a Project Gutenberg classic, upload a document, or paste text. Live SSE progress + auto-reasoning. |
+| `/workspaces/[id]/corpus` | Source-document library with per-document provenance (tier, model, word count, nodes/edges) |
 | `/theory` | 15 theory frameworks browser |
 | `/developers` | API documentation and playground |
 | `/login` / `/signup` | Authentication |
@@ -188,6 +190,27 @@ Use it to inspect the subsystem structure before broad refactors. The artifact
 is intentionally scoped to `app/graph_reasoning`; the full repo currently has
 hundreds of supported files and should be graphified by subdomain for useful
 review.
+
+### Ingestion backbone
+
+One-click public-domain corpus ingestion via Project Gutenberg, with a live
+SSE progress stream and auto-reasoning hand-off. Canonical reference:
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+```bash
+# Catalog (public, no auth)
+curl http://localhost:8080/v1/gutenberg/catalog | jq '.books[].title'
+
+# Ingest "Romeo and Juliet" with the standard tier
+curl -X POST http://localhost:8080/v1/workspaces/$WS/ingest/gutenberg \
+  -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"book_id":"1513","tier":"standard","max_chars":60000}'
+
+# Watch live progress (SSE)
+curl -N http://localhost:8080/v1/workspaces/$WS/extractions/$JOB/stream
+```
+
+Or use the UI tabs at `/workspaces/[id]/ingest` (Project Gutenberg / Upload / Paste).
 
 ---
 

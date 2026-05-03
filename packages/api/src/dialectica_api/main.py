@@ -24,11 +24,14 @@ from dialectica_api.middleware.usage import UsageMiddleware
 from dialectica_api.routers import (
     admin,
     benchmark,
+    corpus_library,
     developers,
     entities,
     extraction,
+    extraction_stream,
     graph,
     graph_reasoning,
+    gutenberg,
     health,
     integration,
     reasoning,
@@ -98,6 +101,10 @@ def create_app() -> FastAPI:
     app.include_router(entities.router)
     app.include_router(relationships.router)
     app.include_router(extraction.router)
+    app.include_router(extraction_stream.router)
+    app.include_router(gutenberg.catalog_router)
+    app.include_router(gutenberg.ingest_router)
+    app.include_router(corpus_library.router)
     app.include_router(graph.router)
     app.include_router(graph_reasoning.router)
     app.include_router(reasoning.router)
