@@ -1,0 +1,11 @@
+{"t":0,"event":"meta","data":{"job_id":"replay-romeo","step":"stream","status":"ready","message":"Replay captured from canonical event shape."}}
+{"t":400,"event":"started","data":{"job_id":"replay-romeo","step":"chunk_document","status":"started"}}
+{"t":900,"event":"complete","data":{"job_id":"replay-romeo","step":"chunk_document","status":"complete","counts":{"chunks":14}}}
+{"t":1400,"event":"complete","data":{"job_id":"replay-romeo","step":"gliner_prefilter","status":"complete","counts":{"chunks_scored":14,"entity_density_avg":0.62}}}
+{"t":2100,"event":"complete","data":{"job_id":"replay-romeo","step":"extract_entities","status":"complete","counts":{"entities_raw":47}}}
+{"t":2800,"event":"complete","data":{"job_id":"replay-romeo","step":"validate_schema","status":"complete","counts":{"entities_valid":31,"entities_invalid":3}}}
+{"t":3500,"event":"complete","data":{"job_id":"replay-romeo","step":"resolve_coreference","status":"complete","counts":{"merged_pairs":12}}}
+{"t":4200,"event":"complete","data":{"job_id":"replay-romeo","step":"extract_relationships","status":"complete","counts":{"edges_valid":28}}}
+{"t":5000,"event":"complete","data":{"job_id":"replay-romeo","step":"compute_embeddings","status":"complete","counts":{"embeddings":31}}}
+{"t":5900,"event":"complete","data":{"job_id":"replay-romeo","step":"write_to_graph","status":"complete","counts":{"nodes_written":31,"edges_written":28},"graph":{"nodes":[{"id":"romeo","label":"Actor","node_type":"Actor","name":"Romeo Montague","confidence":0.94,"properties":{}},{"id":"juliet","label":"Actor","node_type":"Actor","name":"Juliet Capulet","confidence":0.95,"properties":{}},{"id":"mercutio_death","label":"Event","node_type":"Event","name":"Mercutio death","confidence":0.91,"properties":{}}],"links":[{"id":"e1","source":"mercutio_death","target":"romeo","edge_type":"CAUSED","weight":1,"confidence":0.88},{"id":"e2","source":"romeo","target":"juliet","edge_type":"TRUSTS","weight":1,"confidence":0.79}]}}}
+{"t":6200,"event":"job","data":{"job_id":"replay-romeo","step":"job","status":"complete","job":{"job_id":"replay-romeo","status":"complete","nodes_extracted":31,"edges_extracted":28}}}

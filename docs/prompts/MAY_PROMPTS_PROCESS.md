@@ -89,6 +89,9 @@ act components.
 - Prompt files archived on GitHub branch `may-demo-prompts`.
 - Prompt 1 implementation branch: started.
 - Backend SSE/Gutenberg foundation: present from `origin/main`.
-- Frontend theatre: not started.
-- Replay capture: not started.
+- Frontend theatre: first scaffold complete. `/demo` now uses a client
+  conductor, eleven act files, live SSE/replay mode switching, event-log drawer,
+  pause/skip controls, scenario manifest, and Prompt 2 handoff stub.
+- Replay capture: starter NDJSON fixtures added; live capture middleware still
+  not implemented.
 - E2E: not started.

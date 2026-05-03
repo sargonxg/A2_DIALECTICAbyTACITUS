@@ -1,0 +1,10 @@
+{"t":0,"event":"meta","data":{"job_id":"replay-syria","step":"stream","status":"ready","message":"Replay captured from canonical event shape."}}
+{"t":600,"event":"complete","data":{"job_id":"replay-syria","step":"chunk_document","status":"complete","counts":{"chunks":18}}}
+{"t":1200,"event":"complete","data":{"job_id":"replay-syria","step":"gliner_prefilter","status":"complete","counts":{"chunks_scored":18,"entity_density_avg":0.74}}}
+{"t":2100,"event":"complete","data":{"job_id":"replay-syria","step":"extract_entities","status":"complete","counts":{"entities_raw":88}}}
+{"t":3000,"event":"complete","data":{"job_id":"replay-syria","step":"validate_schema","status":"complete","counts":{"entities_valid":64,"entities_invalid":5}}}
+{"t":3800,"event":"complete","data":{"job_id":"replay-syria","step":"resolve_coreference","status":"complete","counts":{"merged_pairs":17}}}
+{"t":4600,"event":"complete","data":{"job_id":"replay-syria","step":"extract_relationships","status":"complete","counts":{"edges_valid":70}}}
+{"t":5400,"event":"complete","data":{"job_id":"replay-syria","step":"compute_embeddings","status":"complete","counts":{"embeddings":64}}}
+{"t":6200,"event":"complete","data":{"job_id":"replay-syria","step":"write_to_graph","status":"complete","counts":{"nodes_written":64,"edges_written":70},"graph":{"nodes":[{"id":"russia_2015","label":"Event","node_type":"Event","name":"Russian intervention","confidence":0.93,"properties":{}},{"id":"assad_regime","label":"Actor","node_type":"Actor","name":"Assad regime","confidence":0.94,"properties":{}},{"id":"aleppo_2016","label":"Event","node_type":"Event","name":"Aleppo fall","confidence":0.91,"properties":{}}],"links":[{"id":"s1","source":"russia_2015","target":"aleppo_2016","edge_type":"CAUSED","weight":1,"confidence":0.87},{"id":"s2","source":"assad_regime","target":"aleppo_2016","edge_type":"PARTICIPATES_IN","weight":1,"confidence":0.82}]}}}
+{"t":6500,"event":"job","data":{"job_id":"replay-syria","step":"job","status":"complete","job":{"job_id":"replay-syria","status":"complete","nodes_extracted":64,"edges_extracted":70}}}

@@ -1,0 +1,10 @@
+{"t":0,"event":"meta","data":{"job_id":"replay-war-peace","step":"stream","status":"ready","message":"Replay captured from canonical event shape."}}
+{"t":600,"event":"complete","data":{"job_id":"replay-war-peace","step":"chunk_document","status":"complete","counts":{"chunks":41}}}
+{"t":1200,"event":"complete","data":{"job_id":"replay-war-peace","step":"gliner_prefilter","status":"complete","counts":{"chunks_scored":41,"entity_density_avg":0.48}}}
+{"t":2100,"event":"complete","data":{"job_id":"replay-war-peace","step":"extract_entities","status":"complete","counts":{"entities_raw":112}}}
+{"t":3000,"event":"complete","data":{"job_id":"replay-war-peace","step":"validate_schema","status":"complete","counts":{"entities_valid":58,"entities_invalid":7}}}
+{"t":3800,"event":"complete","data":{"job_id":"replay-war-peace","step":"resolve_coreference","status":"complete","counts":{"merged_pairs":29}}}
+{"t":4600,"event":"complete","data":{"job_id":"replay-war-peace","step":"extract_relationships","status":"complete","counts":{"edges_valid":33}}}
+{"t":5400,"event":"complete","data":{"job_id":"replay-war-peace","step":"compute_embeddings","status":"complete","counts":{"embeddings":58}}}
+{"t":6200,"event":"complete","data":{"job_id":"replay-war-peace","step":"write_to_graph","status":"complete","counts":{"nodes_written":58,"edges_written":33},"graph":{"nodes":[{"id":"napoleon","label":"Actor","node_type":"Actor","name":"Napoleon","confidence":0.96,"properties":{}},{"id":"kutuzov","label":"Actor","node_type":"Actor","name":"Kutuzov","confidence":0.92,"properties":{}},{"id":"borodino","label":"Event","node_type":"Event","name":"Borodino","confidence":0.9,"properties":{}}],"links":[{"id":"w1","source":"napoleon","target":"borodino","edge_type":"PARTICIPATES_IN","weight":1,"confidence":0.86},{"id":"w2","source":"kutuzov","target":"borodino","edge_type":"PARTICIPATES_IN","weight":1,"confidence":0.84}]}}}
+{"t":6500,"event":"job","data":{"job_id":"replay-war-peace","step":"job","status":"complete","job":{"job_id":"replay-war-peace","status":"complete","nodes_extracted":58,"edges_extracted":33}}}
