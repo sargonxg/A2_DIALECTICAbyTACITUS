@@ -119,6 +119,7 @@ npm run dev
 | Route | Description |
 |-------|-------------|
 | `/` | Marketing landing page |
+| `/situation-demo` | Simple investor demo that explains the product in plain English before opening traced answers or live ingestion. |
 | `/demo` | Paste-and-see demo (works offline with fallback data) |
 | `/demo/[scenarioId]/reasoning` | Deterministic reasoning theatre for Romeo, War and Peace, and Syria. Shows curated questions, LLM comparison fixtures, graph citation paths, trace JSON, counterfactual controls, and structural-similarity panels. |
 | `/demo/investor` | 5-step guided investor walkthrough |
