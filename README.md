@@ -164,11 +164,12 @@ npm run dev
 **Key pages:**
 | Route | Description |
 |-------|-------------|
-| `/` | Product landing page for the live graph/backbone narrative |
-| `/situation-demo` | Main demo page with Syria, Gutenberg/book graph, dynamic ontology, D3 layer graph, source dossier, and PRAXIS handoff |
+| `/` | Investor-ready product landing page for the evidence graph/backbone narrative |
+| `/situation-demo` | Plain-English investor demo showing source intake, ontology extraction, graph creation, traced answers, and live ingestion handoff |
 | `/graphops` | Operator console for ingestion, ontology controls, Databricks hooks, graph writes, retrieval plans, and benchmarks |
 | `/admin/graph-health` | Graph/API health checks for demo readiness |
-| `/demo` | Legacy paste-and-see demo |
+| `/demo` | Ingestion theatre demo with live/replay pipeline acts |
+| `/demo/[scenarioId]/reasoning` | Deterministic reasoning theatre for Romeo, War and Peace, and Syria. Shows curated questions, LLM comparison fixtures, graph citation paths, trace JSON, counterfactual controls, and structural-similarity panels. |
 | `/demo/investor` | 5-step guided investor walkthrough |
 | `/workspaces` | Workspace list |
 | `/workspaces/[id]` | Workspace detail with Graph, Entities, Timeline, Analysis, Query tabs |
@@ -211,6 +212,21 @@ curl -N http://localhost:8080/v1/workspaces/$WS/extractions/$JOB/stream
 ```
 
 Or use the UI tabs at `/workspaces/[id]/ingest` (Project Gutenberg / Upload / Paste).
+
+### Demo experience
+
+The May demo track is split into two theatres:
+
+1. `/demo` builds the graph from a live SSE ingestion stream when the API is available, and from labelled captured replays when it is not.
+2. `/demo/romeo/reasoning`, `/demo/war_peace/reasoning`, and `/demo/syria/reasoning` show the deterministic reasoning layer over the built graph.
+
+The reasoning theatre ships with the curated 23-question library from
+`data/seed/reasoning_library.json` and deterministic frontend fixtures for demo
+reliability. It also exposes a "Run live API" control that calls the backend
+adapter at `/v1/workspaces/{ws}/reason/curated` when `NEXT_PUBLIC_API_URL` and an
+API key are configured. Counterfactual and similarity endpoint contracts are in
+place; the next backend pass upgrades them from adapter semantics to full
+MutilatedGraph recomputation and graph-kernel similarity.
 
 ---
 

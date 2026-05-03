@@ -21,6 +21,17 @@ function timingSafeEqual(a: string, b: string) {
 }
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (
+    pathname === "/" ||
+    pathname === "/situation-demo" ||
+    pathname.startsWith("/situation-demo/") ||
+    pathname === "/demo" ||
+    pathname.startsWith("/demo/")
+  ) {
+    return NextResponse.next();
+  }
+
   const username = process.env.GRAPHOPS_BASIC_USER || "tacitus";
   const password = process.env.GRAPHOPS_BASIC_PASSWORD;
 

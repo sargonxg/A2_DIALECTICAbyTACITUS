@@ -7,59 +7,71 @@ Last updated: 2026-05-03
 - May Prompt 1: `docs/prompts/MAY_PROMPT_01_INGESTION_THEATRE.md`
 - May Prompt 2: `docs/prompts/MAY_PROMPT_02_REASONING_THEATRE.md`
 
-May Prompt 1 is the active implementation target. May Prompt 2 depends on the
-graph-building handoff route produced by Prompt 1.
+May Prompt 1 provides the graph-building ingestion theatre. May Prompt 2
+provides the deterministic reasoning theatre that consumes the graph-building
+handoff route.
 
 ## Branching
 
-- Prompt archive and this process tracker live on `main`.
-- Prompt 1 implementation branch: `feat/demo-ingestion-theatre`.
-- Prompt 2 implementation branch, after Prompt 1 lands:
-  `feat/demo-reasoning-theatre`.
+- Prompt archive branch on GitHub: `may-demo-prompts`.
+- Prompt 1 implementation branch: `feat/demo-ingestion-theatre-prompt1`.
+- Prompt 2 implementation branch:
+  `feat/demo-reasoning-theatre-prompt2`.
+
+## Current Remote Baseline
+
+`origin/main` already contains a merged ingestion PR with several Prompt 1
+building blocks:
+
+- `packages/api/src/dialectica_api/services/pipeline_runner.py`
+- `packages/api/src/dialectica_api/services/job_store.py`
+- `packages/api/src/dialectica_api/routers/extraction_stream.py`
+- `packages/api/src/dialectica_api/routers/gutenberg.py`
+- `packages/extraction/src/dialectica_extraction/sources/gutenberg.py`
+- `apps/web/src/components/extraction/LiveExtractionProgress.tsx`
+- Gutenberg picker and corpus pages under `apps/web/src/app/workspaces/[id]/`
+
+This means Prompt 1 work should not rebuild the SSE/Gutenberg foundation from
+scratch. The next work is to turn those primitives into the cinematic `/demo`
+theatre and add the missing demo-only controls, replay mode, data corpus, and
+act components.
 
 ## Prompt 1 Audit Against Current Repo
 
-The prompt is directionally correct, but several referenced files do not exist
-in the current checkout and must be implemented or adapted.
-
 | Contract Path | Current State | Action |
 | --- | --- | --- |
-| `docs/ARCHITECTURE.md` | Exists | Use as canonical architecture reference. |
+| `docs/ARCHITECTURE.md` | Exists | Use as canonical ingestion architecture reference. |
 | `packages/extraction/src/dialectica_extraction/pipeline.py` | Exists | Reuse 10-step extraction DAG and step names. |
-| `packages/api/src/dialectica_api/services/pipeline_runner.py` | Missing | Add runner service that emits canonical progress events. |
-| `packages/api/src/dialectica_api/routers/extraction_stream.py` | Missing | Add SSE router or integrate equivalent routes into API. |
-| `packages/extraction/src/dialectica_extraction/sources/gutenberg.py` | Missing | Add minimal Gutenberg catalogue/preview helper for book IDs 1513 and 2600. |
-| `data/seed/samples/syria_civil_war.json` | Exists | Keep as benchmark seed; add narrative corpus for demo extraction. |
+| `packages/api/src/dialectica_api/services/pipeline_runner.py` | Exists | Extend counts and cost metadata as needed. |
+| `packages/api/src/dialectica_api/routers/extraction_stream.py` | Exists | Reuse for live mode; add replay/capture docs separately. |
+| `packages/extraction/src/dialectica_extraction/sources/gutenberg.py` | Exists | Use book IDs 1513 and 2600 for doors. |
+| `data/seed/samples/syria_civil_war.json` | Exists | Keep as graph seed; add narrative corpus for text extraction. |
 | `data/seed/benchmarks/*_gold.json` | Exists | Use for replay validation/backstop, not as fake live graph. |
-| `apps/web/src/components/extraction/LiveExtractionProgress.tsx` | Missing | Build new demo event consumer from scratch using existing API patterns. |
-| `apps/web/src/components/graph/ForceGraph.tsx` | Exists | Extend via props/wrapper, do not duplicate graph library. |
-| `apps/web/src/lib/api.ts` | Exists | Extend with demo stream/reset/cost/preview helpers. |
+| `apps/web/src/components/extraction/LiveExtractionProgress.tsx` | Exists | Reuse event-source wiring concepts, not the linear UI. |
+| `apps/web/src/components/graph/ForceGraph.tsx` | Exists | Extend through props/wrapper, do not duplicate graph library. |
+| `apps/web/src/lib/api.ts` | Exists | Extend with demo reset/cost/preview helpers. |
 | `apps/web/src/types/graph.ts` | Exists | Extend types, do not fork. |
-| `apps/web/src/app/demo/page.tsx` | Exists | Replace conductor surface; do not reuse old fake progress behavior. |
+| `apps/web/src/app/demo/page.tsx` | Exists | Replace fake progress with conductor surface. |
 
 ## Implementation Order For Prompt 1
 
-1. Archive prompts and process docs.
-2. Create `feat/demo-ingestion-theatre`.
-3. Add backend demo contracts:
-   - demo workspace reset guarded by `DEMO_RESET_ENABLED`;
-   - pipeline runner that wraps the existing extraction DAG and emits
-     canonical events;
-   - SSE stream endpoint;
-   - Gutenberg preview/ingest helpers;
-   - cost/count endpoint;
-   - tests for tenant/workspace guards and replay-friendly event shape.
-4. Add data assets:
+1. Normalize architecture-doc casing for Windows-safe development on this branch.
+2. Add demo data and manifests:
    - `data/sample_docs/syria_2011_2024_briefing.txt`;
    - `apps/web/public/demo/corpora/syria_2011_2024_briefing.txt`;
-   - initial replay NDJSON fixtures generated from local deterministic runs
-     until live capture exists.
-5. Replace `/demo` with a client-only ingestion theatre:
+   - `apps/web/src/components/demo/data/doors.ts`;
+   - narrator scripts and replay metadata.
+3. Add backend demo controls:
+   - demo workspace reset guarded by `DEMO_RESET_ENABLED`;
+   - cost/count endpoint for extraction jobs;
+   - any missing preview helper needed by `/demo`.
+4. Replace `/demo` with a client-only ingestion theatre:
    - conductor state;
    - eleven act components;
    - live SSE and replay drivers with identical event shape;
    - event log drawer, pause/manual controls, keyboard shortcuts;
    - existing `ForceGraph` wrapper for graph materialization.
+5. Add initial replay fixtures and replay-mode banner.
 6. Add e2e replay tests for all three doors.
 7. Update README and architecture/admin docs.
 
@@ -75,9 +87,49 @@ in the current checkout and must be implemented or adapted.
 
 ## Current Status
 
-- Prompt files archived: in progress.
-- Prompt 1 repo audit: started.
-- Backend demo contracts: not started.
-- Frontend theatre: not started.
-- Replay capture: not started.
+- Prompt files archived on GitHub branch `may-demo-prompts`.
+- Prompt 1 implementation branch: `feat/demo-ingestion-theatre-prompt1`.
+- Backend SSE/Gutenberg foundation: present from `origin/main`.
+- Frontend theatre: first scaffold complete. `/demo` now uses a client
+  conductor, eleven act files, live SSE/replay mode switching, event-log drawer,
+  pause/skip controls, scenario manifest, and Prompt 2 handoff stub.
+- Replay capture: starter NDJSON fixtures added; live capture middleware still
+  not implemented.
 - E2E: not started.
+
+## Prompt 2 Audit Against Current Repo
+
+| Contract Path | Current State | Action |
+| --- | --- | --- |
+| `docs/neurosymbolic-rationale.md` | Exists | Use symbolic-first bridge protocol for answer traces. |
+| `docs/theory-frameworks.md` | Exists | Use framework names and semantics in question metadata. |
+| `packages/ontology/src/dialectica_ontology/benchmark_questions.py` | Exists | Supersede demo copy with curated investor-grade questions. |
+| `packages/reasoning/src/dialectica_reasoning/query_engine.py` | Exists | Curated adapter now calls it and returns the Prompt 2 `ReasoningResult` shape. |
+| `packages/reasoning/src/dialectica_reasoning/hallucination_detector.py` | Exists | Surface hallucination risk in the UI and wire detector in backend pass. |
+| `packages/reasoning/src/dialectica_reasoning/graphrag/retriever.py` | Exists | Use as source for cited subgraph once endpoint is wired. |
+| `apps/web/src/components/graph/ForceGraph.tsx` | Exists | Extended with optional highlighted node and edge IDs. |
+
+## Prompt 2 Current Slice
+
+- Added `data/seed/reasoning_library.json` with the 23 curated questions from
+  May Prompt 2 metadata.
+- Replaced `/demo/[scenarioId]/reasoning` stub with a full reasoning theatre
+  scaffold:
+  - left question library;
+  - LLM comparison panel;
+  - DIALECTICA structured answer panel;
+  - determinism badge and hallucination gauge;
+  - ForceGraph citation-path highlighting;
+  - trace drawer with subgraph, Cypher, symbolic rules, and JSON;
+  - counterfactual toggles and structural-similarity panels for supported
+    questions.
+- Added `packages/reasoning/src/dialectica_reasoning/library.py` to load and
+  validate the curated library.
+- Added backend adapter endpoints:
+  `/reason/curated`, `/reason/counterfactual`, and `/reason/similarity`.
+- Added a "Run live API" control on the reasoning page. Without configured API
+  URL/key, the page keeps the deterministic fixture and says so.
+- Current limitation: counterfactuals preserve the transient API contract but
+  do not yet run symbolic rules against a full in-memory MutilatedGraph.
+  Similarity returns curated comparison-corpus neighbours rather than live
+  semantic/topology scoring.

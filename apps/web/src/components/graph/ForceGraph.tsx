@@ -86,6 +86,8 @@ interface Props {
   onEdgeClick?: (link: GraphLink) => void;
   onNodeDoubleClick?: (node: GraphNode) => void;
   selectedNodeId?: string | null;
+  highlightNodeIds?: string[];
+  highlightEdgeIds?: string[];
 }
 
 export default function ForceGraph({
@@ -96,6 +98,8 @@ export default function ForceGraph({
   onEdgeClick,
   onNodeDoubleClick,
   selectedNodeId,
+  highlightNodeIds = [],
+  highlightEdgeIds = [],
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphLink> | null>(null);
@@ -106,6 +110,9 @@ export default function ForceGraph({
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
+    const highlightedNodes = new Set(highlightNodeIds);
+    const highlightedEdges = new Set(highlightEdgeIds);
+    const hasHighlights = highlightedNodes.size > 0 || highlightedEdges.size > 0;
 
     /* ---- Defs: arrow markers & glow filter ---- */
     const defs = svg.append("defs");
@@ -189,8 +196,13 @@ export default function ForceGraph({
       .data(data.links)
       .join("line")
       .attr("stroke", (d) => EDGE_COLORS[d.edge_type] || DEFAULT_EDGE_COLOR)
-      .attr("stroke-width", (d) => Math.max(1, d.weight * 2.5))
-      .attr("stroke-opacity", 0.5)
+      .attr("stroke-width", (d) =>
+        Math.max(1, d.weight * (highlightedEdges.has(d.id) ? 4 : 2.5))
+      )
+      .attr("stroke-opacity", (d) => {
+        if (!hasHighlights) return 0.5;
+        return highlightedEdges.has(d.id) ? 0.9 : 0.16;
+      })
       .attr("marker-end", (d) => {
         const c = EDGE_COLORS[d.edge_type] || DEFAULT_EDGE_COLOR;
         return `url(#arrow-${c.replace("#", "")})`;
@@ -237,11 +249,16 @@ export default function ForceGraph({
       .join("circle")
       .attr("r", nodeRadius)
       .attr("fill", (d) => NODE_COLORS[d.node_type] || "#94a3b8")
-      .attr("stroke", (d) =>
-        d.id === selectedNodeId ? "#f1f5f9" : "rgba(255,255,255,0.1)"
-      )
-      .attr("stroke-width", (d) => (d.id === selectedNodeId ? 3 : 1))
-      .attr("filter", (d) => (d.id === selectedNodeId ? "url(#glow)" : "none"))
+      .attr("opacity", (d) => {
+        if (!hasHighlights) return 1;
+        return highlightedNodes.has(d.id) ? 1 : 0.35;
+      })
+      .attr("stroke", (d) => {
+        if (d.id === selectedNodeId || highlightedNodes.has(d.id)) return "#f1f5f9";
+        return "rgba(255,255,255,0.1)";
+      })
+      .attr("stroke-width", (d) => (d.id === selectedNodeId || highlightedNodes.has(d.id) ? 3 : 1))
+      .attr("filter", (d) => (d.id === selectedNodeId || highlightedNodes.has(d.id) ? "url(#glow)" : "none"))
       .style("cursor", "pointer")
       .on("click", (_event, d) => onNodeClick?.(d))
       .on("dblclick", (_event, d) => onNodeDoubleClick?.(d))
@@ -349,7 +366,17 @@ export default function ForceGraph({
     simulation.alpha(1).restart();
 
     return () => simulation.stop();
-  }, [data, width, height, onNodeClick, onEdgeClick, onNodeDoubleClick, selectedNodeId]);
+  }, [
+    data,
+    width,
+    height,
+    onNodeClick,
+    onEdgeClick,
+    onNodeDoubleClick,
+    selectedNodeId,
+    highlightNodeIds,
+    highlightEdgeIds,
+  ]);
 
   useEffect(() => {
     render();
