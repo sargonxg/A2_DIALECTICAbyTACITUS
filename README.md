@@ -4,8 +4,12 @@
 
 [![CI](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/actions/workflows/ci.yml/badge.svg)](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-experimental-orange.svg)](#status--how-to-engage)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![Neo4j](https://img.shields.io/badge/Neo4j-Aura-008CC1.svg)](https://neo4j.com/cloud/aura/)
+
+> ⚠️ **Experimental work in progress.** Live MVP, active development, breaking changes possible.
+> Built in the open by [TACITUS](https://www.tacitus.me). **Feedback, issues, and PRs welcome** — see [Status & how to engage](#status--how-to-engage).
 
 > *"We make conflict computable enough for better human judgment."*
 
@@ -257,6 +261,18 @@ What it does NOT do today:
 If those last two matter for your use case, follow the integration roadmap.
 
 ---
+
+## Status & how to engage
+
+DIALECTICA is **experimental work in progress**. The live system runs, tests pass, deploys ship — but the API surface, ontology, and integration contracts are still evolving. Treat the codebase as a serious prototype, not a stabilized product.
+
+**Comments welcome — preferred channels:**
+- 💬 **[GitHub Discussions](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/discussions)** — ideas, questions, what to build next
+- 🐛 **[Issues](https://github.com/sargonxg/A2_DIALECTICAbyTACITUS/issues)** — bugs, concrete proposals
+- 📬 **[tacitus.me](https://www.tacitus.me)** — for direct contact or partnership conversations
+- 🔀 **PRs** — happy to review; touch the integration contracts in [`docs/integration/`](docs/integration/) before large changes
+
+If you're trying it on real data, I'd genuinely like to hear what broke and what surprised you.
 
 ## Contributing
 

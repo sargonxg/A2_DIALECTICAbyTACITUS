@@ -73,8 +73,8 @@ PRAXIS + external developers see one API:
 | Integration architecture | DIALECTICA `docs/integration/` | DIALECTICA is the conductor |
 | Shared contracts spec | DIALECTICA `docs/integration/CONTRACTS.md` | Single source of truth |
 | Ontology mapping | DIALECTICA `docs/integration/ONTOLOGY_MAPPING.md` | DIALECTICA owns the target ontology |
-| AGON-side interop notes | AGON `docs/INTEROP.md` (TBD) | Mirrors CONTRACTS from Rust perspective |
-| KAIROS-side interop notes | KAIROS `docs/INTEROP.md` (TBD) | Mirrors CONTRACTS from Rust perspective |
+| AGON-side interop notes | [AGON `docs/INTEROP.md`](https://github.com/sargonxg/AGON/blob/main/docs/INTEROP.md) | Mirrors CONTRACTS from Rust perspective |
+| KAIROS-side interop notes | [KAIROS `docs/INTEROP.md`](https://github.com/sargonxg/KAIROS-temporal-vision-TACITUS/blob/main/docs/INTEROP.md) | Mirrors CONTRACTS from Rust perspective |
 
 ---
 
